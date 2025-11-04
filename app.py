@@ -398,11 +398,28 @@ def show_add_book():
         is_completed = st.checkbox("完結済み")
         
         # 日付情報
+        st.subheader("📅 発売日情報")
         col3, col4 = st.columns(2)
         with col3:
-            latest_release_date = st.date_input("最新巻発売日")
+            # 最新巻発売日をオプションにする
+            has_latest_release_date = st.checkbox("最新巻発売日を設定")
+            latest_release_date = None
+            if has_latest_release_date:
+                latest_release_date = st.date_input(
+                    "最新巻発売日",
+                    value=datetime.date.today(),
+                    help="最新巻の発売日を設定します"
+                )
         with col4:
-            next_release_date = st.date_input("次巻発売予定日")
+            # 次巻発売予定日をオプションにする
+            has_next_release_date = st.checkbox("次巻発売予定日を設定")
+            next_release_date = None
+            if has_next_release_date:
+                next_release_date = st.date_input(
+                    "次巻発売予定日",
+                    value=datetime.date.today() + datetime.timedelta(days=90),
+                    help="次巻の発売予定日を設定します"
+                )
         
         # 詳細情報
         st.subheader("📚 詳細情報")
