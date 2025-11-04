@@ -1,5 +1,5 @@
 import streamlit as st
-from notion_client import Client
+from utils.notion_client import query_notion, create_notion_page
 import cloudinary
 import cloudinary.uploader
 import datetime
@@ -9,12 +9,6 @@ import datetime
 # =========================
 NOTION_API_KEY = st.secrets["notion"]["api_key"]
 DATABASE_ID = st.secrets["notion"]["database_id"]
-notion = Client(auth=NOTION_API_KEY)
-
-# デバッグ: 利用可能なメソッドを確認
-if st.sidebar.checkbox("デバッグ情報を表示"):
-    st.sidebar.write("Notion databases のメソッド:")
-    st.sidebar.write(dir(notion.databases))
 
 # =========================
 # Cloudinary 設定
@@ -45,14 +39,12 @@ if uploaded_file is not None:
 
             # Notion に登録
             with st.spinner("Notionに保存中..."):
-                notion.pages.create(
-                    parent={"database_id": DATABASE_ID},
-                    properties={
-                        "Name": {"title": [{"text": {"content": uploaded_file.name}}]},
-                        "ImageURL": {"url": image_url},
-                        "UploadedAt": {"date": {"start": datetime.datetime.now().isoformat()}}
-                    }
-                )
+                page_data = {
+                    "Name": {"title": [{"text": {"content": uploaded_file.name}}]},
+                    "ImageURL": {"url": image_url},
+                    "UploadedAt": {"date": {"start": datetime.datetime.now().isoformat()}}
+                }
+                create_notion_page(NOTION_API_KEY, DATABASE_ID, page_data)
 
             st.success("✅ アップロード完了！NotionにURLを保存しました。")
             st.markdown(f"📎 [Cloudinaryで開く]({image_url})")
@@ -67,16 +59,14 @@ if uploaded_file is not None:
 # =========================
 if st.button("📖 Notionに登録された画像一覧を表示"):
     try:
-        # notion-clientの正しいAPIメソッドを使用
-        results = notion.databases.query(
-            database_id=DATABASE_ID,
-            sorts=[
-                {
-                    "property": "UploadedAt",
-                    "direction": "descending"
-                }
-            ]
-        )
+        # カスタムユーティリティを使用してデータベースをクエリ
+        sorts = [
+            {
+                "property": "UploadedAt",
+                "direction": "descending"
+            }
+        ]
+        results = query_notion(NOTION_API_KEY, DATABASE_ID, sorts=sorts)
         st.subheader("登録済み画像一覧")
         
         if results.get("results"):
