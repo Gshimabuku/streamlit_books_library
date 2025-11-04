@@ -31,33 +31,61 @@ if uploaded_file is not None:
     st.image(uploaded_file, caption="アップロード画像プレビュー", use_container_width=True)
 
     if st.button("アップロードしてNotionに保存"):
-        with st.spinner("Cloudinaryにアップロード中..."):
-            # Cloudinaryにアップロード
-            upload_result = cloudinary.uploader.upload(uploaded_file)
+        try:
+            with st.spinner("Cloudinaryにアップロード中..."):
+                # Cloudinaryにアップロード
+                upload_result = cloudinary.uploader.upload(uploaded_file)
 
-        image_url = upload_result["secure_url"]
+            image_url = upload_result["secure_url"]
 
-        # Notion に登録
-        notion.pages.create(
-            parent={"database_id": DATABASE_ID},
-            properties={
-                "Name": {"title": [{"text": {"content": uploaded_file.name}}]},
-                "ImageURL": {"url": image_url},
-                "UploadedAt": {"date": {"start": datetime.datetime.now().isoformat()}}
-            }
-        )
+            # Notion に登録
+            with st.spinner("Notionに保存中..."):
+                notion.pages.create(
+                    parent={"database_id": DATABASE_ID},
+                    properties={
+                        "Name": {"title": [{"text": {"content": uploaded_file.name}}]},
+                        "ImageURL": {"url": image_url},
+                        "UploadedAt": {"date": {"start": datetime.datetime.now().isoformat()}}
+                    }
+                )
 
-        st.success("✅ アップロード完了！NotionにURLを保存しました。")
+            st.success("✅ アップロード完了！NotionにURLを保存しました。")
+            st.markdown(f"📎 [Cloudinaryで開く]({image_url})")
+            
+        except Exception as e:
+            st.error(f"エラーが発生しました: {str(e)}")
+            st.info("Cloudinary設定とNotion設定を確認してください。")
         st.markdown(f"📎 [Cloudinaryで開く]({image_url})")
 
 # =========================
 # 画像一覧（オプション）
 # =========================
 if st.button("📖 Notionに登録された画像一覧を表示"):
-    results = notion.databases.query(database_id=DATABASE_ID)
-    st.subheader("登録済み画像一覧")
-    for page in results["results"]:
-        name = page["properties"]["Name"]["title"][0]["text"]["content"]
-        image_url = page["properties"]["ImageURL"]["url"]
-        st.markdown(f"**{name}**")
-        st.image(image_url, use_container_width=True)
+    try:
+        results = notion.databases.query(database_id=DATABASE_ID)
+        st.subheader("登録済み画像一覧")
+        
+        if results["results"]:
+            for page in results["results"]:
+                # プロパティの存在確認とエラーハンドリング
+                try:
+                    name_prop = page["properties"].get("Name", {})
+                    if name_prop.get("title") and len(name_prop["title"]) > 0:
+                        name = name_prop["title"][0]["text"]["content"]
+                    else:
+                        name = "名前なし"
+                    
+                    image_url_prop = page["properties"].get("ImageURL", {})
+                    if image_url_prop.get("url"):
+                        image_url = image_url_prop["url"]
+                        st.markdown(f"**{name}**")
+                        st.image(image_url, use_container_width=True)
+                    else:
+                        st.markdown(f"**{name}** - 画像URLなし")
+                except Exception as e:
+                    st.error(f"ページの読み込みエラー: {str(e)}")
+        else:
+            st.info("登録された画像がありません。")
+    except Exception as e:
+        st.error(f"Notionデータベースの取得に失敗しました: {str(e)}")
+        st.info("データベースIDとAPIキーを確認してください。")
