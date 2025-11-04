@@ -433,54 +433,137 @@ def show_add_book():
                     elif upload_method == "URLを直接入力" and image_url:
                         final_image_url = image_url
                     
-                    # Notionページのプロパティ構築
-                    properties = {
-                        "title": {"title": [{"text": {"content": title}}]},
-                        "magazine_type": {"rich_text": [{"text": {"content": magazine_type}}]},
-                        "magazine_name": {"rich_text": [{"text": {"content": magazine_name or ""}}]},
-                        "latest_owned_volume": {"number": latest_owned_volume},
-                        "latest_released_volume": {"number": latest_released_volume},
-                        "is_completed": {"checkbox": is_completed}
-                    }
+                    # Notionページのプロパティ構築（より安全な方法）
+                    properties = {}
                     
-                    # 画像URLを追加（存在する場合）
+                    # 必須プロパティ（タイトル）
+                    properties["title"] = {"title": [{"text": {"content": title}}]}
+                    
+                    # 基本プロパティ（存在チェック付き）
+                    if magazine_type:
+                        properties["magazine_type"] = {"rich_text": [{"text": {"content": magazine_type}}]}
+                    
+                    if magazine_name:
+                        properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
+                    
+                    # 数値プロパティ
+                    properties["latest_owned_volume"] = {"number": latest_owned_volume}
+                    properties["latest_released_volume"] = {"number": latest_released_volume}
+                    
+                    # チェックボックス
+                    properties["is_completed"] = {"checkbox": is_completed}
+                    
+                    # 画像URLを追加（存在する場合のみ）
                     if final_image_url:
                         properties["image_url"] = {"url": final_image_url}
                     
-                    # オプション項目の追加
+                    # オプション項目の追加（値がある場合のみ）
                     if synopsis:
                         properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
+                    
                     if latest_release_date:
                         properties["latest_release_date"] = {"date": {"start": latest_release_date.isoformat()}}
+                    
                     if next_release_date:
                         properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
+                    
                     if missing_volumes:
                         properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
+                    
                     if special_volumes:
                         properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
+                    
                     if owned_media:
                         properties["owned_media"] = {"rich_text": [{"text": {"content": owned_media}}]}
+                    
                     if notes:
                         properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
                     
-                    with st.spinner("Notionに登録中..."):
-                        create_notion_page(BOOKS_DATABASE_ID, properties, NOTION_API_KEY)
+                    # デバッグ用：送信するプロパティを表示
+                    with st.expander("🔍 デバッグ情報（送信データ）"):
+                        st.json(properties)
                     
-                    st.success("✅ 漫画が正常に登録されました！")
-                    st.balloons()
-                    
-                    # 画像URLがある場合は表示
-                    if final_image_url:
-                        st.markdown(f"🔗 [画像を開く]({final_image_url})")
-                    
-                    # 少し待ってからホームに戻る
-                    import time
-                    time.sleep(2)
-                    go_to_home()
-                    st.rerun()
+                    # 登録試行
+                    try:
+                        with st.spinner("Notionに登録中..."):
+                            result = create_notion_page(BOOKS_DATABASE_ID, properties, NOTION_API_KEY)
+                        
+                        st.success("✅ 漫画が正常に登録されました！")
+                        st.balloons()
+                        
+                        # デバッグ用：レスポンスを表示
+                        with st.expander("🔍 デバッグ情報（レスポンス）"):
+                            st.json(result)
+                        
+                        # 画像URLがある場合は表示
+                        if final_image_url:
+                            st.markdown(f"🔗 [画像を開く]({final_image_url})")
+                        
+                        # 少し待ってからホームに戻る
+                        import time
+                        time.sleep(2)
+                        go_to_home()
+                        st.rerun()
+                        
+                    except Exception as full_error:
+                        st.error(f"❌ 通常の登録に失敗しました: {str(full_error)}")
+                        
+                        # 最小限のプロパティで再試行
+                        st.warning("🔄 最小限のプロパティで再試行します...")
+                        
+                        minimal_properties = {
+                            "title": {"title": [{"text": {"content": title}}]},
+                            "latest_owned_volume": {"number": latest_owned_volume},
+                            "latest_released_volume": {"number": latest_released_volume},
+                            "is_completed": {"checkbox": is_completed}
+                        }
+                        
+                        with st.expander("🔍 最小限プロパティ"):
+                            st.json(minimal_properties)
+                        
+                        try:
+                            with st.spinner("最小限のプロパティで登録中..."):
+                                result = create_notion_page(BOOKS_DATABASE_ID, minimal_properties, NOTION_API_KEY)
+                            
+                            st.success("✅ 最小限のプロパティで登録成功！")
+                            st.info("💡 一部のプロパティがNotionデータベースのスキーマと一致していない可能性があります。")
+                            
+                            # 少し待ってからホームに戻る
+                            import time
+                            time.sleep(2)
+                            go_to_home()
+                            st.rerun()
+                            
+                        except Exception as minimal_error:
+                            st.error(f"❌ 最小限のプロパティでも登録失敗: {str(minimal_error)}")
+                            
+                            # デバッグ用：エラー詳細を表示
+                            with st.expander("🔍 エラー詳細とデバッグ情報"):
+                                st.write("**フル送信しようとしたプロパティ:**")
+                                st.json(properties)
+                                st.write("**最小限プロパティ:**")
+                                st.json(minimal_properties)
+                                st.write("**フルエラーの詳細:**")
+                                st.code(str(full_error))
+                                st.write("**最小限エラーの詳細:**")
+                                st.code(str(minimal_error))
+                                st.write("**推奨対策:**")
+                                st.markdown("""
+                                1. Notionデータベースのプロパティ名を確認してください
+                                2. プロパティの型（rich_text、number、checkbox、url、date）が正しいか確認してください
+                                3. データベースIDが正しいか確認してください
+                                4. APIキーに適切な権限があるか確認してください
+                                """)
                     
                 except Exception as e:
-                    st.error(f"❌ 登録に失敗しました: {str(e)}")
+                    st.error(f"❌ 登録処理でエラーが発生しました: {str(e)}")
+                    
+                    # デバッグ用：送信しようとしたプロパティを表示
+                    with st.expander("🔍 エラー詳細とデバッグ情報"):
+                        st.write("**送信しようとしたプロパティ:**")
+                        st.json(properties)
+                        st.write("**エラーの詳細:**")
+                        st.code(str(e))
 
 def show_edit_book():
     """漫画編集画面"""

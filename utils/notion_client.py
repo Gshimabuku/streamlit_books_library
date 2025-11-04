@@ -45,7 +45,16 @@ def create_notion_page(db_id: str, properties: Dict[str, Any], api_key: str) -> 
     url = "https://api.notion.com/v1/pages"
     payload = {"parent": {"database_id": db_id}, "properties": properties}
     res = requests.post(url, headers=_build_headers(api_key), json=payload)
-    res.raise_for_status()
+    
+    # エラーの詳細情報を含めてエラーハンドリング
+    if not res.ok:
+        try:
+            error_detail = res.json()
+            error_message = f"Notion API エラー ({res.status_code}): {error_detail}"
+        except:
+            error_message = f"Notion API エラー ({res.status_code}): {res.text}"
+        raise Exception(error_message)
+    
     return res.json()
 
 
