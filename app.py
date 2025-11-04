@@ -1,5 +1,6 @@
 import streamlit as st
-from utils.notion_client import query_notion, create_notion_page
+import query_notion
+import create_notion_page
 import cloudinary
 import cloudinary.uploader
 import datetime
