@@ -63,66 +63,70 @@ def show_books_home():
     """Home画面：本の一覧を3列グリッド表示"""
     st.header("📖 漫画ライブラリ")
     
-    # 新規登録ボタン
+    # 新規登録ボタン（常に表示）
     if st.button("➕ 新しい漫画を登録", type="primary"):
         st.session_state.page = "add_book"
         st.rerun()
     
     st.markdown("---")
     
+    # データベース接続を試行（エラーでも継続）
+    books = []
+    
     try:
         # NotionDBから実際のデータを取得
         with st.spinner("データを読み込み中..."):
             sorts = [
                 {
-                    "property": "title",
+                    "property": "title", 
                     "direction": "ascending"
                 }
             ]
             results = query_notion(BOOKS_DATABASE_ID, NOTION_API_KEY, sorts=sorts)
+            
+            # NotionDBのデータを表示用に変換
+            for page in results:
+                try:
+                    props = page["properties"]
+                    
+                    # タイトル取得
+                    title = "タイトル不明"
+                    if props.get("title", {}).get("title"):
+                        title = props["title"]["title"][0]["text"]["content"]
+                    
+                    # 画像URL取得
+                    image_url = props.get("image_url", {}).get("url", "https://via.placeholder.com/200x300/CCCCCC/FFFFFF?text=No+Image")
+                    
+                    # 巻数情報取得
+                    latest_owned_volume = props.get("latest_owned_volume", {}).get("number", 0)
+                    latest_released_volume = props.get("latest_released_volume", {}).get("number", 0)
+                    
+                    # 完結情報取得
+                    is_completed = props.get("is_completed", {}).get("checkbox", False)
+                    
+                    book_data = {
+                        "id": page["id"],
+                        "title": title,
+                        "image_url": image_url,
+                        "latest_owned_volume": latest_owned_volume,
+                        "latest_released_volume": latest_released_volume,
+                        "is_completed": is_completed,
+                        "page_data": page  # 詳細表示用に元データも保持
+                    }
+                    books.append(book_data)
+                    
+                except Exception as e:
+                    st.error(f"データ読み込みエラー: {str(e)}")
+                    continue
         
-        if not results:
-            st.info("まだ漫画が登録されていません。「新しい漫画を登録」ボタンから追加してください。")
-            return
-        
-        # NotionDBのデータを表示用に変換
-        books = []
-        for page in results:
-            try:
-                props = page["properties"]
-                
-                # タイトル取得
-                title = "タイトル不明"
-                if props.get("title", {}).get("title"):
-                    title = props["title"]["title"][0]["text"]["content"]
-                
-                # 画像URL取得
-                image_url = props.get("image_url", {}).get("url", "https://via.placeholder.com/200x300/CCCCCC/FFFFFF?text=No+Image")
-                
-                # 巻数情報取得
-                latest_owned_volume = props.get("latest_owned_volume", {}).get("number", 0)
-                latest_released_volume = props.get("latest_released_volume", {}).get("number", 0)
-                
-                # 完結情報取得
-                is_completed = props.get("is_completed", {}).get("checkbox", False)
-                
-                book_data = {
-                    "id": page["id"],
-                    "title": title,
-                    "image_url": image_url,
-                    "latest_owned_volume": latest_owned_volume,
-                    "latest_released_volume": latest_released_volume,
-                    "is_completed": is_completed,
-                    "page_data": page  # 詳細表示用に元データも保持
-                }
-                books.append(book_data)
-                
-            except Exception as e:
-                st.error(f"データ読み込みエラー: {str(e)}")
-                continue
+        # NotionDBから取得できなかった場合
+        if not books:
+            st.info("💡 まだ漫画が登録されていません。「新しい漫画を登録」ボタンから追加してください。")
         
     except Exception as e:
-        st.error(f"NotionDB接続エラー: {str(e)}")
+        st.warning(f"⚠️ NotionDBに接続できませんでした: {str(e)}")
+        st.info("📋 ダミーデータを表示しています。実際の使用時はNotionの設定を確認してください。")
+        
         # エラー時はダミーデータを表示
         books = [
             {
@@ -150,33 +154,34 @@ def show_books_home():
                 "is_completed": False
             }
         ]
-        st.warning("NotionDBに接続できませんでした。ダミーデータを表示しています。")
     
-    # 3列グリッド表示
-    cols = st.columns(3)
-    
-    for i, book in enumerate(books):
-        col = cols[i % 3]
+    # 本の一覧表示（データがある場合のみ）
+    if books:
+        # 3列グリッド表示
+        cols = st.columns(3)
         
-        with col:
-            # 本の画像
-            st.image(book["image_url"], use_container_width=True)
+        for i, book in enumerate(books):
+            col = cols[i % 3]
             
-            # タイトル
-            st.subheader(book["title"])
-            
-            # 所持状況
-            owned = book["latest_owned_volume"]
-            released = book["latest_released_volume"]
-            completion_status = "完結" if book["is_completed"] else "連載中"
-            
-            st.write(f"📖 所持: {owned}/{released}巻")
-            st.write(f"📊 状況: {completion_status}")
-            
-            # 詳細ボタン
-            if st.button(f"詳細を見る", key=f"detail_{book['id']}"):
-                go_to_detail(book)
-                st.rerun()
+            with col:
+                # 本の画像
+                st.image(book["image_url"], use_container_width=True)
+                
+                # タイトル
+                st.subheader(book["title"])
+                
+                # 所持状況
+                owned = book["latest_owned_volume"]
+                released = book["latest_released_volume"]
+                completion_status = "完結" if book["is_completed"] else "連載中"
+                
+                st.write(f"📖 所持: {owned}/{released}巻")
+                st.write(f"📊 状況: {completion_status}")
+                
+                # 詳細ボタン
+                if st.button(f"詳細を見る", key=f"detail_{book['id']}"):
+                    go_to_detail(book)
+                    st.rerun()
 
 def show_book_detail():
     """詳細画面：選択された本の詳細情報表示"""
