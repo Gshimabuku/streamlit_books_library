@@ -246,7 +246,7 @@ def show_add_book():
         
         # 必須項目
         title = st.text_input("漫画タイトル *", placeholder="例: 進撃の巨人")
-        magazine_type = st.selectbox("連載誌タイプ *", ["週刊", "月刊", "隔月", "不定期", "完結"])
+        magazine_type = st.selectbox("連載誌タイプ *", ["ジャンプ", "マガジン", "サンデー", "その他"])
         magazine_name = st.text_input("連載誌名", placeholder="例: 週刊少年マガジン")
         
         # 巻数情報
