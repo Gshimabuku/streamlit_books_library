@@ -15,7 +15,7 @@ st.set_page_config(
 # Notion 設定
 # =========================
 NOTION_API_KEY = st.secrets["notion"]["api_key"]
-BOOKS_DATABASE_ID = st.secrets["notion"]["books_database_id"]
+BOOKS_DATABASE_ID = st.secrets["notion"]["database_id"]
 
 # =========================
 # セッション状態の初期化
