@@ -11,6 +11,11 @@ NOTION_API_KEY = st.secrets["notion"]["api_key"]
 DATABASE_ID = st.secrets["notion"]["database_id"]
 notion = Client(auth=NOTION_API_KEY)
 
+# デバッグ: 利用可能なメソッドを確認
+if st.sidebar.checkbox("デバッグ情報を表示"):
+    st.sidebar.write("Notion databases のメソッド:")
+    st.sidebar.write(dir(notion.databases))
+
 # =========================
 # Cloudinary 設定
 # =========================
@@ -62,10 +67,19 @@ if uploaded_file is not None:
 # =========================
 if st.button("📖 Notionに登録された画像一覧を表示"):
     try:
-        results = notion.databases.query(database_id=DATABASE_ID)
+        # notion-clientの正しいAPIメソッドを使用
+        results = notion.databases.query(
+            database_id=DATABASE_ID,
+            sorts=[
+                {
+                    "property": "UploadedAt",
+                    "direction": "descending"
+                }
+            ]
+        )
         st.subheader("登録済み画像一覧")
         
-        if results["results"]:
+        if results.get("results"):
             for page in results["results"]:
                 # プロパティの存在確認とエラーハンドリング
                 try:
