@@ -401,25 +401,25 @@ def show_add_book():
         st.subheader("📅 発売日情報")
         col3, col4 = st.columns(2)
         with col3:
-            # 最新巻発売日をオプションにする
-            has_latest_release_date = st.checkbox("最新巻発売日を設定")
-            latest_release_date = None
-            if has_latest_release_date:
-                latest_release_date = st.date_input(
-                    "最新巻発売日",
-                    value=datetime.date.today(),
-                    help="最新巻の発売日を設定します"
-                )
+            # 最新巻発売日（必須）
+            latest_release_date = st.date_input(
+                "最新巻発売日 *",
+                value=datetime.date.today(),
+                help="最新巻の発売日を設定します（必須項目）"
+            )
         with col4:
             # 次巻発売予定日をオプションにする
             has_next_release_date = st.checkbox("次巻発売予定日を設定")
+            
+        # 次巻発売予定日の入力フィールド（チェックボックスの外に出す）
+        if has_next_release_date:
+            next_release_date = st.date_input(
+                "次巻発売予定日",
+                value=datetime.date.today() + datetime.timedelta(days=90),
+                help="次巻の発売予定日を設定します"
+            )
+        else:
             next_release_date = None
-            if has_next_release_date:
-                next_release_date = st.date_input(
-                    "次巻発売予定日",
-                    value=datetime.date.today() + datetime.timedelta(days=90),
-                    help="次巻の発売予定日を設定します"
-                )
         
         # 詳細情報
         st.subheader("📚 詳細情報")
@@ -478,9 +478,10 @@ def show_add_book():
                     if synopsis:
                         properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
                     
-                    if latest_release_date:
-                        properties["latest_release_date"] = {"date": {"start": latest_release_date.isoformat()}}
+                    # 最新巻発売日（必須）
+                    properties["latest_release_date"] = {"date": {"start": latest_release_date.isoformat()}}
                     
+                    # 次巻発売予定日（オプション）
                     if next_release_date:
                         properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
                     
@@ -532,7 +533,8 @@ def show_add_book():
                             "title": {"title": [{"text": {"content": title}}]},
                             "latest_owned_volume": {"number": latest_owned_volume},
                             "latest_released_volume": {"number": latest_released_volume},
-                            "is_completed": {"checkbox": is_completed}
+                            "is_completed": {"checkbox": is_completed},
+                            "latest_release_date": {"date": {"start": latest_release_date.isoformat()}}
                         }
                         
                         with st.expander("🔍 最小限プロパティ"):
