@@ -463,10 +463,11 @@ def show_add_book():
                         properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
                     
                     # 追加プロパティ（段階的に実装）
-                    # テキスト系プロパティ
+                    # Select系プロパティ
                     if magazine_type:
-                        properties["magazine_type"] = {"rich_text": [{"text": {"content": magazine_type}}]}
+                        properties["magazine_type"] = {"select": {"name": magazine_type}}
                     
+                    # テキスト系プロパティ
                     if magazine_name:
                         properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
                     
@@ -480,7 +481,7 @@ def show_add_book():
                         properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
                     
                     if owned_media:
-                        properties["owned_media"] = {"rich_text": [{"text": {"content": owned_media}}]}
+                        properties["owned_media"] = {"select": {"name": owned_media}}
                     
                     if notes:
                         properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
@@ -544,7 +545,7 @@ def show_add_book():
                         
                         # テキスト系プロパティを段階的に追加
                         if magazine_type:
-                            basic_plus_properties["magazine_type"] = {"rich_text": [{"text": {"content": magazine_type}}]}
+                            basic_plus_properties["magazine_type"] = {"select": {"name": magazine_type}}
                         if magazine_name:
                             basic_plus_properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
                         
