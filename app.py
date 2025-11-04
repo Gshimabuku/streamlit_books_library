@@ -37,6 +37,12 @@ def go_to_detail(book_data):
     st.session_state.page = "book_detail"
     st.session_state.selected_book = book_data
 
+def go_to_add_book():
+    st.session_state.page = "add_book"
+
+def go_to_edit_book():
+    st.session_state.page = "edit_book"
+
 # =========================
 # メインアプリケーション
 # =========================
@@ -48,43 +54,108 @@ def main():
         show_books_home()
     elif st.session_state.page == "book_detail":
         show_book_detail()
+    elif st.session_state.page == "add_book":
+        show_add_book()
+    elif st.session_state.page == "edit_book":
+        show_edit_book()
 
 def show_books_home():
     """Home画面：本の一覧を3列グリッド表示"""
     st.header("📖 漫画ライブラリ")
     
-    # ダミーデータ（後でNotionDBから取得に変更）
-    dummy_books = [
-        {
-            "id": "book1",
-            "title": "進撃の巨人",
-            "image_url": "https://via.placeholder.com/200x300/FF6B6B/FFFFFF?text=進撃の巨人",
-            "latest_owned_volume": 32,
-            "latest_released_volume": 34,
-            "is_completed": True
-        },
-        {
-            "id": "book2", 
-            "title": "鬼滅の刃",
-            "image_url": "https://via.placeholder.com/200x300/4ECDC4/FFFFFF?text=鬼滅の刃",
-            "latest_owned_volume": 20,
-            "latest_released_volume": 23,
-            "is_completed": True
-        },
-        {
-            "id": "book3",
-            "title": "ワンピース",
-            "image_url": "https://via.placeholder.com/200x300/45B7D1/FFFFFF?text=ワンピース",
-            "latest_owned_volume": 105,
-            "latest_released_volume": 108,
-            "is_completed": False
-        }
-    ]
+    # 新規登録ボタン
+    if st.button("➕ 新しい漫画を登録", type="primary"):
+        st.session_state.page = "add_book"
+        st.rerun()
+    
+    st.markdown("---")
+    
+    try:
+        # NotionDBから実際のデータを取得
+        with st.spinner("データを読み込み中..."):
+            sorts = [
+                {
+                    "property": "title",
+                    "direction": "ascending"
+                }
+            ]
+            results = query_notion(BOOKS_DATABASE_ID, NOTION_API_KEY, sorts=sorts)
+        
+        if not results:
+            st.info("まだ漫画が登録されていません。「新しい漫画を登録」ボタンから追加してください。")
+            return
+        
+        # NotionDBのデータを表示用に変換
+        books = []
+        for page in results:
+            try:
+                props = page["properties"]
+                
+                # タイトル取得
+                title = "タイトル不明"
+                if props.get("title", {}).get("title"):
+                    title = props["title"]["title"][0]["text"]["content"]
+                
+                # 画像URL取得
+                image_url = props.get("image_url", {}).get("url", "https://via.placeholder.com/200x300/CCCCCC/FFFFFF?text=No+Image")
+                
+                # 巻数情報取得
+                latest_owned_volume = props.get("latest_owned_volume", {}).get("number", 0)
+                latest_released_volume = props.get("latest_released_volume", {}).get("number", 0)
+                
+                # 完結情報取得
+                is_completed = props.get("is_completed", {}).get("checkbox", False)
+                
+                book_data = {
+                    "id": page["id"],
+                    "title": title,
+                    "image_url": image_url,
+                    "latest_owned_volume": latest_owned_volume,
+                    "latest_released_volume": latest_released_volume,
+                    "is_completed": is_completed,
+                    "page_data": page  # 詳細表示用に元データも保持
+                }
+                books.append(book_data)
+                
+            except Exception as e:
+                st.error(f"データ読み込みエラー: {str(e)}")
+                continue
+        
+    except Exception as e:
+        st.error(f"NotionDB接続エラー: {str(e)}")
+        # エラー時はダミーデータを表示
+        books = [
+            {
+                "id": "book1",
+                "title": "進撃の巨人",
+                "image_url": "https://via.placeholder.com/200x300/FF6B6B/FFFFFF?text=進撃の巨人",
+                "latest_owned_volume": 32,
+                "latest_released_volume": 34,
+                "is_completed": True
+            },
+            {
+                "id": "book2", 
+                "title": "鬼滅の刃",
+                "image_url": "https://via.placeholder.com/200x300/4ECDC4/FFFFFF?text=鬼滅の刃",
+                "latest_owned_volume": 20,
+                "latest_released_volume": 23,
+                "is_completed": True
+            },
+            {
+                "id": "book3",
+                "title": "ワンピース",
+                "image_url": "https://via.placeholder.com/200x300/45B7D1/FFFFFF?text=ワンピース",
+                "latest_owned_volume": 105,
+                "latest_released_volume": 108,
+                "is_completed": False
+            }
+        ]
+        st.warning("NotionDBに接続できませんでした。ダミーデータを表示しています。")
     
     # 3列グリッド表示
     cols = st.columns(3)
     
-    for i, book in enumerate(dummy_books):
+    for i, book in enumerate(books):
         col = cols[i % 3]
         
         with col:
@@ -140,10 +211,135 @@ def show_book_detail():
         # 編集ボタン（今後実装）
         st.subheader("⚙️ 操作")
         if st.button("編集する"):
-            st.info("編集機能は今後実装予定です")
+            go_to_edit_book()
+            st.rerun()
         
         if st.button("削除する", type="secondary"):
-            st.warning("削除機能は今後実装予定です")
+            if st.session_state.get("confirm_delete", False):
+                try:
+                    # 削除機能の実装（今後）
+                    st.success("削除機能は今後実装予定です")
+                    st.session_state.confirm_delete = False
+                except Exception as e:
+                    st.error(f"削除に失敗しました: {str(e)}")
+            else:
+                st.session_state.confirm_delete = True
+                st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
+                st.rerun()
+
+def show_add_book():
+    """新規漫画登録画面"""
+    st.header("➕ 新しい漫画を登録")
+    
+    # 戻るボタン
+    if st.button("← ホームに戻る"):
+        go_to_home()
+        st.rerun()
+    
+    with st.form("add_book_form"):
+        st.subheader("📝 基本情報")
+        
+        # 必須項目
+        title = st.text_input("漫画タイトル *", placeholder="例: 進撃の巨人")
+        magazine_type = st.selectbox("連載誌タイプ *", ["週刊", "月刊", "隔月", "不定期", "完結"])
+        magazine_name = st.text_input("連載誌名", placeholder="例: 週刊少年マガジン")
+        
+        # 巻数情報
+        col1, col2 = st.columns(2)
+        with col1:
+            latest_owned_volume = st.number_input("現在所持巻数 *", min_value=0, value=1)
+        with col2:
+            latest_released_volume = st.number_input("発売済み最新巻 *", min_value=0, value=1)
+        
+        # その他情報
+        image_url = st.text_input("画像URL", placeholder="https://example.com/image.jpg")
+        synopsis = st.text_area("あらすじ", placeholder="漫画のあらすじを入力...")
+        
+        # 完結情報
+        is_completed = st.checkbox("完結済み")
+        
+        # 日付情報
+        col3, col4 = st.columns(2)
+        with col3:
+            latest_release_date = st.date_input("最新巻発売日")
+        with col4:
+            next_release_date = st.date_input("次巻発売予定日")
+        
+        # 詳細情報
+        st.subheader("📚 詳細情報")
+        missing_volumes = st.text_input("未所持巻（抜け）", placeholder="例: 3,5,10")
+        special_volumes = st.text_input("特殊巻", placeholder="例: 0.5,10.5")
+        owned_media = st.selectbox("所持媒体", ["単行本", "電子書籍", "両方"])
+        notes = st.text_area("備考", placeholder="その他メモ...")
+        
+        # 登録ボタン
+        submitted = st.form_submit_button("📚 漫画を登録", type="primary")
+        
+        if submitted:
+            if not title or not magazine_type:
+                st.error("❌ タイトルと連載誌タイプは必須項目です")
+            else:
+                try:
+                    # Notionページのプロパティ構築
+                    properties = {
+                        "title": {"title": [{"text": {"content": title}}]},
+                        "magazine_type": {"rich_text": [{"text": {"content": magazine_type}}]},
+                        "magazine_name": {"rich_text": [{"text": {"content": magazine_name or ""}}]},
+                        "latest_owned_volume": {"number": latest_owned_volume},
+                        "latest_released_volume": {"number": latest_released_volume},
+                        "is_completed": {"checkbox": is_completed}
+                    }
+                    
+                    # オプション項目の追加
+                    if image_url:
+                        properties["image_url"] = {"url": image_url}
+                    if synopsis:
+                        properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
+                    if latest_release_date:
+                        properties["latest_release_date"] = {"date": {"start": latest_release_date.isoformat()}}
+                    if next_release_date:
+                        properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
+                    if missing_volumes:
+                        properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
+                    if special_volumes:
+                        properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
+                    if owned_media:
+                        properties["owned_media"] = {"rich_text": [{"text": {"content": owned_media}}]}
+                    if notes:
+                        properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
+                    
+                    with st.spinner("登録中..."):
+                        create_notion_page(BOOKS_DATABASE_ID, properties, NOTION_API_KEY)
+                    
+                    st.success("✅ 漫画が正常に登録されました！")
+                    st.balloons()
+                    
+                    # 少し待ってからホームに戻る
+                    import time
+                    time.sleep(2)
+                    go_to_home()
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"❌ 登録に失敗しました: {str(e)}")
+
+def show_edit_book():
+    """漫画編集画面"""
+    st.header("✏️ 漫画情報を編集")
+    
+    # 戻るボタン
+    if st.button("← 詳細に戻る"):
+        st.session_state.page = "book_detail"
+        st.rerun()
+    
+    if st.session_state.selected_book is None:
+        st.error("編集する漫画が選択されていません")
+        return
+    
+    book = st.session_state.selected_book
+    
+    st.info("📝 編集機能は今後実装予定です")
+    st.write(f"選択中の漫画: **{book['title']}**")
 
 if __name__ == "__main__":
     main()
