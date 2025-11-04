@@ -22,8 +22,53 @@ st.set_page_config(
 # =========================
 # Notion 設定
 # =========================
-NOTION_API_KEY = st.secrets["notion"]["api_key"]
-BOOKS_DATABASE_ID = st.secrets["notion"]["database_id"]
+try:
+    NOTION_API_KEY = st.secrets["notion"]["api_key"]
+    BOOKS_DATABASE_ID = st.secrets["notion"]["database_id"]
+    
+    # プレースホルダーチェック
+    if NOTION_API_KEY == "your_notion_api_key_here" or BOOKS_DATABASE_ID == "your_books_database_id_here":
+        st.error("🔧 **Notion設定が必要です**")
+        st.markdown("""
+        ### 📋 設定手順
+        
+        1. **Notionでデータベースを作成**
+           - 新しいページでデータベースを作成
+           - 必要なプロパティを追加（title, latest_owned_volume, latest_released_volume, latest_release_date, is_completed など）
+        
+        2. **Notion APIキーを取得**
+           - [Notion Developers](https://developers.notion.com/) にアクセス
+           - 新しいインテグレーションを作成
+           - APIキーをコピー
+        
+        3. **データベースIDを取得**
+           - データベースのURLから32文字のIDをコピー
+           - 例: `https://notion.so/your-workspace/DATABASE_ID?v=...`
+        
+        4. **設定ファイルを更新**
+           - `.streamlit/secrets.toml` ファイルを編集
+           - `api_key` と `database_id` を実際の値に置き換え
+        
+        5. **データベースにアクセス権限を付与**
+           - データベースで「共有」をクリック
+           - 作成したインテグレーションを招待
+        """)
+        st.stop()
+        
+except Exception as e:
+    st.error(f"🔧 **Notion設定エラー**: {str(e)}")
+    st.markdown("""
+    ### 📋 secrets.toml ファイルを確認してください
+    
+    `.streamlit/secrets.toml` ファイルに以下の形式で設定が必要です：
+    
+    ```toml
+    [notion]
+    api_key = "secret_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    ```
+    """)
+    st.stop()
 
 # =========================
 # Cloudinary 設定
@@ -151,8 +196,28 @@ def show_books_home():
             st.info("💡 まだ漫画が登録されていません。「新しい漫画を登録」ボタンから追加してください。")
         
     except Exception as e:
-        st.warning(f"⚠️ NotionDBに接続できませんでした: {str(e)}")
-        st.info("📋 ダミーデータを表示しています。実際の使用時はNotionの設定を確認してください。")
+        error_message = str(e)
+        if "401" in error_message or "Unauthorized" in error_message:
+            st.error("🔐 **認証エラー**: Notion APIキーまたはデータベースIDが正しくありません")
+            st.markdown("""
+            ### 🔧 解決方法
+            1. **APIキーを確認**: `.streamlit/secrets.toml` の `api_key` が正しいか確認
+            2. **データベースIDを確認**: `database_id` が32文字の正しいIDか確認
+            3. **アクセス権限を確認**: データベースにインテグレーションが招待されているか確認
+            
+            ### 📝 設定例
+            ```toml
+            [notion]
+            api_key = "secret_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            ```
+            """)
+        elif "403" in error_message or "Forbidden" in error_message:
+            st.error("🚫 **アクセス権限エラー**: データベースへのアクセスが拒否されました")
+            st.info("💡 Notionデータベースで「共有」→ インテグレーションを招待してください")
+        else:
+            st.warning(f"⚠️ NotionDBに接続できませんでした: {error_message}")
+            st.info("📋 設定を確認するか、ダミーデータで動作をテストしてください。")
         
         # エラー時はダミーデータを表示
         books = [
