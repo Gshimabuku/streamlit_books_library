@@ -1,6 +1,5 @@
 import streamlit as st
-import query_notion
-import create_notion_page
+import requests
 import cloudinary
 import cloudinary.uploader
 import datetime
@@ -10,6 +9,33 @@ import datetime
 # =========================
 NOTION_API_KEY = st.secrets["notion"]["api_key"]
 DATABASE_ID = st.secrets["notion"]["database_id"]
+HEADERS = {
+    "Authorization": f"Bearer {NOTION_API_KEY}",
+    "Content-Type": "application/json",
+    "Notion-Version": "2022-06-28"
+}
+
+def query_notion(db_id, filter=None, page_size=100, sorts=None):
+    """Notionデータベースをクエリする"""
+    url = f"https://api.notion.com/v1/databases/{db_id}/query"
+    payload = {}
+    if filter:
+        payload["filter"] = filter
+    if page_size:
+        payload["page_size"] = page_size
+    if sorts:
+        payload["sorts"] = sorts
+    res = requests.post(url, headers=HEADERS, json=payload)
+    res.raise_for_status()
+    return res.json().get("results", [])
+
+def create_notion_page(db_id, properties):
+    """Notionページを作成する"""
+    url = "https://api.notion.com/v1/pages"
+    payload = {"parent": {"database_id": db_id}, "properties": properties}
+    res = requests.post(url, headers=HEADERS, json=payload)
+    res.raise_for_status()
+    return res.json()
 
 # =========================
 # Cloudinary 設定
@@ -45,7 +71,7 @@ if uploaded_file is not None:
                     "ImageURL": {"url": image_url},
                     "UploadedAt": {"date": {"start": datetime.datetime.now().isoformat()}}
                 }
-                create_notion_page(NOTION_API_KEY, DATABASE_ID, page_data)
+                create_notion_page(DATABASE_ID, page_data)
 
             st.success("✅ アップロード完了！NotionにURLを保存しました。")
             st.markdown(f"📎 [Cloudinaryで開く]({image_url})")
@@ -53,7 +79,6 @@ if uploaded_file is not None:
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")
             st.info("Cloudinary設定とNotion設定を確認してください。")
-        st.markdown(f"📎 [Cloudinaryで開く]({image_url})")
 
 # =========================
 # 画像一覧（オプション）
@@ -67,11 +92,11 @@ if st.button("📖 Notionに登録された画像一覧を表示"):
                 "direction": "descending"
             }
         ]
-        results = query_notion(NOTION_API_KEY, DATABASE_ID, sorts=sorts)
+        results = query_notion(DATABASE_ID, sorts=sorts)
         st.subheader("登録済み画像一覧")
         
-        if results.get("results"):
-            for page in results["results"]:
+        if results:
+            for page in results:
                 # プロパティの存在確認とエラーハンドリング
                 try:
                     name_prop = page["properties"].get("Name", {})
