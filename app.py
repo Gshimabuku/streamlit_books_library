@@ -404,6 +404,8 @@ def show_add_book():
         latest_release_date = st.date_input(
             "最新巻発売日 *",
             value=datetime.date.today(),
+            min_value=datetime.date(1960, 1, 1),
+            max_value=datetime.date(2100, 12, 31),
             help="最新巻の発売日を設定します（必須項目）"
         )
         
@@ -412,6 +414,8 @@ def show_add_book():
         next_release_date = st.date_input(
             "次巻発売予定日",
             value=datetime.date.today() + datetime.timedelta(days=90),
+            min_value=datetime.date(1960, 1, 1),
+            max_value=datetime.date(2100, 12, 31),
             help="上のチェックボックスをオンにした場合のみ登録されます"
         )
         
