@@ -95,7 +95,10 @@ def show_books_home():
                         title = props["title"]["title"][0]["text"]["content"]
                     
                     # 画像URL取得
-                    image_url = props.get("image_url", {}).get("url", "https://via.placeholder.com/200x300/CCCCCC/FFFFFF?text=No+Image")
+                    image_url = props.get("image_url", {}).get("url")
+                    # 無効なURLの場合はNoneに設定
+                    if not image_url or not image_url.startswith(('http://', 'https://')):
+                        image_url = None
                     
                     # 巻数情報取得
                     latest_owned_volume = props.get("latest_owned_volume", {}).get("number", 0)
@@ -132,7 +135,7 @@ def show_books_home():
             {
                 "id": "book1",
                 "title": "進撃の巨人",
-                "image_url": "https://via.placeholder.com/200x300/FF6B6B/FFFFFF?text=進撃の巨人",
+                "image_url": None,  # 安全な画像URLに変更
                 "latest_owned_volume": 32,
                 "latest_released_volume": 34,
                 "is_completed": True
@@ -140,7 +143,7 @@ def show_books_home():
             {
                 "id": "book2", 
                 "title": "鬼滅の刃",
-                "image_url": "https://via.placeholder.com/200x300/4ECDC4/FFFFFF?text=鬼滅の刃",
+                "image_url": None,  # 安全な画像URLに変更
                 "latest_owned_volume": 20,
                 "latest_released_volume": 23,
                 "is_completed": True
@@ -148,7 +151,7 @@ def show_books_home():
             {
                 "id": "book3",
                 "title": "ワンピース",
-                "image_url": "https://via.placeholder.com/200x300/45B7D1/FFFFFF?text=ワンピース",
+                "image_url": None,  # 安全な画像URLに変更
                 "latest_owned_volume": 105,
                 "latest_released_volume": 108,
                 "is_completed": False
@@ -164,8 +167,44 @@ def show_books_home():
             col = cols[i % 3]
             
             with col:
-                # 本の画像
-                st.image(book["image_url"], use_container_width=True)
+                # 本の画像（エラーハンドリング付き）
+                try:
+                    if book["image_url"] and book["image_url"] != "":
+                        st.image(book["image_url"], use_container_width=True)
+                    else:
+                        # 画像がない場合はテキストで代替
+                        st.markdown(f"""
+                        <div style="
+                            width: 100%; 
+                            height: 300px; 
+                            background-color: #f0f0f0; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            border-radius: 8px;
+                            color: #666;
+                            font-size: 14px;
+                        ">
+                            📚 画像なし
+                        </div>
+                        """, unsafe_allow_html=True)
+                except Exception as e:
+                    # 画像読み込みエラー時の代替表示
+                    st.markdown(f"""
+                    <div style="
+                        width: 100%; 
+                        height: 300px; 
+                        background-color: #f8f8f8; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        border-radius: 8px;
+                        color: #999;
+                        font-size: 12px;
+                    ">
+                        ⚠️ 画像読み込みエラー
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 # タイトル
                 st.subheader(book["title"])
@@ -205,7 +244,42 @@ def show_book_detail():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        st.image(book["image_url"], width=300)
+        # 画像表示（エラーハンドリング付き）
+        try:
+            if book["image_url"] and book["image_url"] != "":
+                st.image(book["image_url"], width=300)
+            else:
+                st.markdown(f"""
+                <div style="
+                    width: 300px; 
+                    height: 400px; 
+                    background-color: #f0f0f0; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    border-radius: 8px;
+                    color: #666;
+                    font-size: 16px;
+                ">
+                    📚 画像なし
+                </div>
+                """, unsafe_allow_html=True)
+        except Exception as e:
+            st.markdown(f"""
+            <div style="
+                width: 300px; 
+                height: 400px; 
+                background-color: #f8f8f8; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                border-radius: 8px;
+                color: #999;
+                font-size: 14px;
+            ">
+                ⚠️ 画像読み込みエラー
+            </div>
+            """, unsafe_allow_html=True)
     
     with col2:
         st.subheader("📊 所持情報")
