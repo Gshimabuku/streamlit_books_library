@@ -444,40 +444,22 @@ def show_add_book():
                     elif upload_method == "URLを直接入力" and image_url:
                         final_image_url = image_url
                     
-                    # Notionページのプロパティ構築（より安全な方法）
-                    properties = {}
-                    
-                    # 必須プロパティ（タイトル）
-                    properties["title"] = {"title": [{"text": {"content": title}}]}
-                    
-                    # 基本プロパティ（存在チェック付き）
-                    if magazine_type:
-                        properties["magazine_type"] = {"rich_text": [{"text": {"content": magazine_type}}]}
-                    
-                    if magazine_name:
-                        properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
-                    
-                    # 数値プロパティ
-                    properties["latest_owned_volume"] = {"number": latest_owned_volume}
-                    properties["latest_released_volume"] = {"number": latest_released_volume}
-                    
-                    # チェックボックス
-                    properties["is_completed"] = {"checkbox": is_completed}
-                    
-                    # 画像URLを追加（存在する場合のみ）
-                    if final_image_url:
-                        properties["image_url"] = {"url": final_image_url}
-                    
-                    # オプション項目の追加（値がある場合のみ）
-                    if synopsis:
-                        properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
-                    
-                    # 最新巻発売日（必須）
-                    properties["latest_release_date"] = {"date": {"start": latest_release_date.isoformat()}}
+                    # Notionページのプロパティ構築（確実に動作する項目のみ）
+                    # 保存確認済み項目：title, latest_owned_volume, latest_released_volume, latest_release_date, is_completed
+                    properties = {
+                        "title": {"title": [{"text": {"content": title}}]},
+                        "latest_owned_volume": {"number": latest_owned_volume},
+                        "latest_released_volume": {"number": latest_released_volume},
+                        "latest_release_date": {"date": {"start": latest_release_date.isoformat()}},
+                        "is_completed": {"checkbox": is_completed}
+                    }
                     
                     # 次巻発売予定日（チェックボックスの状態に基づいて）
                     if use_next_release_date and next_release_date:
                         properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
+                    
+                    # その他のプロパティは段階的にテスト
+                    # 必要に応じて後で追加
                     
                     if missing_volumes:
                         properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
@@ -511,11 +493,10 @@ def show_add_book():
                         if final_image_url:
                             st.markdown(f"🔗 [画像を開く]({final_image_url})")
                         
-                        # 少し待ってからホームに戻る
-                        import time
-                        time.sleep(2)
-                        go_to_home()
-                        st.rerun()
+                        # 手動で戻るボタンを表示
+                        if st.button("📚 ホームに戻る", type="primary", key="success_home"):
+                            go_to_home()
+                            st.rerun()
                         
                     except Exception as full_error:
                         st.error(f"❌ 通常の登録に失敗しました: {str(full_error)}")
@@ -541,11 +522,10 @@ def show_add_book():
                             st.success("✅ 最小限のプロパティで登録成功！")
                             st.info("💡 一部のプロパティがNotionデータベースのスキーマと一致していない可能性があります。")
                             
-                            # 少し待ってからホームに戻る
-                            import time
-                            time.sleep(2)
-                            go_to_home()
-                            st.rerun()
+                            # 手動で戻るボタンを表示
+                            if st.button("📚 ホームに戻る", type="primary", key="minimal_success_home"):
+                                go_to_home()
+                                st.rerun()
                             
                         except Exception as minimal_error:
                             st.error(f"❌ 最小限のプロパティでも登録失敗: {str(minimal_error)}")
