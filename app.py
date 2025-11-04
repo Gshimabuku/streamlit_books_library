@@ -448,7 +448,7 @@ def show_add_book():
                     elif upload_method == "URLを直接入力" and image_url:
                         final_image_url = image_url
                     
-                    # Notionページのプロパティ構築（確実に動作する項目のみ）
+                    # Notionページのプロパティ構築（段階的に拡張）
                     # 保存確認済み項目：title, latest_owned_volume, latest_released_volume, latest_release_date, is_completed
                     properties = {
                         "title": {"title": [{"text": {"content": title}}]},
@@ -462,8 +462,32 @@ def show_add_book():
                     if use_next_release_date and next_release_date:
                         properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
                     
-                    # その他のプロパティは段階的にテスト
-                    # 必要に応じて後で追加
+                    # 追加プロパティ（段階的に実装）
+                    # テキスト系プロパティ
+                    if magazine_type:
+                        properties["magazine_type"] = {"rich_text": [{"text": {"content": magazine_type}}]}
+                    
+                    if magazine_name:
+                        properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
+                    
+                    if synopsis:
+                        properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
+                    
+                    if missing_volumes:
+                        properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
+                    
+                    if special_volumes:
+                        properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
+                    
+                    if owned_media:
+                        properties["owned_media"] = {"rich_text": [{"text": {"content": owned_media}}]}
+                    
+                    if notes:
+                        properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
+                    
+                    # 画像URL（存在する場合のみ）
+                    if final_image_url:
+                        properties["image_url"] = {"url": final_image_url}
                     
                     if missing_volumes:
                         properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
@@ -501,52 +525,93 @@ def show_add_book():
                         st.session_state.registration_success = True
                         
                     except Exception as full_error:
-                        st.error(f"❌ 通常の登録に失敗しました: {str(full_error)}")
+                        st.error(f"❌ 全プロパティでの登録に失敗しました: {str(full_error)}")
                         
-                        # 最小限のプロパティで再試行
-                        st.warning("🔄 最小限のプロパティで再試行します...")
+                        # 段階的再試行: まず基本プロパティ + 追加項目
+                        st.warning("🔄 基本プロパティ + 追加項目で再試行します...")
                         
-                        minimal_properties = {
+                        basic_plus_properties = {
                             "title": {"title": [{"text": {"content": title}}]},
                             "latest_owned_volume": {"number": latest_owned_volume},
                             "latest_released_volume": {"number": latest_released_volume},
-                            "is_completed": {"checkbox": is_completed},
-                            "latest_release_date": {"date": {"start": latest_release_date.isoformat()}}
+                            "latest_release_date": {"date": {"start": latest_release_date.isoformat()}},
+                            "is_completed": {"checkbox": is_completed}
                         }
                         
-                        with st.expander("🔍 最小限プロパティ"):
-                            st.json(minimal_properties)
+                        # 次巻発売予定日を追加
+                        if use_next_release_date and next_release_date:
+                            basic_plus_properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
+                        
+                        # テキスト系プロパティを段階的に追加
+                        if magazine_type:
+                            basic_plus_properties["magazine_type"] = {"rich_text": [{"text": {"content": magazine_type}}]}
+                        if magazine_name:
+                            basic_plus_properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
+                        
+                        with st.expander("🔍 基本プロパティ + 追加項目"):
+                            st.json(basic_plus_properties)
                         
                         try:
-                            with st.spinner("最小限のプロパティで登録中..."):
-                                result = create_notion_page(BOOKS_DATABASE_ID, minimal_properties, NOTION_API_KEY)
+                            with st.spinner("基本プロパティ + 追加項目で登録中..."):
+                                result = create_notion_page(BOOKS_DATABASE_ID, basic_plus_properties, NOTION_API_KEY)
                             
-                            st.success("✅ 最小限のプロパティで登録成功！")
-                            st.info("💡 一部のプロパティがNotionデータベースのスキーマと一致していない可能性があります。")
+                            st.success("✅ 基本プロパティ + 追加項目で登録成功！")
+                            st.info("💡 一部のプロパティ（画像URL、詳細情報など）は保存されませんでした。")
                             
                             # セッション状態で登録成功をマーク
                             st.session_state.registration_success = True
                             
-                        except Exception as minimal_error:
-                            st.error(f"❌ 最小限のプロパティでも登録失敗: {str(minimal_error)}")
+                        except Exception as basic_plus_error:
+                            st.error(f"❌ 基本プロパティ + 追加項目でも失敗: {str(basic_plus_error)}")
                             
-                            # デバッグ用：エラー詳細を表示
-                            with st.expander("🔍 エラー詳細とデバッグ情報"):
-                                st.write("**フル送信しようとしたプロパティ:**")
-                                st.json(properties)
-                                st.write("**最小限プロパティ:**")
+                            # 最後の手段: 最小限のプロパティのみ
+                            st.warning("🔄 最小限のプロパティで最終再試行します...")
+                            
+                            minimal_properties = {
+                                "title": {"title": [{"text": {"content": title}}]},
+                                "latest_owned_volume": {"number": latest_owned_volume},
+                                "latest_released_volume": {"number": latest_released_volume},
+                                "is_completed": {"checkbox": is_completed},
+                                "latest_release_date": {"date": {"start": latest_release_date.isoformat()}}
+                            }
+                            
+                            with st.expander("🔍 最小限プロパティ"):
                                 st.json(minimal_properties)
-                                st.write("**フルエラーの詳細:**")
-                                st.code(str(full_error))
-                                st.write("**最小限エラーの詳細:**")
-                                st.code(str(minimal_error))
-                                st.write("**推奨対策:**")
-                                st.markdown("""
-                                1. Notionデータベースのプロパティ名を確認してください
-                                2. プロパティの型（rich_text、number、checkbox、url、date）が正しいか確認してください
-                                3. データベースIDが正しいか確認してください
-                                4. APIキーに適切な権限があるか確認してください
-                                """)
+                            
+                            try:
+                                with st.spinner("最小限のプロパティで登録中..."):
+                                    result = create_notion_page(BOOKS_DATABASE_ID, minimal_properties, NOTION_API_KEY)
+                                
+                                st.success("✅ 最小限のプロパティで登録成功！")
+                                st.info("💡 基本情報のみ保存されました。詳細情報は後で編集してください。")
+                                
+                                # セッション状態で登録成功をマーク
+                                st.session_state.registration_success = True
+                                
+                            except Exception as minimal_error:
+                                st.error(f"❌ 最小限のプロパティでも登録失敗: {str(minimal_error)}")
+                                
+                                # 完全な失敗時のデバッグ情報
+                                with st.expander("🔍 完全なエラー詳細とデバッグ情報"):
+                                    st.write("**全プロパティ:**")
+                                    st.json(properties)
+                                    st.write("**基本プロパティ + 追加項目:**")
+                                    st.json(basic_plus_properties)
+                                    st.write("**最小限プロパティ:**")
+                                    st.json(minimal_properties)
+                                    st.write("**全プロパティエラー:**")
+                                    st.code(str(full_error))
+                                    st.write("**基本プロパティ + 追加項目エラー:**")
+                                    st.code(str(basic_plus_error))
+                                    st.write("**最小限プロパティエラー:**")
+                                    st.code(str(minimal_error))
+                                    st.write("**推奨対策:**")
+                                    st.markdown("""
+                                    1. Notionデータベースのプロパティ名を確認してください
+                                    2. プロパティの型（rich_text、number、checkbox、url、date）が正しいか確認してください
+                                    3. データベースIDが正しいか確認してください
+                                    4. APIキーに適切な権限があるか確認してください
+                                    """)
                     
                 except Exception as e:
                     st.error(f"❌ 登録処理でエラーが発生しました: {str(e)}")
@@ -557,7 +622,6 @@ def show_add_book():
                         st.json(properties)
                         st.write("**エラーの詳細:**")
                         st.code(str(e))
-
     # フォーム外で登録成功状態をチェック
     if st.session_state.get("registration_success", False):
         st.success("🎉 登録が完了しました！")
