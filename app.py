@@ -497,10 +497,8 @@ def show_add_book():
                         if final_image_url:
                             st.markdown(f"🔗 [画像を開く]({final_image_url})")
                         
-                        # 手動で戻るボタンを表示
-                        if st.button("📚 ホームに戻る", type="primary", key="success_home"):
-                            go_to_home()
-                            st.rerun()
+                        # セッション状態で登録成功をマーク
+                        st.session_state.registration_success = True
                         
                     except Exception as full_error:
                         st.error(f"❌ 通常の登録に失敗しました: {str(full_error)}")
@@ -526,10 +524,8 @@ def show_add_book():
                             st.success("✅ 最小限のプロパティで登録成功！")
                             st.info("💡 一部のプロパティがNotionデータベースのスキーマと一致していない可能性があります。")
                             
-                            # 手動で戻るボタンを表示
-                            if st.button("📚 ホームに戻る", type="primary", key="minimal_success_home"):
-                                go_to_home()
-                                st.rerun()
+                            # セッション状態で登録成功をマーク
+                            st.session_state.registration_success = True
                             
                         except Exception as minimal_error:
                             st.error(f"❌ 最小限のプロパティでも登録失敗: {str(minimal_error)}")
@@ -561,6 +557,14 @@ def show_add_book():
                         st.json(properties)
                         st.write("**エラーの詳細:**")
                         st.code(str(e))
+
+    # フォーム外で登録成功状態をチェック
+    if st.session_state.get("registration_success", False):
+        st.success("🎉 登録が完了しました！")
+        if st.button("📚 ホームに戻る", type="primary"):
+            st.session_state.registration_success = False  # フラグをリセット
+            go_to_home()
+            st.rerun()
 
 def show_edit_book():
     """漫画編集画面"""
