@@ -412,8 +412,7 @@ def show_add_book():
         next_release_date = st.date_input(
             "次巻発売予定日",
             value=datetime.date.today() + datetime.timedelta(days=90),
-            help="次巻の発売予定日（チェックした場合のみ登録されます）",
-            disabled=not use_next_release_date
+            help="上のチェックボックスをオンにした場合のみ登録されます"
         )
         
         # 詳細情報
