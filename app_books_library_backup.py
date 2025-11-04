@@ -1,14 +1,8 @@
 import streamlit as st
 from utils.notion_client import query_notion, create_notion_page, update_notion_page, retrieve_notion_page
+import cloudinary
+import cloudinary.uploader
 import datetime
-
-# Cloudinaryのインポート（オプション）
-try:
-    import cloudinary
-    import cloudinary.uploader
-    CLOUDINARY_AVAILABLE = True
-except ImportError:
-    CLOUDINARY_AVAILABLE = False
 
 # =========================
 # アプリケーション設定
@@ -28,17 +22,14 @@ BOOKS_DATABASE_ID = st.secrets["notion"]["database_id"]
 # =========================
 # Cloudinary 設定
 # =========================
-if CLOUDINARY_AVAILABLE:
-    try:
-        cloudinary.config(
-            cloud_name=st.secrets["cloudinary"]["cloud_name"],
-            api_key=st.secrets["cloudinary"]["api_key"],
-            api_secret=st.secrets["cloudinary"]["api_secret"]
-        )
-        CLOUDINARY_ENABLED = True
-    except Exception:
-        CLOUDINARY_ENABLED = False
-else:
+try:
+    cloudinary.config(
+        cloud_name=st.secrets["cloudinary"]["cloud_name"],
+        api_key=st.secrets["cloudinary"]["api_key"],
+        api_secret=st.secrets["cloudinary"]["api_secret"]
+    )
+    CLOUDINARY_ENABLED = True
+except Exception:
     CLOUDINARY_ENABLED = False
 
 # =========================
@@ -355,43 +346,7 @@ def show_add_book():
             latest_released_volume = st.number_input("発売済み最新巻 *", min_value=0, value=1)
         
         # その他情報
-        st.subheader("📷 画像情報")
-        
-        # 画像アップロード方式選択
-        upload_method = st.radio(
-            "画像の追加方法を選択",
-            ["ファイルをアップロード", "URLを直接入力"],
-            horizontal=True
-        )
-        
-        image_url = None
-        
-        if upload_method == "ファイルをアップロード":
-            uploaded_file = st.file_uploader(
-                "画像ファイルを選択", 
-                type=["jpg", "jpeg", "png", "webp"],
-                help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます"
-            )
-            
-            if uploaded_file is not None:
-                # プレビュー表示
-                st.image(uploaded_file, caption="アップロード予定の画像", width=200)
-                
-                # Cloudinaryが利用可能かチェック
-                if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                    st.info("📤 登録時にCloudinaryにアップロードされます")
-                else:
-                    st.warning("⚠️ Cloudinary設定が見つかりません。画像URLは保存されません。")
-        
-        else:  # URLを直接入力
-            image_url = st.text_input("画像URL", placeholder="https://example.com/image.jpg")
-            
-            if image_url:
-                try:
-                    st.image(image_url, caption="URLの画像プレビュー", width=200)
-                except Exception:
-                    st.warning("⚠️ 画像URLが正しくないか、読み込めません")
-        
+        image_url = st.text_input("画像URL", placeholder="https://example.com/image.jpg")
         synopsis = st.text_area("あらすじ", placeholder="漫画のあらすじを入力...")
         
         # 完結情報
@@ -419,20 +374,6 @@ def show_add_book():
                 st.error("❌ タイトルと連載誌タイプは必須項目です")
             else:
                 try:
-                    # 画像アップロード処理
-                    final_image_url = None
-                    
-                    if upload_method == "ファイルをアップロード" and uploaded_file is not None:
-                        if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                            with st.spinner("画像をアップロード中..."):
-                                upload_result = cloudinary.uploader.upload(uploaded_file)
-                                final_image_url = upload_result["secure_url"]
-                                st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
-                        else:
-                            st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
-                    elif upload_method == "URLを直接入力" and image_url:
-                        final_image_url = image_url
-                    
                     # Notionページのプロパティ構築
                     properties = {
                         "title": {"title": [{"text": {"content": title}}]},
@@ -443,11 +384,9 @@ def show_add_book():
                         "is_completed": {"checkbox": is_completed}
                     }
                     
-                    # 画像URLを追加（存在する場合）
-                    if final_image_url:
-                        properties["image_url"] = {"url": final_image_url}
-                    
                     # オプション項目の追加
+                    if image_url:
+                        properties["image_url"] = {"url": image_url}
                     if synopsis:
                         properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
                     if latest_release_date:
@@ -463,15 +402,11 @@ def show_add_book():
                     if notes:
                         properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
                     
-                    with st.spinner("Notionに登録中..."):
+                    with st.spinner("登録中..."):
                         create_notion_page(BOOKS_DATABASE_ID, properties, NOTION_API_KEY)
                     
                     st.success("✅ 漫画が正常に登録されました！")
                     st.balloons()
-                    
-                    # 画像URLがある場合は表示
-                    if final_image_url:
-                        st.markdown(f"🔗 [画像を開く]({final_image_url})")
                     
                     # 少し待ってからホームに戻る
                     import time
