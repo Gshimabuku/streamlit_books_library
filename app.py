@@ -408,18 +408,22 @@ def show_add_book():
                 help="最新巻の発売日を設定します（必須項目）"
             )
         with col4:
-            # 次巻発売予定日をオプションにする
-            has_next_release_date = st.checkbox("次巻発売予定日を設定")
-            
-        # 次巻発売予定日の入力フィールド（チェックボックスの外に出す）
-        if has_next_release_date:
-            next_release_date = st.date_input(
+            # 次巻発売予定日の設定方法を選択
+            next_release_option = st.radio(
                 "次巻発売予定日",
-                value=datetime.date.today() + datetime.timedelta(days=90),
-                help="次巻の発売予定日を設定します"
+                ["未設定", "日付を設定"],
+                horizontal=True,
+                help="次巻の発売予定日を設定するかどうかを選択"
             )
-        else:
-            next_release_date = None
+            
+            if next_release_option == "日付を設定":
+                next_release_date = st.date_input(
+                    "次巻発売予定日を選択",
+                    value=datetime.date.today() + datetime.timedelta(days=90),
+                    help="次巻の発売予定日を設定します"
+                )
+            else:
+                next_release_date = None
         
         # 詳細情報
         st.subheader("📚 詳細情報")
