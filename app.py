@@ -195,55 +195,6 @@ def show_books_home():
     
     # 本の一覧表示（データがある場合のみ）
     if books:
-        # スマホ時の横並びレイアウト用CSS
-        st.markdown("""
-        <style>
-        .book-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .book-card {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: flex-start !important;
-                gap: 10px !important;
-            }
-            .mobile-book-image {
-                flex: 0 0 40% !important;
-                width: 40% !important;
-            }
-            .mobile-book-info {
-                flex: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: space-between !important;
-                min-height: 100% !important;
-            }
-            .detail-button-container {
-                margin-top: auto !important;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .book-card {
-                display: block !important;
-            }
-            .mobile-book-image, .mobile-book-info {
-                width: 100% !important;
-                flex: none !important;
-            }
-            .detail-button-container {
-                margin-top: 8px !important;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
         # レスポンシブ3列グリッド表示（スマホ対応）
         cols = st.columns(3, gap="small")
         
