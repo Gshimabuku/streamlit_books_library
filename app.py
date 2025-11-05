@@ -195,6 +195,36 @@ def show_books_home():
     
     # 本の一覧表示（データがある場合のみ）
     if books:
+        # スマホ時の横並びレイアウト用CSS（グローバルスコープ）
+        st.markdown("""
+        <style>
+        .mobile-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-layout {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+            }
+            .mobile-image {
+                flex: 0 0 40% !important;
+                width: 40% !important;
+            }
+            .mobile-info {
+                flex: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+            }
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         # レスポンシブ3列グリッド表示（スマホ対応）
         cols = st.columns(3, gap="small")
         
@@ -217,36 +247,6 @@ def show_books_home():
                 
                 # 本のカード全体をStreamlitコンテナで作成
                 with st.container(border=True):
-                    # スマホ時の横並びレイアウト用CSS（コンテナ内に配置）
-                    st.markdown("""
-                    <style>
-                    .mobile-layout {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 10px;
-                    }
-                    
-                    @media (max-width: 768px) {
-                        .mobile-layout {
-                            display: flex !important;
-                            flex-direction: row !important;
-                            align-items: flex-start !important;
-                            gap: 10px !important;
-                        }
-                        .mobile-image {
-                            flex: 0 0 40% !important;
-                            width: 40% !important;
-                        }
-                        .mobile-info {
-                            flex: 1 !important;
-                            display: flex !important;
-                            flex-direction: column !important;
-                            justify-content: space-between !important;
-                        }
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
-                    
                     # モバイル対応レイアウト
                     st.markdown('<div class="mobile-layout">', unsafe_allow_html=True)
                     
