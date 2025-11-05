@@ -258,7 +258,35 @@ def show_books_home():
             with col:
                 # コンテナで全体をラップ
                 with st.container(border=True):
-                    # 本の画像（レスポンシブ対応）
+                    # スマホ時の横並びレイアウト用CSS
+                    st.markdown("""
+                    <style>
+                    @media (max-width: 768px) {
+                        .mobile-book-layout {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            align-items: flex-start !important;
+                            gap: 10px !important;
+                        }
+                        .mobile-book-image {
+                            flex: 0 0 40% !important;
+                            width: 40% !important;
+                        }
+                        .mobile-book-info {
+                            flex: 1 !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            justify-content: space-between !important;
+                        }
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    
+                    # モバイル対応の横並びレイアウト
+                    st.markdown('<div class="mobile-book-layout">', unsafe_allow_html=True)
+                    
+                    # 画像部分
+                    st.markdown('<div class="mobile-book-image">', unsafe_allow_html=True)
                     try:
                         if book["image_url"] and book["image_url"] != "":
                             st.image(book["image_url"], use_container_width=True)
@@ -302,6 +330,10 @@ def show_books_home():
                             ⚠️ 画像読み込みエラー
                         </div>
                         """, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # 情報部分
+                    st.markdown('<div class="mobile-book-info">', unsafe_allow_html=True)
                     
                     # タイトル（レスポンシブフォントサイズ）
                     st.markdown(f"""
@@ -334,6 +366,9 @@ def show_books_home():
                     if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
                         go_to_detail(book)
                         st.rerun()
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
 
 def show_book_detail():
     """詳細画面：選択された本の詳細情報表示"""
