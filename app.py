@@ -204,22 +204,44 @@ def show_books_home():
             gap: 10px;
         }
         
+        /* モバイル用の横並びレイアウト */
         @media (max-width: 768px) {
             .mobile-layout {
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: flex-start !important;
                 gap: 10px !important;
+                width: 100% !important;
             }
             .mobile-image {
                 flex: 0 0 40% !important;
                 width: 40% !important;
+                max-width: 40% !important;
             }
             .mobile-info {
                 flex: 1 !important;
+                width: 60% !important;
                 display: flex !important;
                 flex-direction: column !important;
-                justify-content: space-between !important;
+                justify-content: flex-start !important;
+                align-items: stretch !important;
+            }
+            /* Streamlitのカラムレイアウトを上書き */
+            div[data-testid="column"] {
+                width: 100% !important;
+            }
+        }
+        
+        /* デスクトップ用 */
+        @media (min-width: 769px) {
+            .mobile-layout {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            .mobile-image, .mobile-info {
+                width: 100% !important;
+                flex: none !important;
             }
         }
         </style>
@@ -247,8 +269,8 @@ def show_books_home():
                 
                 # 本のカード全体をStreamlitコンテナで作成
                 with st.container(border=True):
-                    # モバイル対応レイアウト
-                    st.markdown('<div class="mobile-layout">', unsafe_allow_html=True)
+                    # モバイル対応レイアウト（一意のIDを追加）
+                    st.markdown(f'<div class="mobile-layout" id="book-card-{book["id"]}">', unsafe_allow_html=True)
                     
                     # 画像部分
                     st.markdown('<div class="mobile-image">', unsafe_allow_html=True)
