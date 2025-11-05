@@ -195,110 +195,85 @@ def show_books_home():
     
     # 本の一覧表示（データがある場合のみ）
     if books:
-        # スマホ時の横並びレイアウト用CSS（グローバルスコープ）
+        # スマホ時の横並びレイアウト用CSS
         st.markdown("""
         <style>
-        /* 基本的なカードグリッドレイアウト */
-        .books-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
         .book-card {
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 15px;
+            padding: 10px;
+            margin-bottom: 10px;
             background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .mobile-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        /* モバイル用の横並びレイアウト */
         @media (max-width: 768px) {
-            .books-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            
-            .mobile-layout {
+            .book-card {
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: flex-start !important;
-                gap: 15px !important;
-                width: 100% !important;
+                gap: 10px !important;
             }
-            .mobile-image {
-                flex: 0 0 35% !important;
-                width: 35% !important;
-                max-width: 35% !important;
+            .mobile-book-image {
+                flex: 0 0 40% !important;
+                width: 40% !important;
             }
-            .mobile-info {
+            .mobile-book-info {
                 flex: 1 !important;
-                width: 65% !important;
                 display: flex !important;
                 flex-direction: column !important;
-                justify-content: flex-start !important;
-                align-items: stretch !important;
-                min-height: 100px !important;
+                justify-content: space-between !important;
+                min-height: 100% !important;
             }
-            .mobile-image img {
-                width: 100% !important;
-                height: auto !important;
-                aspect-ratio: 3/4 !important;
-                object-fit: cover !important;
-                border-radius: 8px !important;
+            .detail-button-container {
+                margin-top: auto !important;
             }
         }
         
-        /* デスクトップ用 */
         @media (min-width: 769px) {
-            .mobile-layout {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 10px !important;
+            .book-card {
+                display: block !important;
             }
-            .mobile-image, .mobile-info {
+            .mobile-book-image, .mobile-book-info {
                 width: 100% !important;
                 flex: none !important;
+            }
+            .detail-button-container {
+                margin-top: 8px !important;
             }
         }
         </style>
         """, unsafe_allow_html=True)
         
-        # HTMLでカードを直接作成
-        books_html = '<div class="books-grid">'
+        # レスポンシブ3列グリッド表示（スマホ対応）
+        cols = st.columns(3, gap="small")
         
-        for book in books:
-            owned = book["latest_owned_volume"]
-            released = book["latest_released_volume"]
-            completion_status = "完結" if book["is_completed"] else "連載中"
+        for i, book in enumerate(books):
+            col = cols[i % 3]
             
-            # 画像URLを準備
-            try:
-                if book["image_url"] and book["image_url"] != "":
-                    image_url = book["image_url"]
-                else:
-                    image_url = "https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg"
-            except:
-                image_url = "https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg"
-            
-            books_html += f'''
-            <div class="book-card">
-                <div class="mobile-layout" id="book-card-{book["id"]}">
-                    <div class="mobile-image">
-                        <img src="{image_url}" alt="{book["title"]}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;">
+            with col:
+                owned = book["latest_owned_volume"]
+                released = book["latest_released_volume"]
+                completion_status = "完結" if book["is_completed"] else "連載中"
+                
+                # 画像HTMLを準備
+                try:
+                    if book["image_url"] and book["image_url"] != "":
+                        image_html = f'<img src="{book["image_url"]}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="{book["title"]}">'
+                    else:
+                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像なし">'
+                except:
+                    image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像読み込みエラー">'
+                
+                # 本のカード全体をHTMLで作成
+                st.markdown(f"""
+                <div class="book-card">
+                    <div class="mobile-book-image">
+                        {image_html}
                     </div>
-                    <div class="mobile-info">
+                    <div class="mobile-book-info">
                         <h3 style="
                             font-size: clamp(16px, 4vw, 24px);
-                            margin: 8px 0 4px 0;
+                            margin: 8px 0 8px 0;
                             line-height: 1.2;
                             text-align: center;
                             overflow-wrap: break-word;
@@ -307,31 +282,20 @@ def show_books_home():
                         <div style="
                             font-size: clamp(11px, 3vw, 16px);
                             text-align: center;
-                            margin: 4px 0 8px 0;
+                            margin: 8px 0 12px 0;
                         ">
                             📖 {owned}/{released}巻<br>
                             📊 {completion_status}
                         </div>
+                        <div class="detail-button-container">
+                            <!-- ボタンはStreamlitコンポーネントで配置 -->
+                        </div>
                     </div>
                 </div>
-            </div>
-            '''
-        
-        books_html += '</div>'
-        
-        # HTMLを表示
-        st.markdown(books_html, unsafe_allow_html=True)
-        
-        # 詳細ボタンは別途Streamlitで作成
-        st.write("") # スペース
-        cols = st.columns(len(books) if len(books) <= 3 else 3, gap="small")
-        
-        for i, book in enumerate(books):
-            col_index = i % (len(books) if len(books) <= 3 else 3)
-            with cols[col_index]:
-                if st.button(f"📖 {book['title'][:10]}{'...' if len(book['title']) > 10 else ''}", 
-                           key=f"detail_{book['id']}", 
-                           use_container_width=True):
+                """, unsafe_allow_html=True)
+                
+                # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
+                if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
                     go_to_detail(book)
                     st.rerun()
 
