@@ -276,6 +276,10 @@ def show_books_home():
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: space-between !important;
+                min-height: 100% !important;
+            }
+            .detail-button-container {
+                margin-top: auto !important;
             }
         }
         
@@ -286,6 +290,9 @@ def show_books_home():
             .mobile-book-image, .mobile-book-info {
                 width: 100% !important;
                 flex: none !important;
+            }
+            .detail-button-container {
+                margin-top: 8px !important;
             }
         }
         </style>
@@ -349,25 +356,29 @@ def show_books_home():
                     </div>
                     <div class="mobile-book-info">
                         <h3 style="
-                            font-size: clamp(12px, 3vw, 18px);
-                            margin: 8px 0 4px 0;
+                            font-size: clamp(16px, 4vw, 24px);
+                            margin: 8px 0 8px 0;
                             line-height: 1.2;
                             text-align: center;
                             overflow-wrap: break-word;
+                            font-weight: bold;
                         ">{book["title"]}</h3>
                         <div style="
-                            font-size: clamp(10px, 2.5vw, 14px);
+                            font-size: clamp(11px, 3vw, 16px);
                             text-align: center;
-                            margin: 4px 0;
+                            margin: 8px 0 12px 0;
                         ">
                             📖 {owned}/{released}巻<br>
                             📊 {completion_status}
+                        </div>
+                        <div class="detail-button-container">
+                            <!-- ボタンはStreamlitコンポーネントで配置 -->
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # 詳細ボタンはStreamlitコンポーネントとして配置
+                # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
                 if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
                     go_to_detail(book)
                     st.rerun()
