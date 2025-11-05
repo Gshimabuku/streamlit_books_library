@@ -312,7 +312,7 @@ def show_books_home():
                 # 画像HTMLを準備
                 try:
                     if book["image_url"] and book["image_url"] != "":
-                        image_html = f'''
+                        image_html = f"""
                         <div style="
                             width: 100%; 
                             aspect-ratio: 3/4;
@@ -332,7 +332,7 @@ def show_books_home():
                                 border-radius: 8px;
                             " alt="{book["title"]}">
                         </div>
-                        '''
+                        """
                     else:
                         image_html = """
                         <div style="
