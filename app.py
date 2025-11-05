@@ -312,7 +312,7 @@ def show_books_home():
                 # 画像HTMLを準備
                 try:
                     if book["image_url"] and book["image_url"] != "":
-                        image_html = f"""
+                        image_html = """
                         <div style="
                             width: 100%; 
                             aspect-ratio: 3/4;
@@ -325,14 +325,14 @@ def show_books_home():
                             border: 1px solid #e0e0e0;
                             overflow: hidden;
                         ">
-                            <img src="{book["image_url"]}" style="
+                            <img src="{}" style="
                                 max-width: 100%; 
                                 max-height: 100%; 
                                 object-fit: contain; 
                                 border-radius: 8px;
-                            " alt="{book["title"]}">
+                            " alt="{}">
                         </div>
-                        """
+                        """.format(book["image_url"], book["title"])
                     else:
                         image_html = """
                         <div style="
