@@ -260,39 +260,9 @@ def show_books_home():
                     if book["image_url"] and book["image_url"] != "":
                         image_html = f'<img src="{book["image_url"]}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="{book["title"]}">'
                     else:
-                        image_html = """
-                        <div style="
-                            width: 100%; 
-                            aspect-ratio: 3/4;
-                            min-height: 120px;
-                            background-color: #f0f0f0; 
-                            display: flex; 
-                            align-items: center; 
-                            justify-content: center; 
-                            border-radius: 8px;
-                            color: #666;
-                            font-size: 14px;
-                        ">
-                            📚 画像なし
-                        </div>
-                        """
+                        image_html = '<img src="/image/noimage.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像なし">'
                 except:
-                    image_html = """
-                    <div style="
-                        width: 100%; 
-                        aspect-ratio: 3/4;
-                        min-height: 120px;
-                        background-color: #f8f8f8; 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center; 
-                        border-radius: 8px;
-                        color: #999;
-                        font-size: 12px;
-                    ">
-                        ⚠️ 画像読み込みエラー
-                    </div>
-                    """
+                    image_html = '<img src="/image/noimage.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像読み込みエラー">'
                 
                 # 本のカード全体をHTMLで作成
                 st.markdown(f"""
@@ -356,37 +326,9 @@ def show_book_detail():
             if book["image_url"] and book["image_url"] != "":
                 st.image(book["image_url"], width=300)
             else:
-                st.markdown(f"""
-                <div style="
-                    width: 300px; 
-                    height: 400px; 
-                    background-color: #f0f0f0; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
-                    border-radius: 8px;
-                    color: #666;
-                    font-size: 16px;
-                ">
-                    📚 画像なし
-                </div>
-                """, unsafe_allow_html=True)
+                st.image("/image/noimage.jpg", width=300)
         except Exception as e:
-            st.markdown(f"""
-            <div style="
-                width: 300px; 
-                height: 400px; 
-                background-color: #f8f8f8; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                border-radius: 8px;
-                color: #999;
-                font-size: 14px;
-            ">
-                ⚠️ 画像読み込みエラー
-            </div>
-            """, unsafe_allow_html=True)
+            st.image("/image/noimage.jpg", width=300)
     
     with col2:
         st.subheader("📊 所持情報")
