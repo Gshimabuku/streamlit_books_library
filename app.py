@@ -249,55 +249,6 @@ def show_books_home():
     
     # 本の一覧表示（データがある場合のみ）
     if books:
-        # スマホ時の横並びレイアウト用CSS
-        st.markdown("""
-        <style>
-        .book-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .book-card {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: flex-start !important;
-                gap: 10px !important;
-            }
-            .mobile-book-image {
-                flex: 0 0 40% !important;
-                width: 40% !important;
-            }
-            .mobile-book-info {
-                flex: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: space-between !important;
-                min-height: 100% !important;
-            }
-            .detail-button-container {
-                margin-top: auto !important;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .book-card {
-                display: block !important;
-            }
-            .mobile-book-image, .mobile-book-info {
-                width: 100% !important;
-                flex: none !important;
-            }
-            .detail-button-container {
-                margin-top: 8px !important;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
         # レスポンシブ3列グリッド表示（スマホ対応）
         cols = st.columns(3, gap="small")
         
@@ -305,103 +256,85 @@ def show_books_home():
             col = cols[i % 3]
             
             with col:
-                owned = book["latest_owned_volume"]
-                released = book["latest_released_volume"]
-                completion_status = "完結" if book["is_completed"] else "連載中"
-                
-                # 画像HTMLを準備
-                try:
-                    if book["image_url"] and book["image_url"] != "":
-                        image_html = """
-                        <div style="
-                            width: 100%; 
-                            aspect-ratio: 3/4;
-                            min-height: 120px;
-                            background-color: white; 
-                            display: flex; 
-                            align-items: center; 
-                            justify-content: center; 
-                            border-radius: 8px;
-                            border: 1px solid #e0e0e0;
-                            overflow: hidden;
-                        ">
-                            <img src="{}" style="
-                                max-width: 100%; 
-                                max-height: 100%; 
-                                object-fit: contain; 
+                # コンテナで全体をラップ
+                with st.container(border=True):
+                    # 本の画像（レスポンシブ対応）
+                    try:
+                        if book["image_url"] and book["image_url"] != "":
+                            st.image(book["image_url"], use_container_width=True)
+                        else:
+                            # 画像がない場合はテキストで代替（スマホ対応サイズ）
+                            st.markdown(f"""
+                            <div style="
+                                width: 100%; 
+                                aspect-ratio: 3/4;
+                                min-height: 120px;
+                                max-height: 200px;
+                                background-color: #f0f0f0; 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: center; 
                                 border-radius: 8px;
-                            " alt="{}">
-                        </div>
-                        """.format(book["image_url"], book["title"])
-                    else:
-                        image_html = """
+                                color: #666;
+                                font-size: clamp(10px, 2.5vw, 14px);
+                                margin-bottom: 8px;
+                            ">
+                                📚 画像なし
+                            </div>
+                            """, unsafe_allow_html=True)
+                    except Exception as e:
+                        # 画像読み込みエラー時の代替表示（スマホ対応）
+                        st.markdown(f"""
                         <div style="
                             width: 100%; 
                             aspect-ratio: 3/4;
                             min-height: 120px;
-                            background-color: #f0f0f0; 
+                            max-height: 200px;
+                            background-color: #f8f8f8; 
                             display: flex; 
                             align-items: center; 
                             justify-content: center; 
                             border-radius: 8px;
-                            color: #666;
-                            font-size: 14px;
+                            color: #999;
+                            font-size: clamp(8px, 2vw, 12px);
+                            margin-bottom: 8px;
                         ">
-                            📚 画像なし
+                            ⚠️ 画像読み込みエラー
                         </div>
-                        """
-                except:
-                    image_html = """
+                        """, unsafe_allow_html=True)
+                    
+                    # タイトル（レスポンシブフォントサイズ）
+                    st.markdown(f"""
+                    <h3 style="
+                        font-size: clamp(16px, 4vw, 24px);
+                        margin: 8px 0 4px 0;
+                        line-height: 1.2;
+                        text-align: center;
+                        overflow-wrap: break-word;
+                        font-weight: bold;
+                    ">{book["title"]}</h3>
+                    """, unsafe_allow_html=True)
+                    
+                    # 所持状況（コンパクト表示）
+                    owned = book["latest_owned_volume"]
+                    released = book["latest_released_volume"]
+                    completion_status = "完結" if book["is_completed"] else "連載中"
+                    
+                    st.markdown(f"""
                     <div style="
-                        width: 100%; 
-                        aspect-ratio: 3/4;
-                        min-height: 120px;
-                        background-color: #f8f8f8; 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center; 
-                        border-radius: 8px;
-                        color: #999;
-                        font-size: 12px;
+                        font-size: clamp(11px, 3vw, 16px);
+                        text-align: center;
+                        margin: 4px 0;
                     ">
-                        ⚠️ 画像読み込みエラー
+                        📖 {owned}/{released}巻<br>
+                        📊 {completion_status}
                     </div>
-                    """
-                
-                # 本のカード全体をHTMLで作成
-                st.markdown(f"""
-                <div class="book-card">
-                    <div class="mobile-book-image">
-                        {image_html}
-                    </div>
-                    <div class="mobile-book-info">
-                        <h3 style="
-                            font-size: clamp(16px, 4vw, 24px);
-                            margin: 8px 0 8px 0;
-                            line-height: 1.2;
-                            text-align: center;
-                            overflow-wrap: break-word;
-                            font-weight: bold;
-                        ">{book["title"]}</h3>
-                        <div style="
-                            font-size: clamp(11px, 3vw, 16px);
-                            text-align: center;
-                            margin: 8px 0 12px 0;
-                        ">
-                            📖 {owned}/{released}巻<br>
-                            📊 {completion_status}
-                        </div>
-                        <div class="detail-button-container">
-                            <!-- ボタンはStreamlitコンポーネントで配置 -->
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
-                if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
-                    go_to_detail(book)
-                    st.rerun()
+                    """, unsafe_allow_html=True)
+                    
+                    # 詳細ボタン（フルサイズ）
+                    if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
+                        go_to_detail(book)
+                        st.rerun()
 
 def show_book_detail():
     """詳細画面：選択された本の詳細情報表示"""
