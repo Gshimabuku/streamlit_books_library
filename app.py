@@ -27,33 +27,33 @@ try:
     BOOKS_DATABASE_ID = st.secrets["notion"]["database_id"]
     
     # プレースホルダーチェック
-    if NOTION_API_KEY == "your_notion_api_key_here" or BOOKS_DATABASE_ID == "your_books_database_id_here":
-        st.error("🔧 **Notion設定が必要です**")
-        st.markdown("""
-        ### 📋 設定手順
+    # if NOTION_API_KEY == "your_notion_api_key_here" or BOOKS_DATABASE_ID == "your_books_database_id_here":
+    #     st.error("🔧 **Notion設定が必要です**")
+    #     st.markdown("""
+    #     ### 📋 設定手順
         
-        1. **Notionでデータベースを作成**
-           - 新しいページでデータベースを作成
-           - 必要なプロパティを追加（title, latest_owned_volume, latest_released_volume, latest_release_date, is_completed など）
+    #     1. **Notionでデータベースを作成**
+    #        - 新しいページでデータベースを作成
+    #        - 必要なプロパティを追加（title, latest_owned_volume, latest_released_volume, latest_release_date, is_completed など）
         
-        2. **Notion APIキーを取得**
-           - [Notion Developers](https://developers.notion.com/) にアクセス
-           - 新しいインテグレーションを作成
-           - APIキーをコピー
+    #     2. **Notion APIキーを取得**
+    #        - [Notion Developers](https://developers.notion.com/) にアクセス
+    #        - 新しいインテグレーションを作成
+    #        - APIキーをコピー
         
-        3. **データベースIDを取得**
-           - データベースのURLから32文字のIDをコピー
-           - 例: `https://notion.so/your-workspace/DATABASE_ID?v=...`
+    #     3. **データベースIDを取得**
+    #        - データベースのURLから32文字のIDをコピー
+    #        - 例: `https://notion.so/your-workspace/DATABASE_ID?v=...`
         
-        4. **設定ファイルを更新**
-           - `.streamlit/secrets.toml` ファイルを編集
-           - `api_key` と `database_id` を実際の値に置き換え
+    #     4. **設定ファイルを更新**
+    #        - `.streamlit/secrets.toml` ファイルを編集
+    #        - `api_key` と `database_id` を実際の値に置き換え
         
-        5. **データベースにアクセス権限を付与**
-           - データベースで「共有」をクリック
-           - 作成したインテグレーションを招待
-        """)
-        st.stop()
+    #     5. **データベースにアクセス権限を付与**
+    #        - データベースで「共有」をクリック
+    #        - 作成したインテグレーションを招待
+    #     """)
+    #     st.stop()
         
 except Exception as e:
     st.error(f"🔧 **Notion設定エラー**: {str(e)}")
