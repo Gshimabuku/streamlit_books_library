@@ -264,45 +264,80 @@ def show_books_home():
                 except:
                     image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像読み込みエラー">'
                 
-                # 本のカード全体をHTMLで作成（Streamlitコンポーネント統合）
-                st.markdown('<div class="book-card">', unsafe_allow_html=True)
-                st.markdown('<div class="mobile-book-image">', unsafe_allow_html=True)
-                st.markdown(image_html, unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                st.markdown('<div class="mobile-book-info">', unsafe_allow_html=True)
-                
-                # タイトル（レスポンシブフォントサイズ）
-                st.markdown(f"""
-                <h3 style="
-                    font-size: clamp(16px, 4vw, 24px);
-                    margin: 8px 0 4px 0;
-                    line-height: 1.2;
-                    text-align: center;
-                    overflow-wrap: break-word;
-                    font-weight: bold;
-                ">{book["title"]}</h3>
-                """, unsafe_allow_html=True)
-                
-                # 所持状況（コンパクト表示）
-                st.markdown(f"""
-                <div style="
-                    font-size: clamp(11px, 3vw, 16px);
-                    text-align: center;
-                    margin: 4px 0 8px 0;
-                ">
-                    📖 {owned}/{released}巻<br>
-                    📊 {completion_status}
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # 詳細ボタン（情報部分内に配置）
-                if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
-                    go_to_detail(book)
-                    st.rerun()
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+                # 本のカード全体をStreamlitコンテナで作成
+                with st.container(border=True):
+                    # スマホ時の横並びレイアウト用CSS（コンテナ内に配置）
+                    st.markdown("""
+                    <style>
+                    .mobile-layout {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                    
+                    @media (max-width: 768px) {
+                        .mobile-layout {
+                            display: flex !important;
+                            flex-direction: row !important;
+                            align-items: flex-start !important;
+                            gap: 10px !important;
+                        }
+                        .mobile-image {
+                            flex: 0 0 40% !important;
+                            width: 40% !important;
+                        }
+                        .mobile-info {
+                            flex: 1 !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            justify-content: space-between !important;
+                        }
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    
+                    # モバイル対応レイアウト
+                    st.markdown('<div class="mobile-layout">', unsafe_allow_html=True)
+                    
+                    # 画像部分
+                    st.markdown('<div class="mobile-image">', unsafe_allow_html=True)
+                    st.markdown(image_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # 情報部分
+                    st.markdown('<div class="mobile-info">', unsafe_allow_html=True)
+                    
+                    # タイトル（レスポンシブフォントサイズ）
+                    st.markdown(f"""
+                    <h3 style="
+                        font-size: clamp(16px, 4vw, 24px);
+                        margin: 8px 0 4px 0;
+                        line-height: 1.2;
+                        text-align: center;
+                        overflow-wrap: break-word;
+                        font-weight: bold;
+                    ">{book["title"]}</h3>
+                    """, unsafe_allow_html=True)
+                    
+                    # 所持状況（コンパクト表示）
+                    st.markdown(f"""
+                    <div style="
+                        font-size: clamp(11px, 3vw, 16px);
+                        text-align: center;
+                        margin: 4px 0 8px 0;
+                    ">
+                        📖 {owned}/{released}巻<br>
+                        📊 {completion_status}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 詳細ボタン（情報部分内に配置）
+                    if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
+                        go_to_detail(book)
+                        st.rerun()
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
 
 def show_book_detail():
     """詳細画面：選択された本の詳細情報表示"""
