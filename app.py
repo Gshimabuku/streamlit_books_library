@@ -188,35 +188,10 @@ def show_books_home():
             st.info("💡 Notionデータベースで「共有」→ インテグレーションを招待してください")
         else:
             st.warning(f"⚠️ NotionDBに接続できませんでした: {error_message}")
-            st.info("📋 設定を確認するか、ダミーデータで動作をテストしてください。")
+            st.info("📋 設定を確認してください。")
         
-        # エラー時はダミーデータを表示
-        books = [
-            {
-                "id": "book1",
-                "title": "進撃の巨人",
-                "image_url": None,
-                "latest_owned_volume": 32,
-                "latest_released_volume": 34,
-                "is_completed": True
-            },
-            {
-                "id": "book2", 
-                "title": "鬼滅の刃",
-                "image_url": None,
-                "latest_owned_volume": 20,
-                "latest_released_volume": 23,
-                "is_completed": True
-            },
-            {
-                "id": "book3",
-                "title": "ワンピース",
-                "image_url": None,
-                "latest_owned_volume": 105,
-                "latest_released_volume": 108,
-                "is_completed": False
-            }
-        ]
+        # エラー時は空のリストを設定
+        books = []
     
     # 本の一覧表示（データがある場合のみ）
     if books:
