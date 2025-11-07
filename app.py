@@ -510,10 +510,32 @@ def show_book_detail():
     
     book = st.session_state.selected_book
     
-    # 戻るボタン
-    if st.button("← ホームに戻る"):
-        go_to_home()
-        st.rerun()
+    # ボタン群を水平配置
+    button_col1, button_col2, button_col3 = st.columns([2, 1, 1])
+    
+    with button_col1:
+        if st.button("← ホームに戻る"):
+            go_to_home()
+            st.rerun()
+    
+    with button_col2:
+        if st.button("✏️ 編集"):
+            go_to_edit_book()
+            st.rerun()
+    
+    with button_col3:
+        if st.button("🗑️ 削除", type="secondary"):
+            if st.session_state.get("confirm_delete", False):
+                try:
+                    # 削除機能の実装
+                    st.success("削除機能は今後実装予定です")
+                    st.session_state.confirm_delete = False
+                except Exception as e:
+                    st.error(f"削除に失敗しました: {str(e)}")
+            else:
+                st.session_state.confirm_delete = True
+                st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
+                st.rerun()
     
     # Notionから詳細データを取得
     page_data = book.get("page_data", {})
@@ -628,27 +650,6 @@ def show_book_detail():
         # 特殊巻
         if special_volumes:
             st.write(f"**特殊巻:** {special_volumes}")
-        
-        st.markdown("---")
-        
-        # 編集ボタン
-        st.subheader("⚙️ 操作")
-        if st.button("編集する"):
-            go_to_edit_book()
-            st.rerun()
-        
-        if st.button("削除する", type="secondary"):
-            if st.session_state.get("confirm_delete", False):
-                try:
-                    # 削除機能の実装
-                    st.success("削除機能は今後実装予定です")
-                    st.session_state.confirm_delete = False
-                except Exception as e:
-                    st.error(f"削除に失敗しました: {str(e)}")
-            else:
-                st.session_state.confirm_delete = True
-                st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
-                st.rerun()
 
 def show_add_book():
     """新規漫画登録画面"""
