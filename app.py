@@ -473,10 +473,19 @@ def show_books_home():
                                         <div style="
                                             font-size: clamp(11px, 3vw, 16px);
                                             text-align: center;
-                                            margin: 8px 0 12px 0;
+                                            margin: 8px 0 8px 0;
                                         ">
-                                            📖 {owned}/{released}巻<br>
-                                            📊 {completion_status}
+                                            📖 {owned}/{released}巻
+                                        </div>
+                                        <div style="text-align: center; margin: 4px 0 8px 0;">
+                                            <span style="
+                                                background-color: {'#28a745' if book['is_completed'] else '#007bff'};
+                                                color: white;
+                                                padding: 3px 8px;
+                                                border-radius: 10px;
+                                                font-size: clamp(10px, 2.5vw, 12px);
+                                                font-weight: bold;
+                                            ">{completion_status}</span>
                                         </div>
                                         <div class="detail-button-container">
                                             <!-- ボタンはStreamlitコンポーネントで配置 -->
@@ -547,7 +556,29 @@ def show_book_detail():
         # 漫画情報
         st.subheader("📊 漫画情報")
         completion_status = "完結" if book['is_completed'] else "連載中"
-        st.write(f"**{completion_status}**")
+        
+        # 完結・連載中のステータスを背景色付きで表示
+        if book['is_completed']:
+            status_color = "#28a745"  # 緑色（完結）
+            text_color = "white"
+        else:
+            status_color = "#007bff"  # 青色（連載中）
+            text_color = "white"
+        
+        st.markdown(f"""
+        <div style="
+            display: inline-block;
+            background-color: {status_color};
+            color: {text_color};
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 5px 0 15px 0;
+        ">
+            {completion_status}
+        </div>
+        """, unsafe_allow_html=True)
         
         # 最新巻情報
         release_info = f"**最新巻:** {book['latest_released_volume']}巻"
