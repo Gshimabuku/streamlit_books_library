@@ -506,7 +506,30 @@ def show_book_detail():
         go_to_home()
         st.rerun()
     
-    st.header(f"📚 {book['title']}")
+    # Notionから詳細データを取得
+    page_data = book.get("page_data", {})
+    props = page_data.get("properties", {})
+    
+    # 追加情報を取得
+    synopsis = ""
+    if props.get("synopsis", {}).get("rich_text") and props["synopsis"]["rich_text"]:
+        synopsis = props["synopsis"]["rich_text"][0]["text"]["content"]
+    
+    latest_release_date = ""
+    if props.get("latest_release_date", {}).get("date"):
+        latest_release_date = props["latest_release_date"]["date"]["start"]
+    
+    next_release_date = ""
+    if props.get("next_release_date", {}).get("date"):
+        next_release_date = props["next_release_date"]["date"]["start"]
+    
+    missing_volumes = ""
+    if props.get("missing_volumes", {}).get("rich_text") and props["missing_volumes"]["rich_text"]:
+        missing_volumes = props["missing_volumes"]["rich_text"][0]["text"]["content"]
+    
+    special_volumes = ""
+    if props.get("special_volumes", {}).get("rich_text") and props["special_volumes"]["rich_text"]:
+        special_volumes = props["special_volumes"]["rich_text"][0]["text"]["content"]
     
     # 2列レイアウト
     col1, col2 = st.columns([1, 2])
@@ -522,10 +545,71 @@ def show_book_detail():
             st.image("https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg", width=300)
     
     with col2:
-        st.subheader("📊 所持情報")
-        st.write(f"**現在所持巻数:** {book['latest_owned_volume']}巻")
-        st.write(f"**発売済み最新巻:** {book['latest_released_volume']}巻")
-        st.write(f"**完結状況:** {'完結' if book['is_completed'] else '連載中'}")
+        # タイトル
+        st.header(f"📚 {book['title']}")
+        
+        # あらすじ
+        if synopsis:
+            st.subheader("📖 あらすじ")
+            st.write(synopsis)
+            st.markdown("---")
+        
+        # 漫画情報
+        st.subheader("📊 漫画情報")
+        completion_status = "完結" if book['is_completed'] else "連載中"
+        st.write(f"**{completion_status}**")
+        
+        # 最新巻情報
+        release_info = f"**最新巻:** {book['latest_released_volume']}巻"
+        if latest_release_date:
+            from datetime import datetime
+            try:
+                date_obj = datetime.strptime(latest_release_date, "%Y-%m-%d")
+                formatted_date = date_obj.strftime("%Y年%m月%d日")
+                release_info += f" [{formatted_date}発売]"
+            except:
+                release_info += f" [{latest_release_date}発売]"
+        st.write(release_info)
+        
+        # 次巻発売日
+        if next_release_date:
+            try:
+                date_obj = datetime.strptime(next_release_date, "%Y-%m-%d")
+                formatted_next_date = date_obj.strftime("%Y年%m月%d日")
+                st.write(f"**次巻発売日:** {formatted_next_date}")
+            except:
+                st.write(f"**次巻発売日:** {next_release_date}")
+        
+        st.markdown("---")
+        
+        # 所持状況
+        st.subheader("📚 所持状況")
+        
+        # 所持巻数の計算
+        owned_count = book['latest_owned_volume']
+        missing_count = 0
+        
+        # 抜け巻がある場合の計算
+        if missing_volumes:
+            try:
+                missing_list = [vol.strip() for vol in missing_volumes.split(",")]
+                missing_count = len(missing_list)
+                actual_owned = owned_count - missing_count
+                st.write(f"**所持巻数:** {owned_count}巻 ({actual_owned}巻)")
+            except:
+                st.write(f"**所持巻数:** {owned_count}巻")
+        else:
+            st.write(f"**所持巻数:** {owned_count}巻")
+        
+        # 抜け巻
+        if missing_volumes:
+            st.write(f"**抜け巻:** {missing_volumes}")
+        
+        # 特殊巻
+        if special_volumes:
+            st.write(f"**特殊巻:** {special_volumes}")
+        
+        st.markdown("---")
         
         # 編集ボタン
         st.subheader("⚙️ 操作")
