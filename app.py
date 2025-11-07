@@ -361,6 +361,30 @@ def show_books_home():
                 font-size: 14px;
                 padding: 8px 12px;
             }
+            
+            /* モバイルでのボタン横並び強制 */
+            [data-testid="column"] {
+                flex-direction: row !important;
+            }
+            
+            [data-testid="column"] > div {
+                display: flex !important;
+                gap: 5px !important;
+            }
+            
+            .stButton {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+            
+            .stButton > button {
+                width: 100% !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                font-size: 12px !important;
+                padding: 8px 4px !important;
+            }
         }
         
         @media (min-width: 769px) {
@@ -510,34 +534,72 @@ def show_book_detail():
     
     book = st.session_state.selected_book
     
-    # ボタン群を水平配置（左側に戻るボタン、右側に編集・削除ボタンを隙間なく配置）
-    button_col1, button_col2 = st.columns([3, 1])
+    # モバイル用ボタンレイアウトCSS
+    st.markdown("""
+    <style>
+    /* 詳細画面のボタンを強制的に横並びにする */
+    @media (max-width: 768px) {
+        .detail-buttons-container {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        
+        .detail-buttons-container [data-testid="column"] {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 4px !important;
+        }
+        
+        .detail-buttons-container .stButton {
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+        
+        .detail-buttons-container .stButton > button {
+            width: 100% !important;
+            font-size: 11px !important;
+            padding: 6px 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    with button_col1:
+    # ボタン群を水平配置（モバイルでも強制的に横並び）
+    st.markdown('<div class="detail-buttons-container">', unsafe_allow_html=True)
+    
+    # 4列レイアウトでより細かく制御（戻る・編集・削除・空白）
+    home_col, edit_col, delete_col, spacer_col = st.columns([2, 1, 1, 1])
+    
+    with home_col:
         if st.button("← ホームに戻る"):
             go_to_home()
             st.rerun()
     
-    with button_col2:
-        # 編集・削除ボタンを隙間なく右揃えで配置
-        edit_col, delete_col = st.columns(2)
-        with edit_col:
-            if st.button("✏️ 編集"):
-                go_to_edit_book()
+    with edit_col:
+        if st.button("✏️ 編集"):
+            go_to_edit_book()
+            st.rerun()
+    
+    with delete_col:
+        if st.button("🗑️ 削除", type="secondary"):
+            if st.session_state.get("confirm_delete", False):
+                try:
+                    # 削除機能の実装
+                    st.success("削除機能は今後実装予定です")
+                    st.session_state.confirm_delete = False
+                except Exception as e:
+                    st.error(f"削除に失敗しました: {str(e)}")
+            else:
+                st.session_state.confirm_delete = True
+                st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
                 st.rerun()
-        with delete_col:
-            if st.button("🗑️ 削除", type="secondary"):
-                if st.session_state.get("confirm_delete", False):
-                    try:
-                        # 削除機能の実装
-                        st.success("削除機能は今後実装予定です")
-                        st.session_state.confirm_delete = False
-                    except Exception as e:
-                        st.error(f"削除に失敗しました: {str(e)}")
-                else:
-                    st.session_state.confirm_delete = True
-                    st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
-                    st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     
     # Notionから詳細データを取得
     page_data = book.get("page_data", {})
