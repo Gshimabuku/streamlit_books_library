@@ -384,6 +384,14 @@ def show_books_home():
         # magazine_typeの表示順序を定義
         type_order = ["ジャンプ", "マガジン", "サンデー", "その他"]
         
+        # magazine_nameの表示順序を定義
+        magazine_name_order = {
+            "ジャンプ": ["週刊少年ジャンプ", "週刊ヤングジャンプ", "ジャンプ+", "ジャンプSQ", "ジャンプGIGA"],
+            "マガジン": ["週刊少年マガジン", "週刊ヤングマガジン", "月刊少年マガジン", "別冊少年マガジン"],
+            "サンデー": ["週刊少年サンデー", "少年サンデーＳ（スーパー）", "裏サンデー"],
+            "その他": ["週刊ビッグコミックスピリッツ", "月刊コミックゼノン", "月刊アフタヌーン"]
+        }
+        
         # グループ分け用の辞書
         grouped_books = defaultdict(lambda: defaultdict(list))
         
@@ -408,10 +416,21 @@ def show_books_home():
                 
                 # 展開されている場合のみ内容を表示
                 if is_expanded:
-                    # magazine_nameでソート
-                    magazine_names = sorted(grouped_books[magazine_type].keys())
+                    # magazine_nameをカスタム順序でソート
+                    magazine_names = list(grouped_books[magazine_type].keys())
+                    defined_order = magazine_name_order.get(magazine_type, [])
                     
-                    for magazine_name in magazine_names:
+                    # 定義済みの順序に従って並び替え、その後は辞書順
+                    sorted_names = []
+                    # まず定義済みの順序で追加
+                    for name in defined_order:
+                        if name in magazine_names:
+                            sorted_names.append(name)
+                    # 定義されていない雑誌名は辞書順で末尾に追加
+                    remaining_names = [name for name in magazine_names if name not in defined_order]
+                    sorted_names.extend(sorted(remaining_names))
+                    
+                    for magazine_name in sorted_names:
                         # magazine_nameヘッダー
                         st.markdown(f'<div class="magazine-name-header">📖 {magazine_name}</div>', unsafe_allow_html=True)
                         
