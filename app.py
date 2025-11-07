@@ -534,70 +534,114 @@ def show_book_detail():
     
     book = st.session_state.selected_book
     
-    # モバイル用ボタンレイアウトCSS
+    # PC・モバイル対応ボタンレイアウトCSS
     st.markdown("""
     <style>
-    /* 詳細画面のボタンを強制的に横並びにする */
+    /* 詳細画面のボタン配置 */
+    .detail-buttons-container {
+        margin-bottom: 20px;
+    }
+    
+    /* PC版：右揃えのボタン配置 */
+    @media (min-width: 769px) {
+        .detail-buttons-container [data-testid="column"]:last-child {
+            display: flex !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+        }
+        
+        .detail-buttons-container [data-testid="column"]:last-child [data-testid="column"] {
+            flex: 0 0 auto !important;
+            margin: 0 !important;
+            padding: 0 2px !important;
+        }
+        
+        .detail-buttons-container [data-testid="column"]:last-child .stButton {
+            margin: 0 !important;
+        }
+    }
+    
+    /* モバイル版：強制横並び */
     @media (max-width: 768px) {
         .detail-buttons-container {
             display: flex !important;
-            flex-direction: row !important;
-            gap: 8px !important;
+            flex-wrap: nowrap !important;
+            gap: 4px !important;
             width: 100% !important;
         }
         
         .detail-buttons-container [data-testid="column"] {
+            flex: 1 !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 1px !important;
+        }
+        
+        .detail-buttons-container [data-testid="column"]:nth-child(2) {
+            flex: 0 0 8px !important;
+        }
+        
+        .detail-buttons-container [data-testid="column"]:last-child {
             display: flex !important;
             flex-direction: row !important;
-            gap: 4px !important;
+            gap: 2px !important;
+        }
+        
+        .detail-buttons-container [data-testid="column"]:last-child [data-testid="column"] {
+            flex: 1 !important;
+            margin: 0 !important;
+            padding: 0 1px !important;
         }
         
         .detail-buttons-container .stButton {
-            flex: 1 !important;
-            min-width: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
         }
         
         .detail-buttons-container .stButton > button {
             width: 100% !important;
-            font-size: 11px !important;
-            padding: 6px 4px !important;
+            font-size: 10px !important;
+            padding: 6px 2px !important;
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
+            min-height: 38px !important;
         }
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # ボタン群を水平配置（モバイルでも強制的に横並び）
+    # ボタン群を水平配置（PC右揃え、モバイル横並び）
     st.markdown('<div class="detail-buttons-container">', unsafe_allow_html=True)
     
-    # 4列レイアウトでより細かく制御（戻る・編集・削除・空白）
-    home_col, edit_col, delete_col, spacer_col = st.columns([2, 1, 1, 1])
+    # 3列レイアウト（戻る・空白・編集削除）
+    home_col, spacer_col, action_col = st.columns([2, 1, 2])
     
     with home_col:
         if st.button("← ホームに戻る"):
             go_to_home()
             st.rerun()
     
-    with edit_col:
-        if st.button("✏️ 編集"):
-            go_to_edit_book()
-            st.rerun()
-    
-    with delete_col:
-        if st.button("🗑️ 削除", type="secondary"):
-            if st.session_state.get("confirm_delete", False):
-                try:
-                    # 削除機能の実装
-                    st.success("削除機能は今後実装予定です")
-                    st.session_state.confirm_delete = False
-                except Exception as e:
-                    st.error(f"削除に失敗しました: {str(e)}")
-            else:
-                st.session_state.confirm_delete = True
-                st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
+    with action_col:
+        # 編集・削除ボタンを入れ子の列で右揃え配置
+        edit_col, delete_col = st.columns(2)
+        with edit_col:
+            if st.button("✏️ 編集"):
+                go_to_edit_book()
                 st.rerun()
+        with delete_col:
+            if st.button("🗑️ 削除", type="secondary"):
+                if st.session_state.get("confirm_delete", False):
+                    try:
+                        # 削除機能の実装
+                        st.success("削除機能は今後実装予定です")
+                        st.session_state.confirm_delete = False
+                    except Exception as e:
+                        st.error(f"削除に失敗しました: {str(e)}")
+                else:
+                    st.session_state.confirm_delete = True
+                    st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
+                    st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     
