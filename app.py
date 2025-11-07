@@ -511,10 +511,6 @@ def show_book_detail():
     props = page_data.get("properties", {})
     
     # 追加情報を取得
-    synopsis = ""
-    if props.get("synopsis", {}).get("rich_text") and props["synopsis"]["rich_text"]:
-        synopsis = props["synopsis"]["rich_text"][0]["text"]["content"]
-    
     latest_release_date = ""
     if props.get("latest_release_date", {}).get("date"):
         latest_release_date = props["latest_release_date"]["date"]["start"]
@@ -547,12 +543,6 @@ def show_book_detail():
     with col2:
         # タイトル
         st.header(f"📚 {book['title']}")
-        
-        # あらすじ
-        if synopsis:
-            st.subheader("📖 あらすじ")
-            st.write(synopsis)
-            st.markdown("---")
         
         # 漫画情報
         st.subheader("📊 漫画情報")
@@ -692,8 +682,6 @@ def show_add_book():
                 except Exception:
                     st.warning("⚠️ 画像URLが正しくないか、読み込めません")
         
-        synopsis = st.text_area("あらすじ", placeholder="漫画のあらすじを入力...")
-        
         # 完結情報
         is_completed = st.checkbox("完結済み")
         
@@ -767,9 +755,6 @@ def show_add_book():
                     
                     if magazine_name:
                         properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
-                    
-                    if synopsis:
-                        properties["synopsis"] = {"rich_text": [{"text": {"content": synopsis}}]}
                     
                     if missing_volumes:
                         properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
