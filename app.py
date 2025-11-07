@@ -118,6 +118,14 @@ def show_books_home():
         with st.spinner("データを読み込み中..."):
             sorts = [
                 {
+                    "property": "magazine_type", 
+                    "direction": "ascending"
+                },
+                {
+                    "property": "magazine_name", 
+                    "direction": "ascending"
+                },
+                {
                     "property": "title", 
                     "direction": "ascending"
                 }
@@ -147,6 +155,16 @@ def show_books_home():
                     # 完結情報取得
                     is_completed = props.get("is_completed", {}).get("checkbox", False)
                     
+                    # 雑誌タイプ取得
+                    magazine_type = "その他"
+                    if props.get("magazine_type", {}).get("select"):
+                        magazine_type = props["magazine_type"]["select"]["name"]
+                    
+                    # 雑誌名取得
+                    magazine_name = "不明"
+                    if props.get("magazine_name", {}).get("rich_text") and props["magazine_name"]["rich_text"]:
+                        magazine_name = props["magazine_name"]["rich_text"][0]["text"]["content"]
+                    
                     book_data = {
                         "id": page["id"],
                         "title": title,
@@ -154,6 +172,8 @@ def show_books_home():
                         "latest_owned_volume": latest_owned_volume,
                         "latest_released_volume": latest_released_volume,
                         "is_completed": is_completed,
+                        "magazine_type": magazine_type,
+                        "magazine_name": magazine_name,
                         "page_data": page  # 詳細表示用に元データも保持
                     }
                     books.append(book_data)
@@ -170,6 +190,25 @@ def show_books_home():
         error_message = str(e)
         if "401" in error_message or "Unauthorized" in error_message:
             st.error("🔐 **認証エラー**: Notion APIキーまたはデータベースIDが正しくありません")
+            
+            # デバッグ情報を表示（APIキーの最初と最後の4文字のみ表示）
+            with st.expander("🔍 デバッグ情報"):
+                if NOTION_API_KEY:
+                    api_key_masked = f"{NOTION_API_KEY[:4]}...{NOTION_API_KEY[-4:]}" if len(NOTION_API_KEY) > 8 else "設定済み"
+                    st.write(f"**APIキー**: {api_key_masked}")
+                    st.write(f"**APIキー長**: {len(NOTION_API_KEY)}文字")
+                else:
+                    st.write("**APIキー**: 未設定")
+                    
+                if BOOKS_DATABASE_ID:
+                    db_id_masked = f"{BOOKS_DATABASE_ID[:4]}...{BOOKS_DATABASE_ID[-4:]}" if len(BOOKS_DATABASE_ID) > 8 else "設定済み"
+                    st.write(f"**データベースID**: {db_id_masked}")
+                    st.write(f"**データベースID長**: {len(BOOKS_DATABASE_ID)}文字")
+                else:
+                    st.write("**データベースID**: 未設定")
+                    
+                st.write(f"**エラー詳細**: {error_message}")
+            
             st.markdown("""
             ### 🔧 解決方法
             1. **APIキーを確認**: `.streamlit/secrets.toml` の `api_key` が正しいか確認
