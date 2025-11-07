@@ -208,20 +208,74 @@ def show_books_home():
                     st.write("**データベースID**: 未設定")
                     
                 st.write(f"**エラー詳細**: {error_message}")
+                
+                # 設定ファイルの場所を表示
+                st.markdown("**📁 設定ファイルの場所:**")
+                st.code(".streamlit/secrets.toml")
+                
+                # 現在の設定値チェック
+                if "your_notion_api_key_here" in NOTION_API_KEY:
+                    st.error("❌ APIキーがデフォルト値のままです")
+                if "your_books_database_id_here" in BOOKS_DATABASE_ID:
+                    st.error("❌ データベースIDがデフォルト値のままです")
             
             st.markdown("""
             ### 🔧 解決方法
-            1. **APIキーを確認**: `.streamlit/secrets.toml` の `api_key` が正しいか確認
-            2. **データベースIDを確認**: `database_id` が32文字の正しいIDか確認
-            3. **アクセス権限を確認**: データベースにインテグレーションが招待されているか確認
             
-            ### 📝 設定例
+            現在、設定ファイルにプレースホルダー値が設定されています。以下の手順で実際の値を設定してください：
+            
+            #### 1. Notion Integration を作成
+            - [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations) にアクセス
+            - 「New integration」をクリック
+            - 適当な名前を付けて作成
+            - 「Internal Integration Token」をコピー（`secret_` で始まる長い文字列）
+            
+            #### 2. データベースIDを取得
+            - Notionで対象のデータベースを開く
+            - URLから32文字のIDを取得: `https://notion.so/workspace/DATABASE_ID?v=...`
+            - または、データベースページで「Share」→「Copy link」からURLを取得
+            
+            #### 3. データベースにIntegrationを招待
+            - データベース画面で「Share」をクリック
+            - 作成したIntegration名を検索して招待
+            
+            #### 4. 設定ファイル (`.streamlit/secrets.toml`) を更新
             ```toml
             [notion]
-            api_key = "secret_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            api_key = "secret_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"    # 実際のAPIキー
+            database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"       # 実際のデータベースID（32文字）
             ```
+            
+            #### 5. 必要なデータベースプロパティ
+            以下のプロパティがデータベースに必要です：
+            - `title` (Title)
+            - `magazine_type` (Select) - オプション：ジャンプ、マガジン、サンデー、その他
+            - `magazine_name` (Rich text)
+            - `latest_owned_volume` (Number)
+            - `latest_released_volume` (Number)
+            - `is_completed` (Checkbox)
+            - `image_url` (URL)
+            - `latest_release_date` (Date)
             """)
+            
+            # 設定ファイル編集用の展開可能セクション
+            with st.expander("⚙️ 設定ファイル編集ヘルプ"):
+                st.markdown("**現在の設定ファイル内容:**")
+                try:
+                    with open("/workspaces/streamlit_books_library/.streamlit/secrets.toml", "r") as f:
+                        current_config = f.read()
+                    st.code(current_config, language="toml")
+                except Exception:
+                    st.warning("設定ファイルが見つかりません")
+                
+                st.markdown("**✏️ 編集手順:**")
+                st.markdown("""
+                1. 左側のファイルエクスプローラーで `.streamlit/secrets.toml` を開く
+                2. `your_notion_api_key_here` を実際のAPIキーに置き換え
+                3. `your_books_database_id_here` を実際のデータベースIDに置き換え
+                4. ファイルを保存（Ctrl+S）
+                5. このページをリロード
+                """)
         elif "403" in error_message or "Forbidden" in error_message:
             st.error("🚫 **アクセス権限エラー**: データベースへのアクセスが拒否されました")
             st.info("💡 Notionデータベースで「共有」→ インテグレーションを招待してください")
