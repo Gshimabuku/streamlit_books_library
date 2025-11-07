@@ -112,10 +112,32 @@ def show_books_home():
     """Home画面：本の一覧を3列グリッド表示"""
     st.header("📖 漫画ライブラリ")
     
+    # 新規登録ボタン専用CSS
+    st.markdown("""
+    <style>
+    /* 新規登録ボタンのスタイル */
+    .add-book-button .stButton > button {
+        background: #28a745 !important;
+        border: none !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        padding: 15px 30px !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    
+    .add-book-button .stButton > button:hover {
+        background: #218838 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # 新規登録ボタン
+    st.markdown('<div class="add-book-button">', unsafe_allow_html=True)
     if st.button("➕ 新しい漫画を登録", type="primary"):
         st.session_state.page = "add_book"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
