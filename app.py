@@ -554,7 +554,6 @@ def show_book_detail():
         st.header(f"📚 {book['title']}")
         
         # 漫画情報
-        st.subheader("📊 漫画情報")
         completion_status = "完結" if book['is_completed'] else "連載中"
         
         # 完結・連載中のステータスを背景色付きで表示
