@@ -66,6 +66,15 @@ if "page" not in st.session_state:
 if "selected_book" not in st.session_state:
     st.session_state.selected_book = None
 
+# アコーディオンメニューの展開状態を管理
+if "magazine_type_expanded" not in st.session_state:
+    st.session_state.magazine_type_expanded = {
+        "ジャンプ": True,
+        "マガジン": True, 
+        "サンデー": True,
+        "その他": True
+    }
+
 # =========================
 # ページ遷移関数
 # =========================
@@ -299,16 +308,21 @@ def show_books_home():
             background-color: white;
         }
         
-        .magazine-type-header {
+        /* アコーディオンボタンのスタイル調整 */
+        .stButton > button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .stButton > button[kind="primary"] {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
             padding: 15px 20px;
             border-radius: 10px;
-            margin: 20px 0 15px 0;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            color: white;
         }
         
         .magazine-name-header {
@@ -342,10 +356,7 @@ def show_books_home():
             .detail-button-container {
                 margin-top: auto !important;
             }
-            .magazine-type-header {
-                font-size: 18px;
-                padding: 12px 15px;
-            }
+
             .magazine-name-header {
                 font-size: 14px;
                 padding: 8px 12px;
@@ -384,71 +395,81 @@ def show_books_home():
         # magazine_typeごとに表示
         for magazine_type in type_order:
             if magazine_type in grouped_books:
-                # magazine_typeヘッダー
-                st.markdown(f'<div class="magazine-type-header">📚 {magazine_type}</div>', unsafe_allow_html=True)
+                # アコーディオンヘッダー（クリック可能）
+                is_expanded = st.session_state.magazine_type_expanded.get(magazine_type, True)
+                expand_icon = "🔽" if is_expanded else "▶️"
                 
-                # magazine_nameでソート
-                magazine_names = sorted(grouped_books[magazine_type].keys())
+                # ヘッダーボタン
+                if st.button(f"{expand_icon} 📚 {magazine_type} ({len(grouped_books[magazine_type])}誌)", 
+                           key=f"toggle_{magazine_type}", 
+                           use_container_width=True):
+                    st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
+                    st.rerun()
                 
-                for magazine_name in magazine_names:
-                    # magazine_nameヘッダー
-                    st.markdown(f'<div class="magazine-name-header">📖 {magazine_name}</div>', unsafe_allow_html=True)
+                # 展開されている場合のみ内容を表示
+                if is_expanded:
+                    # magazine_nameでソート
+                    magazine_names = sorted(grouped_books[magazine_type].keys())
                     
-                    # この雑誌の本を表示
-                    magazine_books = grouped_books[magazine_type][magazine_name]
-                    cols = st.columns(3, gap="small")
-                    
-                    for i, book in enumerate(magazine_books):
-                        col = cols[i % 3]
+                    for magazine_name in magazine_names:
+                        # magazine_nameヘッダー
+                        st.markdown(f'<div class="magazine-name-header">📖 {magazine_name}</div>', unsafe_allow_html=True)
                         
-                        with col:
-                            owned = book["latest_owned_volume"]
-                            released = book["latest_released_volume"]
-                            completion_status = "完結" if book["is_completed"] else "連載中"
-                
-                            # 画像HTMLを準備
-                            try:
-                                if book["image_url"] and book["image_url"] != "":
-                                    image_html = f'<img src="{book["image_url"]}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="{book["title"]}">'
-                                else:
-                                    image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像なし">'
-                            except:
-                                image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像読み込みエラー">'
+                        # この雑誌の本を表示
+                        magazine_books = grouped_books[magazine_type][magazine_name]
+                        cols = st.columns(3, gap="small")
+                        
+                        for i, book in enumerate(magazine_books):
+                            col = cols[i % 3]
                             
-                            # 本のカード全体をHTMLで作成
-                            st.markdown(f"""
-                            <div class="book-card">
-                                <div class="mobile-book-image">
-                                    {image_html}
-                                </div>
-                                <div class="mobile-book-info">
-                                    <h3 style="
-                                        font-size: clamp(16px, 4vw, 24px);
-                                        margin: 8px 0 8px 0;
-                                        line-height: 1.2;
-                                        text-align: center;
-                                        overflow-wrap: break-word;
-                                        font-weight: bold;
-                                    ">{book["title"]}</h3>
-                                    <div style="
-                                        font-size: clamp(11px, 3vw, 16px);
-                                        text-align: center;
-                                        margin: 8px 0 12px 0;
-                                    ">
-                                        📖 {owned}/{released}巻<br>
-                                        📊 {completion_status}
+                            with col:
+                                owned = book["latest_owned_volume"]
+                                released = book["latest_released_volume"]
+                                completion_status = "完結" if book["is_completed"] else "連載中"
+                    
+                                # 画像HTMLを準備
+                                try:
+                                    if book["image_url"] and book["image_url"] != "":
+                                        image_html = f'<img src="{book["image_url"]}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="{book["title"]}">'
+                                    else:
+                                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像なし">'
+                                except:
+                                    image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像読み込みエラー">'
+                                
+                                # 本のカード全体をHTMLで作成
+                                st.markdown(f"""
+                                <div class="book-card">
+                                    <div class="mobile-book-image">
+                                        {image_html}
                                     </div>
-                                    <div class="detail-button-container">
-                                        <!-- ボタンはStreamlitコンポーネントで配置 -->
+                                    <div class="mobile-book-info">
+                                        <h3 style="
+                                            font-size: clamp(16px, 4vw, 24px);
+                                            margin: 8px 0 8px 0;
+                                            line-height: 1.2;
+                                            text-align: center;
+                                            overflow-wrap: break-word;
+                                            font-weight: bold;
+                                        ">{book["title"]}</h3>
+                                        <div style="
+                                            font-size: clamp(11px, 3vw, 16px);
+                                            text-align: center;
+                                            margin: 8px 0 12px 0;
+                                        ">
+                                            📖 {owned}/{released}巻<br>
+                                            📊 {completion_status}
+                                        </div>
+                                        <div class="detail-button-container">
+                                            <!-- ボタンはStreamlitコンポーネントで配置 -->
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
-                            if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
-                                go_to_detail(book)
-                                st.rerun()
+                                """, unsafe_allow_html=True)
+                                
+                                # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
+                                if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
+                                    go_to_detail(book)
+                                    st.rerun()
 
 def show_book_detail():
     """詳細画面：選択された本の詳細情報表示"""
