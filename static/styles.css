@@ -36,7 +36,7 @@
     margin-bottom: 10px;
 }
 
-.stButton > button[kind="primary"] {
+/* .stButton > button[kind="primary"] {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     font-size: 18px;
@@ -45,7 +45,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     color: white;
-}
+} */
 
 /* ==================================== */
 /* 雑誌名ヘッダー */
