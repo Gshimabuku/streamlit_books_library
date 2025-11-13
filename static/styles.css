@@ -72,11 +72,11 @@
 }
 
 .status-completed {
-    background-color: #28a745 !important;
+    background-color: #757575 !important;
 }
 
 .status-ongoing {
-    background-color: #007bff !important;
+    background-color: #43A047 !important;
 }
 
 /* 詳細ページのステータスバッジ */
