@@ -370,6 +370,10 @@ def show_books_home():
                                 owned = book["latest_owned_volume"]
                                 released = book["latest_released_volume"]
                                 completion_status = "完結" if book["is_completed"] else "連載中"
+                                
+                                # 未購入巻の判定
+                                has_unpurchased = owned < released
+                                unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
                     
                                 # 画像HTMLを準備
                                 try:
@@ -386,7 +390,7 @@ def show_books_home():
                                     </div>
                                     <div class="mobile-book-info">
                                         <div class="status-container">
-                                            <span class="status-badge {'status-completed' if book['is_completed'] else 'status-ongoing'}">{completion_status}</span>
+                                            <span class="status-badge {'status-completed' if book['is_completed'] else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
                                         </div>
                                         <h3>{book["title"]}</h3>
                                         <div class="book-volume-info">

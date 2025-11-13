@@ -79,6 +79,17 @@
     background-color: #2196F3 !important;
 }
 
+/* 未購入巻表示 */
+.unpurchased-badge {
+    background-color: #FF9800 !important;
+    color: white !important;
+    padding: 3px 8px !important;
+    border-radius: 10px !important;
+    font-size: clamp(9px, 2vw, 11px) !important;
+    font-weight: bold !important;
+    margin-left: 5px !important;
+}
+
 /* 詳細ページのステータスバッジ */
 .detail-status-badge {
     display: inline-block !important;
