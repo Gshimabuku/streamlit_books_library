@@ -646,7 +646,7 @@ def show_add_book():
         st.subheader("📚 詳細情報")
         missing_volumes = st.text_input("未所持巻（抜け）", placeholder="例: 3,5,10")
         special_volumes = st.text_input("特殊巻", placeholder="例: 0.5,10.5")
-        owned_media = st.selectbox("所持媒体", ["単行本", "電子書籍", "両方"])
+        owned_media = st.selectbox("所持媒体", ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"])
         notes = st.text_area("備考", placeholder="その他メモ...")
         
         # 登録ボタン
@@ -698,7 +698,7 @@ def show_add_book():
                         properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
                     
                     if owned_media:
-                        properties["owned_media"] = {"rich_text": [{"text": {"content": owned_media}}]}
+                        properties["owned_media"] = {"select": {"name": owned_media}}
                     
                     if notes:
                         properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
