@@ -385,10 +385,10 @@ def show_books_home():
                                         {image_html}
                                     </div>
                                     <div class="mobile-book-info">
-                                        <h3>{book["title"]}</h3>
                                         <div class="status-container">
                                             <span class="status-badge {'status-completed' if book['is_completed'] else 'status-ongoing'}">{completion_status}</span>
                                         </div>
+                                        <h3>{book["title"]}</h3>
                                         <div class="book-volume-info">
                                             📖 {owned}/{released}巻
                                         </div>

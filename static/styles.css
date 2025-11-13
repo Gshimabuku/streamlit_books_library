@@ -59,8 +59,8 @@
 
 /* 完結・連載中ステータス */
 .status-container {
-    text-align: center !important;
-    margin: 4px 0 8px 0 !important;
+    text-align: left !important;
+    margin: 8px 0 8px 10px !important;
 }
 
 .status-badge {
