@@ -37,8 +37,9 @@
     max-width: 100% !important;
     line-height: 1.2 !important;
     font-size: clamp(16px, 4vw, 24px) !important;
-    margin: 8px 0 8px 0 !important;
+    margin: 8px 0 8px 10px !important;
     font-weight: bold !important;
+    padding: 0 !important;
 }
 
 /* 本のカード内画像 */
