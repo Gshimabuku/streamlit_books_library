@@ -46,7 +46,7 @@
 .book-card img {
     width: 100% !important;
     aspect-ratio: 3/4 !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     border-radius: 8px !important;
 }
 
