@@ -116,8 +116,6 @@ def show_books_home():
     """Home画面：本の一覧を3列グリッド表示"""
     st.header("📖 漫画ライブラリ")
     
-    # 新規登録ボタン（CSSは外部ファイルで管理）
-    
     # 新規登録ボタン
     st.markdown('<div class="add-book-button">', unsafe_allow_html=True)
     if st.button("➕ 新しい漫画を登録", type="primary"):
@@ -305,8 +303,6 @@ def show_books_home():
     
     # 本の一覧表示（データがある場合のみ）
     if books:
-        # 本一覧のスタイルは外部CSSファイルで管理
-        
         # 本をmagazine_typeとmagazine_nameでグループ分け
         from collections import defaultdict
         
@@ -378,43 +374,23 @@ def show_books_home():
                                 # 画像HTMLを準備
                                 try:
                                     if book["image_url"] and book["image_url"] != "":
-                                        image_html = f'<img src="{book["image_url"]}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="{book["title"]}">'
+                                        image_html = f'<img src="{book["image_url"]}" alt="{book["title"]}">'  
                                     else:
-                                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像なし">'
+                                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像なし">'  
                                 except:
-                                    image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;" alt="画像読み込みエラー">'
-                                
-                                # 本のカード全体をHTMLで作成
+                                    image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像読み込みエラー">'                                # 本のカード全体をHTMLで作成
                                 st.markdown(f"""
                                 <div class="book-card">
                                     <div class="mobile-book-image">
                                         {image_html}
                                     </div>
                                     <div class="mobile-book-info">
-                                        <h3 style="
-                                            font-size: clamp(16px, 4vw, 24px);
-                                            margin: 8px 0 8px 0;
-                                            line-height: 1.2;
-                                            text-align: center;
-                                            overflow-wrap: break-word;
-                                            font-weight: bold;
-                                        ">{book["title"]}</h3>
-                                        <div style="
-                                            font-size: clamp(11px, 3vw, 16px);
-                                            text-align: center;
-                                            margin: 8px 0 8px 0;
-                                        ">
+                                        <h3>{book["title"]}</h3>
+                                        <div class="book-volume-info">
                                             📖 {owned}/{released}巻
                                         </div>
-                                        <div style="text-align: center; margin: 4px 0 8px 0;">
-                                            <span style="
-                                                background-color: {'#28a745' if book['is_completed'] else '#007bff'};
-                                                color: white;
-                                                padding: 3px 8px;
-                                                border-radius: 10px;
-                                                font-size: clamp(10px, 2.5vw, 12px);
-                                                font-weight: bold;
-                                            ">{completion_status}</span>
+                                        <div class="status-container">
+                                            <span class="status-badge {'status-completed' if book['is_completed'] else 'status-ongoing'}">{completion_status}</span>
                                         </div>
                                         <div class="detail-button-container">
                                             <!-- ボタンはStreamlitコンポーネントで配置 -->
@@ -438,8 +414,6 @@ def show_book_detail():
         return
     
     book = st.session_state.selected_book
-    
-    # 詳細画面のボタンレイアウトは外部CSSファイルで管理
     
     # ボタン群を水平配置（PC右揃え、モバイル横並び）
     st.markdown('<div class="detail-buttons-container">', unsafe_allow_html=True)
@@ -524,17 +498,9 @@ def show_book_detail():
             status_color = "#007bff"  # 青色（連載中）
             text_color = "white"
         
+        status_class = "status-completed" if book['is_completed'] else "status-ongoing"
         st.markdown(f"""
-        <div style="
-            display: inline-block;
-            background-color: {status_color};
-            color: {text_color};
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            margin: 5px 0 15px 0;
-        ">
+        <div class="detail-status-badge {status_class}">
             {completion_status}
         </div>
         """, unsafe_allow_html=True)

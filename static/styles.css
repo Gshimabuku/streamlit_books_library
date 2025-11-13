@@ -36,6 +36,57 @@
     text-overflow: ellipsis !important;
     max-width: 100% !important;
     line-height: 1.2 !important;
+    font-size: clamp(16px, 4vw, 24px) !important;
+    margin: 8px 0 8px 0 !important;
+    font-weight: bold !important;
+}
+
+/* 本のカード内画像 */
+.book-card img {
+    width: 100% !important;
+    aspect-ratio: 3/4 !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+}
+
+/* 巻数情報 */
+.book-volume-info {
+    font-size: clamp(11px, 3vw, 16px) !important;
+    text-align: center !important;
+    margin: 8px 0 8px 0 !important;
+}
+
+/* 完結・連載中ステータス */
+.status-container {
+    text-align: center !important;
+    margin: 4px 0 8px 0 !important;
+}
+
+.status-badge {
+    color: white !important;
+    padding: 3px 8px !important;
+    border-radius: 10px !important;
+    font-size: clamp(10px, 2.5vw, 12px) !important;
+    font-weight: bold !important;
+}
+
+.status-completed {
+    background-color: #28a745 !important;
+}
+
+.status-ongoing {
+    background-color: #007bff !important;
+}
+
+/* 詳細ページのステータスバッジ */
+.detail-status-badge {
+    display: inline-block !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: bold !important;
+    font-size: 14px !important;
+    margin: 5px 0 15px 0 !important;
+    color: white !important;
 }
 
 /* ==================================== */
