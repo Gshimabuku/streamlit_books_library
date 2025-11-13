@@ -1,0 +1,61 @@
+/* Books Library - Add Book Page Styles */
+
+/* ==================================== */
+/* フォーム関連スタイル */
+/* ==================================== */
+.add-book-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.form-section h3 {
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+/* ==================================== */
+/* アップロード関連 */
+/* ==================================== */
+.upload-preview {
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 10px 0;
+}
+
+.upload-preview.active {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+/* ==================================== */
+/* 登録成功メッセージ */
+/* ==================================== */
+.registration-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 20px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.registration-success h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+}
+
+.registration-success p {
+    margin: 0;
+    font-size: 16px;
+}

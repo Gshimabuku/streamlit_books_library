@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.notion_client import query_notion, create_notion_page, update_notion_page, retrieve_notion_page
+from utils.css_loader import load_custom_styles
 import datetime
 
 # Cloudinaryのインポート
@@ -96,6 +97,9 @@ def go_to_edit_book():
 # メインアプリケーション
 # =========================
 def main():
+    # カスタムCSSを読み込み
+    load_custom_styles()
+    
     st.title("📚 Books Library")
     
     # ページ遷移に基づいてコンテンツを表示
@@ -112,25 +116,7 @@ def show_books_home():
     """Home画面：本の一覧を3列グリッド表示"""
     st.header("📖 漫画ライブラリ")
     
-    # 新規登録ボタン専用CSS
-    st.markdown("""
-    <style>
-    /* 新規登録ボタンのスタイル */
-    .add-book-button .stButton > button {
-        background: #28a745 !important;
-        border: none !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        padding: 15px 30px !important;
-        border-radius: 8px !important;
-        color: white !important;
-    }
-    
-    .add-book-button .stButton > button:hover {
-        background: #218838 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # 新規登録ボタン（CSSは外部ファイルで管理）
     
     # 新規登録ボタン
     st.markdown('<div class="add-book-button">', unsafe_allow_html=True)
@@ -319,110 +305,7 @@ def show_books_home():
     
     # 本の一覧表示（データがある場合のみ）
     if books:
-        # スマホ時の横並びレイアウト用CSS
-        st.markdown("""
-        <style>
-        .book-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: white;
-        }
-        
-        /* アコーディオンボタンのスタイル調整 */
-        .stButton > button {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            color: white;
-        }
-        
-        .magazine-name-header {
-            background-color: #f8f9fa;
-            border-left: 4px solid #007bff;
-            padding: 10px 15px;
-            margin: 15px 0 10px 0;
-            font-size: 16px;
-            font-weight: bold;
-            color: #495057;
-        }
-        
-        @media (max-width: 768px) {
-            .book-card {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: flex-start !important;
-                gap: 10px !important;
-            }
-            .mobile-book-image {
-                flex: 0 0 40% !important;
-                width: 40% !important;
-            }
-            .mobile-book-info {
-                flex: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: space-between !important;
-                min-height: 100% !important;
-            }
-            .detail-button-container {
-                margin-top: auto !important;
-            }
-
-            .magazine-name-header {
-                font-size: 14px;
-                padding: 8px 12px;
-            }
-            
-            /* モバイルでのボタン横並び強制 */
-            [data-testid="column"] {
-                flex-direction: row !important;
-            }
-            
-            [data-testid="column"] > div {
-                display: flex !important;
-                gap: 5px !important;
-            }
-            
-            .stButton {
-                flex: 1 !important;
-                min-width: 0 !important;
-            }
-            
-            .stButton > button {
-                width: 100% !important;
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                font-size: 12px !important;
-                padding: 8px 4px !important;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .book-card {
-                display: block !important;
-            }
-            .mobile-book-image, .mobile-book-info {
-                width: 100% !important;
-                flex: none !important;
-            }
-            .detail-button-container {
-                margin-top: 8px !important;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
+        # 本一覧のスタイルは外部CSSファイルで管理
         
         # 本をmagazine_typeとmagazine_nameでグループ分け
         from collections import defaultdict
@@ -556,82 +439,7 @@ def show_book_detail():
     
     book = st.session_state.selected_book
     
-    # PC・モバイル対応ボタンレイアウトCSS
-    st.markdown("""
-    <style>
-    /* 詳細画面のボタン配置 */
-    .detail-buttons-container {
-        margin-bottom: 20px;
-    }
-    
-    /* PC版：右揃えのボタン配置 */
-    @media (min-width: 769px) {
-        .detail-buttons-container [data-testid="column"]:last-child {
-            display: flex !important;
-            justify-content: flex-end !important;
-            gap: 8px !important;
-        }
-        
-        .detail-buttons-container [data-testid="column"]:last-child [data-testid="column"] {
-            flex: 0 0 auto !important;
-            margin: 0 !important;
-            padding: 0 2px !important;
-        }
-        
-        .detail-buttons-container [data-testid="column"]:last-child .stButton {
-            margin: 0 !important;
-        }
-    }
-    
-    /* モバイル版：強制横並び */
-    @media (max-width: 768px) {
-        .detail-buttons-container {
-            display: flex !important;
-            flex-wrap: nowrap !important;
-            gap: 4px !important;
-            width: 100% !important;
-        }
-        
-        .detail-buttons-container [data-testid="column"] {
-            flex: 1 !important;
-            min-width: 0 !important;
-            margin: 0 !important;
-            padding: 0 1px !important;
-        }
-        
-        .detail-buttons-container [data-testid="column"]:nth-child(2) {
-            flex: 0 0 8px !important;
-        }
-        
-        .detail-buttons-container [data-testid="column"]:last-child {
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 2px !important;
-        }
-        
-        .detail-buttons-container [data-testid="column"]:last-child [data-testid="column"] {
-            flex: 1 !important;
-            margin: 0 !important;
-            padding: 0 1px !important;
-        }
-        
-        .detail-buttons-container .stButton {
-            margin: 0 !important;
-            width: 100% !important;
-        }
-        
-        .detail-buttons-container .stButton > button {
-            width: 100% !important;
-            font-size: 10px !important;
-            padding: 6px 2px !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            min-height: 38px !important;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # 詳細画面のボタンレイアウトは外部CSSファイルで管理
     
     # ボタン群を水平配置（PC右揃え、モバイル横並び）
     st.markdown('<div class="detail-buttons-container">', unsafe_allow_html=True)

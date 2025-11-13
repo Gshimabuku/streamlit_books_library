@@ -1,0 +1,91 @@
+/* Books Library - Book Detail Page Styles */
+
+/* ==================================== */
+/* 詳細ページレイアウト */
+/* ==================================== */
+.book-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.book-image-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.book-image {
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-width: 100%;
+    height: auto;
+}
+
+/* ==================================== */
+/* ステータスバッジ */
+/* ==================================== */
+.status-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 5px 0 15px 0;
+}
+
+.status-badge.completed {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-badge.ongoing {
+    background-color: #007bff;
+    color: white;
+}
+
+/* ==================================== */
+/* 情報セクション */
+/* ==================================== */
+.info-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.info-section h3 {
+    color: #495057;
+    margin-top: 0;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.info-item {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.info-item strong {
+    color: #495057;
+}
+
+/* ==================================== */
+/* レスポンシブデザイン（詳細ページ） */
+/* ==================================== */
+@media (max-width: 768px) {
+    .book-detail-container {
+        padding: 10px;
+    }
+    
+    .book-image {
+        width: 200px;
+    }
+    
+    .info-section {
+        padding: 15px;
+    }
+    
+    .info-item {
+        font-size: 14px;
+    }
+}
