@@ -386,11 +386,11 @@ def show_books_home():
                                     </div>
                                     <div class="mobile-book-info">
                                         <h3>{book["title"]}</h3>
-                                        <div class="book-volume-info">
-                                            📖 {owned}/{released}巻
-                                        </div>
                                         <div class="status-container">
                                             <span class="status-badge {'status-completed' if book['is_completed'] else 'status-ongoing'}">{completion_status}</span>
+                                        </div>
+                                        <div class="book-volume-info">
+                                            📖 {owned}/{released}巻
                                         </div>
                                         <div class="detail-button-container">
                                             <!-- ボタンはStreamlitコンポーネントで配置 -->
