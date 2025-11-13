@@ -28,9 +28,14 @@
     background-color: white;
 }
 
-/* 本のタイトル左寄せ */
+/* 本のタイトル左寄せ・一行表示 */
 .book-card h3 {
     text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    line-height: 1.2 !important;
 }
 
 /* ==================================== */
