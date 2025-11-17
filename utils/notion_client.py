@@ -73,3 +73,12 @@ def retrieve_notion_page(page_id: str, api_key: str) -> Dict[str, Any]:
     res = requests.get(url, headers=_build_headers(api_key))
     res.raise_for_status()
     return res.json()
+
+
+def delete_notion_page(page_id: str, api_key: str) -> Dict[str, Any]:
+    """Notionページをアーカイブ（削除）する。"""
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    payload = {"archived": True}
+    res = requests.patch(url, headers=_build_headers(api_key), json=payload)
+    res.raise_for_status()
+    return res.json()

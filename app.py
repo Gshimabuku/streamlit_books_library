@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.notion_client import query_notion, create_notion_page, update_notion_page, retrieve_notion_page
+from utils.notion_client import query_notion, create_notion_page, update_notion_page, retrieve_notion_page, delete_notion_page
 from utils.css_loader import load_custom_styles
 from utils.kana_converter import title_to_kana
 import datetime
@@ -457,17 +457,58 @@ def show_book_detail():
             if st.button("🗑️ 削除", type="secondary"):
                 if st.session_state.get("confirm_delete", False):
                     try:
-                        # 削除機能の実装
-                        st.success("削除機能は今後実装予定です")
+                        # Cloudinary画像の削除
+                        image_url = book.get("image_url")
+                        if image_url and CLOUDINARY_ENABLED:
+                            try:
+                                # CloudinaryのURLからpublic_idを抽出
+                                # URL例: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/public_id.jpg
+                                if "cloudinary.com" in image_url:
+                                    import re
+                                    match = re.search(r'/upload/(?:v\d+/)?([^/]+?)(?:\.[^.]+)?$', image_url)
+                                    if match:
+                                        public_id = match.group(1)
+                                        with st.spinner("画像を削除中..."):
+                                            cloudinary.uploader.destroy(public_id)
+                                        st.success("✅ 画像を削除しました")
+                            except Exception as img_error:
+                                st.warning(f"⚠️ 画像の削除に失敗しました: {str(img_error)}")
+                        
+                        # Notionレコードの削除
+                        with st.spinner("データを削除中..."):
+                            delete_notion_page(book["id"], NOTION_API_KEY)
+                        
+                        st.success("✅ 漫画を削除しました")
                         st.session_state.confirm_delete = False
+                        
+                        # ホームに戻る
+                        import time
+                        time.sleep(1)
+                        go_to_home()
+                        st.rerun()
+                        
                     except Exception as e:
-                        st.error(f"削除に失敗しました: {str(e)}")
+                        st.error(f"❌ 削除に失敗しました: {str(e)}")
+                        st.session_state.confirm_delete = False
                 else:
                     st.session_state.confirm_delete = True
-                    st.warning("⚠️ 本当に削除しますか？もう一度「削除する」ボタンを押してください。")
                     st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
+    
+    # 削除確認ダイアログ
+    if st.session_state.get("confirm_delete", False):
+        st.markdown("---")
+        st.error("⚠️ 本当に削除しますか？この操作は取り消せません。")
+        st.warning(f"削除対象: {book['title']}")
+        col_confirm, col_cancel = st.columns(2)
+        with col_confirm:
+            st.markdown("もう一度「削除」ボタンを押してください")
+        with col_cancel:
+            if st.button("❌ キャンセル", use_container_width=True):
+                st.session_state.confirm_delete = False
+                st.rerun()
+        st.markdown("---")
     
     # Notionから詳細データを取得
     page_data = book.get("page_data", {})
