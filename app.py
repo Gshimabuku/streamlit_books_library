@@ -871,9 +871,328 @@ def show_edit_book():
         return
     
     book = st.session_state.selected_book
+    page_data = book.get("page_data", {})
+    props = page_data.get("properties", {})
     
-    st.info("📝 編集機能は今後実装予定です")
-    st.write(f"選択中の漫画: **{book['title']}**")
+    # 既存データを取得
+    current_title = book.get("title", "")
+    current_magazine_type = book.get("magazine_type", "その他")
+    
+    # 雑誌名
+    current_magazine_name = ""
+    if props.get("magazine_name", {}).get("rich_text") and props["magazine_name"]["rich_text"]:
+        current_magazine_name = props["magazine_name"]["rich_text"][0]["text"]["content"]
+    
+    # タイトルかな
+    current_title_kana = ""
+    if props.get("title_kana", {}).get("rich_text") and props["title_kana"]["rich_text"]:
+        current_title_kana = props["title_kana"]["rich_text"][0]["text"]["content"]
+    
+    # 巻数情報
+    current_owned = book.get("latest_owned_volume", 0)
+    current_released = book.get("latest_released_volume", 0)
+    current_completed = book.get("is_completed", False)
+    
+    # 画像URL
+    current_image_url = book.get("image_url", "")
+    
+    # 発売日情報
+    current_latest_release_date = datetime.date.today()
+    if props.get("latest_release_date", {}).get("date"):
+        try:
+            date_str = props["latest_release_date"]["date"]["start"]
+            current_latest_release_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        except:
+            pass
+    
+    current_next_release_date = None
+    if props.get("next_release_date", {}).get("date"):
+        try:
+            date_str = props["next_release_date"]["date"]["start"]
+            current_next_release_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        except:
+            pass
+    
+    # 詳細情報
+    current_missing_volumes = ""
+    if props.get("missing_volumes", {}).get("rich_text") and props["missing_volumes"]["rich_text"]:
+        current_missing_volumes = props["missing_volumes"]["rich_text"][0]["text"]["content"]
+    
+    current_special_volumes = ""
+    if props.get("special_volumes", {}).get("rich_text") and props["special_volumes"]["rich_text"]:
+        current_special_volumes = props["special_volumes"]["rich_text"][0]["text"]["content"]
+    
+    current_owned_media = "単行本"
+    if props.get("owned_media", {}).get("select"):
+        current_owned_media = props["owned_media"]["select"]["name"]
+    
+    current_notes = ""
+    if props.get("notes", {}).get("rich_text") and props["notes"]["rich_text"]:
+        current_notes = props["notes"]["rich_text"][0]["text"]["content"]
+    
+    # 編集フォーム
+    with st.form("edit_book_form"):
+        st.subheader("📝 基本情報")
+        
+        # 必須項目
+        title = st.text_input("漫画タイトル *", value=current_title)
+        title_kana = st.text_input(
+            "タイトルかな（並び順用）", 
+            value=current_title_kana,
+            placeholder="例: しんげきのきょじん",
+            help="空欄の場合は保存時に自動生成されます"
+        )
+        
+        magazine_type = st.selectbox(
+            "連載誌タイプ *", 
+            ["ジャンプ", "マガジン", "サンデー", "その他"],
+            index=["ジャンプ", "マガジン", "サンデー", "その他"].index(current_magazine_type) if current_magazine_type in ["ジャンプ", "マガジン", "サンデー", "その他"] else 3
+        )
+        magazine_name = st.text_input("連載誌名", value=current_magazine_name)
+        
+        # 巻数情報
+        col1, col2 = st.columns(2)
+        with col1:
+            latest_owned_volume = st.number_input("現在所持巻数 *", min_value=0, value=current_owned)
+        with col2:
+            latest_released_volume = st.number_input("発売済み最新巻 *", min_value=0, value=current_released)
+        
+        # その他情報
+        st.subheader("📷 画像情報")
+        
+        # 現在の画像を表示
+        if current_image_url:
+            st.image(current_image_url, caption="現在の画像", width=200)
+        
+        # 画像アップロード方式選択
+        upload_method = st.radio(
+            "画像の変更方法",
+            ["画像を変更しない", "ファイルをアップロード", "URLを直接入力"],
+            horizontal=True
+        )
+        
+        uploaded_file = None
+        new_image_url = None
+        
+        if upload_method == "ファイルをアップロード":
+            uploaded_file = st.file_uploader(
+                "新しい画像ファイルを選択", 
+                type=["jpg", "jpeg", "png", "webp"],
+                help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます"
+            )
+            
+            if uploaded_file is not None:
+                st.image(uploaded_file, caption="新しい画像プレビュー", width=200)
+                if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
+                    st.info("📤 保存時にCloudinaryにアップロードされます")
+                else:
+                    st.warning("⚠️ Cloudinary設定が見つかりません")
+        
+        elif upload_method == "URLを直接入力":
+            new_image_url = st.text_input("新しい画像URL", placeholder="https://example.com/image.jpg")
+            
+            if new_image_url:
+                try:
+                    st.image(new_image_url, caption="新しい画像プレビュー", width=200)
+                except Exception:
+                    st.warning("⚠️ 画像URLが正しくないか、読み込めません")
+        
+        # 完結情報
+        is_completed = st.checkbox("完結済み", value=current_completed)
+        
+        # 日付情報
+        st.subheader("📅 発売日情報")
+        
+        latest_release_date = st.date_input(
+            "最新巻発売日 *",
+            value=current_latest_release_date,
+            min_value=datetime.date(1960, 1, 1),
+            max_value=datetime.date(2100, 12, 31)
+        )
+        
+        use_next_release_date = st.checkbox("次巻発売予定日を設定する", value=current_next_release_date is not None)
+        next_release_date = st.date_input(
+            "次巻発売予定日",
+            value=current_next_release_date if current_next_release_date else datetime.date.today() + datetime.timedelta(days=90),
+            min_value=datetime.date(1960, 1, 1),
+            max_value=datetime.date(2100, 12, 31),
+            help="上のチェックボックスをオンにした場合のみ保存されます"
+        )
+        
+        # 詳細情報
+        st.subheader("📚 詳細情報")
+        missing_volumes = st.text_input("未所持巻（抜け）", value=current_missing_volumes, placeholder="例: 3,5,10")
+        special_volumes = st.text_input("特殊巻", value=current_special_volumes, placeholder="例: 10.5,外伝1")
+        owned_media = st.selectbox(
+            "所持媒体", 
+            ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"],
+            index=["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"].index(current_owned_media) if current_owned_media in ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"] else 0
+        )
+        notes = st.text_area("備考", value=current_notes, placeholder="その他メモ...")
+        
+        # 更新ボタン
+        submitted = st.form_submit_button("💾 変更を保存", type="primary")
+        
+        if submitted:
+            if not title or not magazine_type:
+                st.error("❌ タイトルと連載誌タイプは必須項目です")
+            else:
+                try:
+                    # 画像アップロード処理
+                    final_image_url = current_image_url  # デフォルトは現在の画像
+                    
+                    if upload_method == "ファイルをアップロード" and uploaded_file is not None:
+                        if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
+                            with st.spinner("画像をアップロード中..."):
+                                upload_result = cloudinary.uploader.upload(uploaded_file)
+                                final_image_url = upload_result["secure_url"]
+                                st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
+                                
+                                # 古い画像を削除（Cloudinaryの場合）
+                                if current_image_url and "cloudinary.com" in current_image_url:
+                                    try:
+                                        import re
+                                        match = re.search(r'/upload/(?:v\d+/)?([^/]+?)(?:\.[^.]+)?$', current_image_url)
+                                        if match:
+                                            old_public_id = match.group(1)
+                                            cloudinary.uploader.destroy(old_public_id)
+                                    except:
+                                        pass  # 古い画像削除失敗は無視
+                        else:
+                            st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
+                    elif upload_method == "URLを直接入力" and new_image_url:
+                        final_image_url = new_image_url
+                    
+                    # Notionページのプロパティ構築
+                    properties = {
+                        "title": {"title": [{"text": {"content": title}}]},
+                        "latest_owned_volume": {"number": latest_owned_volume},
+                        "latest_released_volume": {"number": latest_released_volume},
+                        "latest_release_date": {"date": {"start": latest_release_date.isoformat()}},
+                        "is_completed": {"checkbox": is_completed}
+                    }
+                    
+                    # タイトルかなを追加（未入力の場合はAIで自動生成）
+                    final_title_kana = title_kana.strip() if title_kana else ""
+                    ai_generated = False
+                    
+                    if not final_title_kana and title:
+                        # AI APIキーを取得（secrets.tomlまたは環境変数から）
+                        openai_api_key = None
+                        try:
+                            openai_api_key = st.secrets.get("openai", {}).get("api_key") or os.environ.get("OPENAI_API_KEY")
+                        except:
+                            pass
+                        
+                        # AIを使用して変換（APIキーがある場合）
+                        use_ai = openai_api_key is not None
+                        ai_generated = use_ai
+                        
+                        with st.spinner("タイトルかなを生成中..." + (" (AI使用)" if use_ai else "")):
+                            final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
+                    
+                    if final_title_kana:
+                        properties["title_kana"] = {"rich_text": [{"text": {"content": final_title_kana}}]}
+                    
+                    # 次巻発売予定日
+                    if use_next_release_date and next_release_date:
+                        properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
+                    else:
+                        # チェックを外した場合は削除
+                        properties["next_release_date"] = {"date": None}
+                    
+                    # 追加プロパティ
+                    if magazine_type:
+                        properties["magazine_type"] = {"select": {"name": magazine_type}}
+                    
+                    if magazine_name:
+                        properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
+                    else:
+                        properties["magazine_name"] = {"rich_text": []}
+                    
+                    if missing_volumes:
+                        properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
+                    else:
+                        properties["missing_volumes"] = {"rich_text": []}
+                    
+                    if special_volumes:
+                        properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
+                    else:
+                        properties["special_volumes"] = {"rich_text": []}
+                    
+                    if owned_media:
+                        properties["owned_media"] = {"select": {"name": owned_media}}
+                    
+                    if notes:
+                        properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
+                    else:
+                        properties["notes"] = {"rich_text": []}
+                    
+                    # 画像URL
+                    if final_image_url:
+                        properties["image_url"] = {"url": final_image_url}
+                    
+                    # Notion更新
+                    try:
+                        with st.spinner("Notionを更新中..."):
+                            result = update_notion_page(book["id"], properties, NOTION_API_KEY)
+                        
+                        st.success("✅ 漫画情報が正常に更新されました！")
+                        st.balloons()
+                        
+                        # かなが自動生成された場合は通知（AI生成の場合は明示）
+                        if not title_kana.strip() and final_title_kana:
+                            if ai_generated:
+                                st.info(f"🤖 タイトルかなをAIで生成しました: **{final_title_kana}** (AI生成)")
+                            else:
+                                st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
+                        
+                        # セッション状態で更新成功をマーク
+                        st.session_state.update_success = True
+                        
+                    except Exception as update_error:
+                        st.error(f"❌ 更新に失敗しました: {str(update_error)}")
+                    
+                except Exception as e:
+                    st.error(f"❌ 更新処理でエラーが発生しました: {str(e)}")
+    
+    # フォーム外で更新成功状態をチェック
+    if st.session_state.get("update_success", False):
+        st.success("🎉 更新が完了しました！")
+        if st.button("📖 詳細に戻る", type="primary"):
+            st.session_state.update_success = False
+            # 更新されたデータを再取得して詳細画面に戻る
+            try:
+                updated_page = retrieve_notion_page(book["id"], NOTION_API_KEY)
+                # book_dataを更新
+                updated_props = updated_page["properties"]
+                
+                updated_title = "タイトル不明"
+                if updated_props.get("title", {}).get("title"):
+                    updated_title = updated_props["title"]["title"][0]["text"]["content"]
+                
+                updated_image_url = updated_props.get("image_url", {}).get("url")
+                if not updated_image_url or not updated_image_url.startswith(('http://', 'https://')):
+                    updated_image_url = None
+                
+                updated_book_data = {
+                    "id": book["id"],
+                    "title": updated_title,
+                    "image_url": updated_image_url,
+                    "latest_owned_volume": updated_props.get("latest_owned_volume", {}).get("number", 0),
+                    "latest_released_volume": updated_props.get("latest_released_volume", {}).get("number", 0),
+                    "is_completed": updated_props.get("is_completed", {}).get("checkbox", False),
+                    "magazine_type": updated_props.get("magazine_type", {}).get("select", {}).get("name", "その他"),
+                    "magazine_name": updated_props.get("magazine_name", {}).get("rich_text", [{}])[0].get("text", {}).get("content", "不明") if updated_props.get("magazine_name", {}).get("rich_text") else "不明",
+                    "page_data": updated_page
+                }
+                
+                st.session_state.selected_book = updated_book_data
+            except:
+                pass  # エラー時は古いデータのまま
+            
+            st.session_state.page = "book_detail"
+            st.rerun()
 
 if __name__ == "__main__":
     main()
