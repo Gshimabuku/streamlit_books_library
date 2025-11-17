@@ -343,27 +343,12 @@ def show_books_home():
 
                 logo_url = magazine_type_logos.get(magazine_type)
 
-                # magazine-header のラッパーで囲ってスタイルを確実に適用
-                st.markdown('<div class="magazine-header">', unsafe_allow_html=True)
-                header_cols = st.columns([1, 9])
-                # 左側にロゴ（ある場合） — HTMLで画像を埋め込み、`.magazine-logo`クラスを使用
-                with header_cols[0]:
-                    if logo_url:
-                        try:
-                            st.markdown(f'<div class="magazine-logo"><img src="{logo_url}" alt="{magazine_type} logo"></div>', unsafe_allow_html=True)
-                        except Exception:
-                            st.write(magazine_type)
-                    else:
-                        st.write("")
-
-                # 右側に折りたたみボタン
-                with header_cols[1]:
-                    if st.button(f"{expand_icon}  📚 ({len(grouped_books[magazine_type])}誌)",
-                                 key=f"toggle_{magazine_type}",
-                                 use_container_width=True):
-                        st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
-                        st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                # ヘッダーボタン（テキスト表示に戻す）
+                if st.button(f"{expand_icon} 📚 {magazine_type} ({len(grouped_books[magazine_type])}誌)",
+                             key=f"toggle_{magazine_type}",
+                             use_container_width=True):
+                    st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
+                    st.rerun()
                 
                 # 展開されている場合のみ内容を表示
                 if is_expanded:
