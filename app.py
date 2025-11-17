@@ -625,44 +625,19 @@ def show_add_book():
         go_to_home()
         st.rerun()
     
-    # タイトルかな自動生成用のセッション状態初期化
-    if "temp_title" not in st.session_state:
-        st.session_state.temp_title = ""
-    if "temp_title_kana" not in st.session_state:
-        st.session_state.temp_title_kana = ""
-    
-    # フォーム外でタイトル入力とかな生成ボタンを配置
-    st.subheader("📝 基本情報")
-    
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        temp_title = st.text_input("漫画タイトル *", value=st.session_state.temp_title, placeholder="例: 進撃の巨人", key="title_input")
-    with col2:
-        st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
-        if st.button("🔄 かな生成", help="タイトルからかなを自動生成します"):
-            if temp_title:
-                st.session_state.temp_title = temp_title
-                st.session_state.temp_title_kana = title_to_kana(temp_title)
-                st.rerun()
-    
-    temp_title_kana = st.text_input(
-        "タイトルかな（並び順用）", 
-        value=st.session_state.temp_title_kana,
-        placeholder="例: しんげきのきょじん",
-        help="上の「かな生成」ボタンで自動生成できます。手動編集も可能です。",
-        key="title_kana_input"
-    )
-    
-    # セッション状態を更新
-    st.session_state.temp_title = temp_title
-    st.session_state.temp_title_kana = temp_title_kana
-    
     with st.form("add_book_form"):
-        # フォーム内では非表示フィールドとしてタイトルとかなを保持
-        st.markdown("---")
+        st.subheader("📝 基本情報")
+        
+        # 必須項目
+        title = st.text_input("漫画タイトル *", placeholder="例: ONE PIECE")
+        title_kana = st.text_input(
+            "タイトルかな（並び順用）", 
+            placeholder="例: わんぴーす",
+            help="空欄の場合は保存時に自動生成されます"
+        )
         
         magazine_type = st.selectbox("連載誌タイプ *", ["ジャンプ", "マガジン", "サンデー", "その他"])
-        magazine_name = st.text_input("連載誌名", placeholder="例: 週刊少年マガジン")
+        magazine_name = st.text_input("連載誌名", placeholder="例: 週刊少年ジャンプ")
         
         # 巻数情報
         col1, col2 = st.columns(2)
@@ -737,7 +712,7 @@ def show_add_book():
         # 詳細情報
         st.subheader("📚 詳細情報")
         missing_volumes = st.text_input("未所持巻（抜け）", placeholder="例: 3,5,10")
-        special_volumes = st.text_input("特殊巻", placeholder="例: 0.5,10.5")
+        special_volumes = st.text_input("特殊巻", placeholder="例: 10.5,外伝1")
         owned_media = st.selectbox("所持媒体", ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"])
         notes = st.text_area("備考", placeholder="その他メモ...")
         
@@ -745,10 +720,6 @@ def show_add_book():
         submitted = st.form_submit_button("📚 漫画を登録", type="primary")
         
         if submitted:
-            # セッション状態から値を取得
-            title = st.session_state.temp_title
-            title_kana = st.session_state.temp_title_kana
-            
             if not title or not magazine_type:
                 st.error("❌ タイトルと連載誌タイプは必須項目です")
             else:
@@ -776,9 +747,13 @@ def show_add_book():
                         "is_completed": {"checkbox": is_completed}
                     }
                     
-                    # タイトルかなを追加（空でない場合のみ）
-                    if title_kana:
-                        properties["title_kana"] = {"rich_text": [{"text": {"content": title_kana}}]}
+                    # タイトルかなを追加（未入力の場合は自動生成）
+                    final_title_kana = title_kana.strip() if title_kana else ""
+                    if not final_title_kana and title:
+                        final_title_kana = title_to_kana(title)
+                    
+                    if final_title_kana:
+                        properties["title_kana"] = {"rich_text": [{"text": {"content": final_title_kana}}]}
                     
                     # 次巻発売予定日
                     if use_next_release_date and next_release_date:
@@ -819,9 +794,9 @@ def show_add_book():
                         if final_image_url:
                             st.markdown(f"🔗 [画像を開く]({final_image_url})")
                         
-                        # セッション状態をクリア
-                        st.session_state.temp_title = ""
-                        st.session_state.temp_title_kana = ""
+                        # かなが自動生成された場合は通知
+                        if not title_kana.strip() and final_title_kana:
+                            st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
                         
                         # セッション状態で登録成功をマーク
                         st.session_state.registration_success = True
@@ -846,10 +821,6 @@ def show_add_book():
                             
                             st.success("✅ 基本プロパティで登録成功！")
                             st.info("💡 基本情報のみ保存されました。詳細情報は後で編集してください。")
-                            
-                            # セッション状態をクリア
-                            st.session_state.temp_title = ""
-                            st.session_state.temp_title_kana = ""
                             
                             # セッション状態で登録成功をマーク
                             st.session_state.registration_success = True
