@@ -173,7 +173,7 @@ def title_to_kana_with_ai(title: str, api_key: str = None, provider: str = "open
                 messages=[
                     {
                         "role": "user",
-                        "content": f"次の漫画タイトルを正確なひらがなの読み仮名に変換してください。ひらがなのみで出力し、記号やスペースは含めないでください: {title}"
+                        "content": f"次の漫画タイトルを正確なひらがなの読み仮名に変換してください。ひらがなのみ（伸ばし棒「ー」含む）で出力し、記号やスペースは含めないでください: {title}"
                     }
                 ]
             )
