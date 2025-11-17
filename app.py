@@ -1119,40 +1119,50 @@ def show_edit_book():
     # フォーム外で更新成功状態をチェック
     if st.session_state.get("update_success", False):
         st.success("🎉 更新が完了しました！")
-        if st.button("📖 詳細に戻る", type="primary"):
-            st.session_state.update_success = False
-            # 更新されたデータを再取得して詳細画面に戻る
-            try:
-                updated_page = retrieve_notion_page(book["id"], NOTION_API_KEY)
-                # book_dataを更新
-                updated_props = updated_page["properties"]
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📖 詳細に戻る", type="primary", use_container_width=True):
+                st.session_state.update_success = False
+                # 更新されたデータを再取得して詳細画面に戻る
+                try:
+                    updated_page = retrieve_notion_page(book["id"], NOTION_API_KEY)
+                    # book_dataを更新
+                    updated_props = updated_page["properties"]
+                    
+                    updated_title = "タイトル不明"
+                    if updated_props.get("title", {}).get("title"):
+                        updated_title = updated_props["title"]["title"][0]["text"]["content"]
+                    
+                    updated_image_url = updated_props.get("image_url", {}).get("url")
+                    if not updated_image_url or not updated_image_url.startswith(('http://', 'https://')):
+                        updated_image_url = None
+                    
+                    updated_book_data = {
+                        "id": book["id"],
+                        "title": updated_title,
+                        "image_url": updated_image_url,
+                        "latest_owned_volume": updated_props.get("latest_owned_volume", {}).get("number", 0),
+                        "latest_released_volume": updated_props.get("latest_released_volume", {}).get("number", 0),
+                        "is_completed": updated_props.get("is_completed", {}).get("checkbox", False),
+                        "magazine_type": updated_props.get("magazine_type", {}).get("select", {}).get("name", "その他"),
+                        "magazine_name": updated_props.get("magazine_name", {}).get("rich_text", [{}])[0].get("text", {}).get("content", "不明") if updated_props.get("magazine_name", {}).get("rich_text") else "不明",
+                        "page_data": updated_page
+                    }
+                    
+                    st.session_state.selected_book = updated_book_data
+                except:
+                    pass  # エラー時は古いデータのまま
                 
-                updated_title = "タイトル不明"
-                if updated_props.get("title", {}).get("title"):
-                    updated_title = updated_props["title"]["title"][0]["text"]["content"]
-                
-                updated_image_url = updated_props.get("image_url", {}).get("url")
-                if not updated_image_url or not updated_image_url.startswith(('http://', 'https://')):
-                    updated_image_url = None
-                
-                updated_book_data = {
-                    "id": book["id"],
-                    "title": updated_title,
-                    "image_url": updated_image_url,
-                    "latest_owned_volume": updated_props.get("latest_owned_volume", {}).get("number", 0),
-                    "latest_released_volume": updated_props.get("latest_released_volume", {}).get("number", 0),
-                    "is_completed": updated_props.get("is_completed", {}).get("checkbox", False),
-                    "magazine_type": updated_props.get("magazine_type", {}).get("select", {}).get("name", "その他"),
-                    "magazine_name": updated_props.get("magazine_name", {}).get("rich_text", [{}])[0].get("text", {}).get("content", "不明") if updated_props.get("magazine_name", {}).get("rich_text") else "不明",
-                    "page_data": updated_page
-                }
-                
-                st.session_state.selected_book = updated_book_data
-            except:
-                pass  # エラー時は古いデータのまま
-            
-            st.session_state.page = "book_detail"
-            st.rerun()
+                st.session_state.page = "book_detail"
+                st.rerun()
+        
+        with col2:
+            if st.button("📚 一覧に戻る", use_container_width=True):
+                st.session_state.update_success = False
+                go_to_home()
+                st.rerun()
 
 if __name__ == "__main__":
     main()
