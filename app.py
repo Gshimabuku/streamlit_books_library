@@ -750,6 +750,8 @@ def show_add_book():
                     
                     # タイトルかなを追加（未入力の場合はAIで自動生成）
                     final_title_kana = title_kana.strip() if title_kana else ""
+                    ai_generated = False
+                    
                     if not final_title_kana and title:
                         # AI APIキーを取得（secrets.tomlまたは環境変数から）
                         openai_api_key = None
@@ -760,6 +762,8 @@ def show_add_book():
                         
                         # AIを使用して変換（APIキーがある場合）
                         use_ai = openai_api_key is not None
+                        ai_generated = use_ai
+                        
                         with st.spinner("タイトルかなを生成中..." + (" (AI使用)" if use_ai else "")):
                             final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
@@ -805,9 +809,12 @@ def show_add_book():
                         if final_image_url:
                             st.markdown(f"🔗 [画像を開く]({final_image_url})")
                         
-                        # かなが自動生成された場合は通知
+                        # かなが自動生成された場合は通知（AI生成の場合は明示）
                         if not title_kana.strip() and final_title_kana:
-                            st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
+                            if ai_generated:
+                                st.info(f"🤖 タイトルかなをAIで生成しました: **{final_title_kana}** (AI生成)")
+                            else:
+                                st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
                         
                         # セッション状態で登録成功をマーク
                         st.session_state.registration_success = True
