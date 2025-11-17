@@ -123,6 +123,71 @@
 }
 
 /* ==================================== */
+/* アコーディオンヘッダー（ロゴ + 折りたたみボタン） */
+/* ==================================== */
+.magazine-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 6px 8px !important;
+    margin: 12px 0 !important;
+}
+
+.magazine-header .magazine-logo {
+    width: 48px !important;
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffffff !important; /* 余白を白にする */
+    border-radius: 6px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    padding: 4px !important;
+}
+
+.magazine-header .magazine-logo img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important; /* 画像を切り抜かず収める */
+}
+
+.magazine-header .magazine-toggle {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.magazine-header .magazine-toggle .stButton {
+    width: 100% !important;
+}
+
+.magazine-header .magazine-toggle .stButton > button {
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    padding-left: 12px !important;
+}
+
+@media (max-width: 600px) {
+    .magazine-header {
+        gap: 8px !important;
+        padding: 4px 6px !important;
+    }
+    .magazine-header .magazine-logo {
+        width: 40px !important;
+        height: 40px !important;
+        padding: 3px !important;
+    }
+    .magazine-header .magazine-toggle .stButton > button {
+        height: 40px !important;
+        padding-left: 8px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* ==================================== */
 /* モバイル対応レスポンシブデザイン */
 /* ==================================== */
 @media (max-width: 768px) {

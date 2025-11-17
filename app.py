@@ -334,10 +334,11 @@ def show_books_home():
                 
                 # ヘッダーボタン（ロゴ画像 + ボタン）
                 # 各雑誌タイプに対応するロゴ画像URL（必要に応じて差し替えてください）
+                # ロゴをローカル静的ファイルから参照するように変更
                 magazine_type_logos = {
-                    "ジャンプ": "https://res.cloudinary.com/do6trtdrp/image/upload/v1763345237/Weekly_Shonen_Jump_logo.svg_wjmr19.png",
-                    "マガジン": "https://res.cloudinary.com/do6trtdrp/image/upload/v1763345237/Weekly_Shonen_Magazine.svg_v9eys4.png",
-                    "サンデー": "https://res.cloudinary.com/do6trtdrp/image/upload/v1763345237/Shounen_Sunday_Super_vlnff5.png",
+                    "ジャンプ": "static/logos/jump.png",
+                    "マガジン": "static/logos/magazine.png",
+                    "サンデー": "static/logos/sunday.png",
                 }
 
                 logo_url = magazine_type_logos.get(magazine_type)
