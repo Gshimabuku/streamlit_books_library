@@ -146,11 +146,11 @@ def title_to_kana_with_ai(title: str, api_key: str = None, provider: str = "open
                 messages=[
                     {
                         "role": "system",
-                        "content": "あなたは漫画タイトルを正確なひらがなの読み仮名に変換する専門家です。タイトルの正式な読み方をひらがなのみで出力してください。記号やスペースは含めず、純粋なひらがなのみ（伸ばし棒「ー」は含める）を出力してください。"
+                        "content": "あなたは漫画タイトルを正確なひらがなの読み仮名に変換する専門家です。長音（伸ばす音）は必ず「ー」で表記してください。例：「ワンピース」→「わんぴーす」、「ヒーロー」→「ひーろー」、「スパイファミリー」→「すぱいふぁみりー」。ひらがなと「ー」のみで出力し、他の記号やスペースは含めないでください。"
                     },
                     {
                         "role": "user",
-                        "content": f"次の漫画タイトルをひらがなに変換してください（ひらがなのみで出力）: {title}"
+                        "content": f"次の漫画タイトルをひらがな（長音は「ー」使用）に変換してください: {title}"
                     }
                 ],
                 temperature=0.1,
@@ -158,8 +158,8 @@ def title_to_kana_with_ai(title: str, api_key: str = None, provider: str = "open
             )
             
             kana = response.choices[0].message.content.strip()
-            # ひらがな以外を除去
-            kana = re.sub(r'[^\u3040-\u309F]', '', kana)
+            # ひらがなと長音記号以外を除去
+            kana = re.sub(r'[^\u3040-\u309Fー]', '', kana)
             return kana
             
         elif provider == "anthropic":
@@ -173,14 +173,14 @@ def title_to_kana_with_ai(title: str, api_key: str = None, provider: str = "open
                 messages=[
                     {
                         "role": "user",
-                        "content": f"次の漫画タイトルを正確なひらがなの読み仮名に変換してください。ひらがなのみ（伸ばし棒「ー」含む）で出力し、記号やスペースは含めないでください: {title}"
+                        "content": f"次の漫画タイトルを正確なひらがなの読み仮名に変換してください。長音（伸ばす音）は必ず「ー」で表記してください。例：「ワンピース」→「わんぴーす」、「ヒーロー」→「ひーろー」。ひらがなと「ー」のみで出力し、他の記号やスペースは含めないでください: {title}"
                     }
                 ]
             )
             
             kana = message.content[0].text.strip()
-            # ひらがな以外を除去
-            kana = re.sub(r'[^\u3040-\u309F]', '', kana)
+            # ひらがなと長音記号以外を除去
+            kana = re.sub(r'[^\u3040-\u309Fー]', '', kana)
             return kana
             
     except Exception as e:
