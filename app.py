@@ -963,39 +963,8 @@ def show_edit_book():
         # 現在の画像を表示
         if current_image_url:
             st.image(current_image_url, caption="現在の画像", width=200)
-        
-        # 画像アップロード方式選択
-        upload_method = st.radio(
-            "画像の変更方法",
-            ["画像を変更しない", "ファイルをアップロード", "URLを直接入力"],
-            horizontal=True
-        )
-        
-        uploaded_file = None
-        new_image_url = None
-        
-        if upload_method == "ファイルをアップロード":
-            uploaded_file = st.file_uploader(
-                "新しい画像ファイルを選択", 
-                type=["jpg", "jpeg", "png", "webp"],
-                help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます"
-            )
-            
-            if uploaded_file is not None:
-                st.image(uploaded_file, caption="新しい画像プレビュー", width=200)
-                if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                    st.info("📤 保存時にCloudinaryにアップロードされます")
-                else:
-                    st.warning("⚠️ Cloudinary設定が見つかりません")
-        
-        elif upload_method == "URLを直接入力":
-            new_image_url = st.text_input("新しい画像URL", placeholder="https://example.com/image.jpg")
-            
-            if new_image_url:
-                try:
-                    st.image(new_image_url, caption="新しい画像プレビュー", width=200)
-                except Exception:
-                    st.warning("⚠️ 画像URLが正しくないか、読み込めません")
+        else:
+            st.info("現在、画像が登録されていません")
         
         # 完結情報
         is_completed = st.checkbox("完結済み", value=current_completed)
@@ -1019,7 +988,45 @@ def show_edit_book():
             help="上のチェックボックスをオンにした場合のみ保存されます"
         )
         
+        # 画像アップロード方式選択（フォーム内、日付情報の後）
+        st.markdown("---")
+        st.subheader("🖼️ 画像変更")
+        
+        upload_method = st.radio(
+            "画像の変更方法を選択",
+            ["画像を変更しない", "ファイルをアップロード", "URLを直接入力"],
+            horizontal=True
+        )
+        
+        uploaded_file = None
+        new_image_url = None
+        
+        if upload_method == "ファイルをアップロード":
+            uploaded_file = st.file_uploader(
+                "新しい画像ファイルを選択", 
+                type=["jpg", "jpeg", "png", "webp"],
+                help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます",
+                key="edit_image_upload"
+            )
+            
+            if uploaded_file is not None:
+                st.image(uploaded_file, caption="新しい画像プレビュー", width=200)
+                if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
+                    st.info("📤 保存時にCloudinaryにアップロードされます")
+                else:
+                    st.warning("⚠️ Cloudinary設定が見つかりません")
+        
+        elif upload_method == "URLを直接入力":
+            new_image_url = st.text_input("新しい画像URL", placeholder="https://example.com/image.jpg", key="edit_image_url")
+            
+            if new_image_url:
+                try:
+                    st.image(new_image_url, caption="新しい画像プレビュー", width=200)
+                except Exception:
+                    st.warning("⚠️ 画像URLが正しくないか、読み込めません")
+        
         # 詳細情報
+        st.markdown("---")
         st.subheader("📚 詳細情報")
         missing_volumes = st.text_input("未所持巻（抜け）", value=current_missing_volumes, placeholder="例: 3,5,10")
         special_volumes = st.text_input("特殊巻", value=current_special_volumes, placeholder="例: 10.5,外伝1")
