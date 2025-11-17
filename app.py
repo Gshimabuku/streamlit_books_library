@@ -650,40 +650,21 @@ def show_add_book():
         # その他情報
         st.subheader("📷 画像情報")
         
-        # 画像アップロード方式選択
-        upload_method = st.radio(
-            "画像の追加方法を選択",
-            ["ファイルをアップロード", "URLを直接入力"],
-            horizontal=True
+        uploaded_file = st.file_uploader(
+            "画像ファイルを選択", 
+            type=["jpg", "jpeg", "png", "webp"],
+            help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます"
         )
         
-        image_url = None
-        
-        if upload_method == "ファイルをアップロード":
-            uploaded_file = st.file_uploader(
-                "画像ファイルを選択", 
-                type=["jpg", "jpeg", "png", "webp"],
-                help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます"
-            )
+        if uploaded_file is not None:
+            # プレビュー表示
+            st.image(uploaded_file, caption="アップロード予定の画像", width=200)
             
-            if uploaded_file is not None:
-                # プレビュー表示
-                st.image(uploaded_file, caption="アップロード予定の画像", width=200)
-                
-                # Cloudinaryが利用可能かチェック
-                if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                    st.info("📤 登録時にCloudinaryにアップロードされます")
-                else:
-                    st.warning("⚠️ Cloudinary設定が見つかりません。画像URLは保存されません。")
-        
-        else:  # URLを直接入力
-            image_url = st.text_input("画像URL", placeholder="https://example.com/image.jpg")
-            
-            if image_url:
-                try:
-                    st.image(image_url, caption="URLの画像プレビュー", width=200)
-                except Exception:
-                    st.warning("⚠️ 画像URLが正しくないか、読み込めません")
+            # Cloudinaryが利用可能かチェック
+            if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
+                st.info("📤 登録時にCloudinaryにアップロードされます")
+            else:
+                st.warning("⚠️ Cloudinary設定が見つかりません。画像URLは保存されません。")
         
         # 完結情報
         is_completed = st.checkbox("完結済み")
@@ -728,7 +709,7 @@ def show_add_book():
                     # 画像アップロード処理
                     final_image_url = None
                     
-                    if upload_method == "ファイルをアップロード" and uploaded_file is not None:
+                    if uploaded_file is not None:
                         if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
                             with st.spinner("画像をアップロード中..."):
                                 upload_result = cloudinary.uploader.upload(uploaded_file)
@@ -736,8 +717,6 @@ def show_add_book():
                                 st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
                         else:
                             st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
-                    elif upload_method == "URLを直接入力" and image_url:
-                        final_image_url = image_url
                     
                     # Notionページのプロパティ構築
                     properties = {
@@ -966,6 +945,20 @@ def show_edit_book():
         else:
             st.info("現在、画像が登録されていません")
         
+        uploaded_file = st.file_uploader(
+            "新しい画像をアップロード" + ("（画像を変更する場合のみ）" if current_image_url else ""), 
+            type=["jpg", "jpeg", "png", "webp"],
+            help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます",
+            key="edit_image_upload"
+        )
+        
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="新しい画像プレビュー", width=200)
+            if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
+                st.info("📤 保存時にCloudinaryにアップロードされ、現在の画像と入れ替わります")
+            else:
+                st.warning("⚠️ Cloudinary設定が見つかりません")
+        
         # 完結情報
         is_completed = st.checkbox("完結済み", value=current_completed)
         
@@ -988,45 +981,7 @@ def show_edit_book():
             help="上のチェックボックスをオンにした場合のみ保存されます"
         )
         
-        # 画像アップロード方式選択（フォーム内、日付情報の後）
-        st.markdown("---")
-        st.subheader("🖼️ 画像変更")
-        
-        upload_method = st.radio(
-            "画像の変更方法を選択",
-            ["画像を変更しない", "ファイルをアップロード", "URLを直接入力"],
-            horizontal=True
-        )
-        
-        uploaded_file = None
-        new_image_url = None
-        
-        if upload_method == "ファイルをアップロード":
-            uploaded_file = st.file_uploader(
-                "新しい画像ファイルを選択", 
-                type=["jpg", "jpeg", "png", "webp"],
-                help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます",
-                key="edit_image_upload"
-            )
-            
-            if uploaded_file is not None:
-                st.image(uploaded_file, caption="新しい画像プレビュー", width=200)
-                if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                    st.info("📤 保存時にCloudinaryにアップロードされます")
-                else:
-                    st.warning("⚠️ Cloudinary設定が見つかりません")
-        
-        elif upload_method == "URLを直接入力":
-            new_image_url = st.text_input("新しい画像URL", placeholder="https://example.com/image.jpg", key="edit_image_url")
-            
-            if new_image_url:
-                try:
-                    st.image(new_image_url, caption="新しい画像プレビュー", width=200)
-                except Exception:
-                    st.warning("⚠️ 画像URLが正しくないか、読み込めません")
-        
         # 詳細情報
-        st.markdown("---")
         st.subheader("📚 詳細情報")
         missing_volumes = st.text_input("未所持巻（抜け）", value=current_missing_volumes, placeholder="例: 3,5,10")
         special_volumes = st.text_input("特殊巻", value=current_special_volumes, placeholder="例: 10.5,外伝1")
@@ -1048,7 +1003,7 @@ def show_edit_book():
                     # 画像アップロード処理
                     final_image_url = current_image_url  # デフォルトは現在の画像
                     
-                    if upload_method == "ファイルをアップロード" and uploaded_file is not None:
+                    if uploaded_file is not None:
                         if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
                             with st.spinner("画像をアップロード中..."):
                                 upload_result = cloudinary.uploader.upload(uploaded_file)
@@ -1067,8 +1022,6 @@ def show_edit_book():
                                         pass  # 古い画像削除失敗は無視
                         else:
                             st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
-                    elif upload_method == "URLを直接入力" and new_image_url:
-                        final_image_url = new_image_url
                     
                     # Notionページのプロパティ構築
                     properties = {
