@@ -1,6 +1,7 @@
 import streamlit as st
 from utils.notion_client import query_notion, create_notion_page, update_notion_page, retrieve_notion_page
 from utils.css_loader import load_custom_styles
+from utils.kana_converter import title_to_kana
 import datetime
 
 # Cloudinaryのインポート
@@ -138,6 +139,10 @@ def show_books_home():
                 },
                 {
                     "property": "magazine_name", 
+                    "direction": "ascending"
+                },
+                {
+                    "property": "title_kana", 
                     "direction": "ascending"
                 },
                 {
@@ -584,6 +589,19 @@ def show_add_book():
         
         # 必須項目
         title = st.text_input("漫画タイトル *", placeholder="例: 進撃の巨人")
+        
+        # タイトルかな（自動生成）
+        auto_kana = ""
+        if title:
+            auto_kana = title_to_kana(title)
+        
+        title_kana = st.text_input(
+            "タイトルかな（並び順用）", 
+            value=auto_kana,
+            placeholder="例: しんげきのきょじん",
+            help="タイトルを入力すると自動で生成されます。編集も可能です。"
+        )
+        
         magazine_type = st.selectbox("連載誌タイプ *", ["ジャンプ", "マガジン", "サンデー", "その他"])
         magazine_name = st.text_input("連載誌名", placeholder="例: 週刊少年マガジン")
         
@@ -694,6 +712,10 @@ def show_add_book():
                         "latest_release_date": {"date": {"start": latest_release_date.isoformat()}},
                         "is_completed": {"checkbox": is_completed}
                     }
+                    
+                    # タイトルかなを追加（空でない場合のみ）
+                    if title_kana:
+                        properties["title_kana"] = {"rich_text": [{"text": {"content": title_kana}}]}
                     
                     # 次巻発売予定日
                     if use_next_release_date and next_release_date:
