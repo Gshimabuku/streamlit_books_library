@@ -332,12 +332,35 @@ def show_books_home():
                 is_expanded = st.session_state.magazine_type_expanded.get(magazine_type, True)
                 expand_icon = "🔽" if is_expanded else "▶️"
                 
-                # ヘッダーボタン
-                if st.button(f"{expand_icon} 📚 {magazine_type} ({len(grouped_books[magazine_type])}誌)", 
-                           key=f"toggle_{magazine_type}", 
-                           use_container_width=True):
-                    st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
-                    st.rerun()
+                # ヘッダーボタン（ロゴ画像 + ボタン）
+                # 各雑誌タイプに対応するロゴ画像URL（必要に応じて差し替えてください）
+                magazine_type_logos = {
+                    "ジャンプ": "https://res.cloudinary.com/do6trtdrp/image/upload/v1763345237/Weekly_Shonen_Jump_logo.svg_wjmr19.png",
+                    "マガジン": "https://res.cloudinary.com/do6trtdrp/image/upload/v1763345237/Weekly_Shonen_Magazine.svg_v9eys4.png",
+                    "サンデー": "https://res.cloudinary.com/do6trtdrp/image/upload/v1763345237/Shounen_Sunday_Super_vlnff5.png",
+                }
+
+                logo_url = magazine_type_logos.get(magazine_type)
+
+                header_cols = st.columns([1, 9])
+                # 左側にロゴ（ある場合）
+                with header_cols[0]:
+                    if logo_url:
+                        try:
+                            st.image(logo_url, width=48)
+                        except Exception:
+                            # 画像が読み込めない場合はテキストをフォールバックで表示
+                            st.write(magazine_type)
+                    else:
+                        st.write("")
+
+                # 右側に折りたたみボタン（ロゴの代わりに文字を表示しない）
+                with header_cols[1]:
+                    if st.button(f"{expand_icon}  📚 ({len(grouped_books[magazine_type])}誌)",
+                                 key=f"toggle_{magazine_type}",
+                                 use_container_width=True):
+                        st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
+                        st.rerun()
                 
                 # 展開されている場合のみ内容を表示
                 if is_expanded:
