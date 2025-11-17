@@ -3,6 +3,7 @@ from utils.notion_client import query_notion, create_notion_page, update_notion_
 from utils.css_loader import load_custom_styles
 from utils.kana_converter import title_to_kana
 import datetime
+import os
 
 # Cloudinaryのインポート
 try:
@@ -747,10 +748,20 @@ def show_add_book():
                         "is_completed": {"checkbox": is_completed}
                     }
                     
-                    # タイトルかなを追加（未入力の場合は自動生成）
+                    # タイトルかなを追加（未入力の場合はAIで自動生成）
                     final_title_kana = title_kana.strip() if title_kana else ""
                     if not final_title_kana and title:
-                        final_title_kana = title_to_kana(title)
+                        # AI APIキーを取得（secrets.tomlまたは環境変数から）
+                        openai_api_key = None
+                        try:
+                            openai_api_key = st.secrets.get("openai", {}).get("api_key") or os.environ.get("OPENAI_API_KEY")
+                        except:
+                            pass
+                        
+                        # AIを使用して変換（APIキーがある場合）
+                        use_ai = openai_api_key is not None
+                        with st.spinner("タイトルかなを生成中..." + (" (AI使用)" if use_ai else "")):
+                            final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
                     if final_title_kana:
                         properties["title_kana"] = {"rich_text": [{"text": {"content": final_title_kana}}]}
