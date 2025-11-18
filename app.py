@@ -709,6 +709,8 @@ def show_add_book():
         if submitted:
             if not title or not magazine_type:
                 st.error("❌ タイトルと連載誌タイプは必須項目です")
+            elif latest_owned_volume > latest_released_volume:
+                st.error("❌ 所持巻数が発売済み最新巻を超えています")
             else:
                 try:
                     # 画像アップロード処理
@@ -1003,6 +1005,8 @@ def show_edit_book():
         if submitted:
             if not title or not magazine_type:
                 st.error("❌ タイトルと連載誌タイプは必須項目です")
+            elif latest_owned_volume > latest_released_volume:
+                st.error("❌ 所持巻数が発売済み最新巻を超えています")
             else:
                 try:
                     # 画像アップロード処理
