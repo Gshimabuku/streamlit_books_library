@@ -209,6 +209,16 @@
         flex-direction: column !important;
         justify-content: space-between !important;
         min-height: 100% !important;
+        min-width: 0 !important;
+    }
+    
+    /* モバイルでタイトルを省略 */
+    .mobile-book-info h3,
+    .book-card h3 {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
     }
     
     .detail-button-container {
@@ -242,6 +252,37 @@
         text-overflow: ellipsis !important;
         font-size: 12px !important;
         padding: 8px 4px !important;
+    }
+}
+
+/* ==================================== */
+/* タブレット横向き・3カラムレイアウト対応 */
+/* ==================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .book-card {
+        display: block !important;
+    }
+    
+    /* タイトルの省略を強化 */
+    .book-card h3 {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+        font-size: clamp(14px, 3vw, 18px) !important;
+    }
+    
+    /* 画像のアスペクト比を維持 */
+    .book-card img {
+        width: 100% !important;
+        aspect-ratio: 3/4 !important;
+        object-fit: contain !important;
+    }
+    
+    /* ボタンサイズを調整 */
+    .stButton > button {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
     }
 }
 
