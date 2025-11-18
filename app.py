@@ -378,29 +378,34 @@ def show_books_home():
                         
                         # この雑誌の本を表示
                         magazine_books = grouped_books[magazine_type][magazine_name]
-                        cols = st.columns(3, gap="small")
                         
-                        for i, book in enumerate(magazine_books):
-                            col = cols[i % 3]
+                        # PC表示：3カラムで表示
+                        # スマホ表示：CSSで1カラムに変換（順序を保つため）
+                        for row_start in range(0, len(magazine_books), 3):
+                            cols = st.columns(3, gap="small")
+                            row_books = magazine_books[row_start:row_start + 3]
                             
-                            with col:
-                                owned = book["latest_owned_volume"]
-                                released = book["latest_released_volume"]
-                                completion_status = "完結" if book["is_completed"] else "連載中"
-                                
-                                # 未購入巻の判定
-                                has_unpurchased = owned < released
-                                unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
-                    
-                                # 画像HTMLを準備
-                                try:
-                                    if book["image_url"] and book["image_url"] != "":
-                                        image_html = f'<img src="{book["image_url"]}" alt="{book["title"]}">'  
-                                    else:
-                                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像なし">'  
-                                except:
-                                    image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像読み込みエラー">'                                # 本のカード全体をHTMLで作成
-                                st.markdown(f"""
+                            for col_idx, book in enumerate(row_books):
+                                with cols[col_idx]:
+                                    owned = book["latest_owned_volume"]
+                                    released = book["latest_released_volume"]
+                                    completion_status = "完結" if book["is_completed"] else "連載中"
+                                    
+                                    # 未購入巻の判定
+                                    has_unpurchased = owned < released
+                                    unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
+                        
+                                    # 画像HTMLを準備
+                                    try:
+                                        if book["image_url"] and book["image_url"] != "":
+                                            image_html = f'<img src="{book["image_url"]}" alt="{book["title"]}">'  
+                                        else:
+                                            image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像なし">'  
+                                    except:
+                                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像読み込みエラー">'
+                                    
+                                    # 本のカード全体をHTMLで作成
+                                    st.markdown(f"""
                                 <div class="book-card">
                                     <div class="mobile-book-image">
                                         {image_html}
@@ -417,13 +422,13 @@ def show_books_home():
                                             <!-- ボタンはStreamlitコンポーネントで配置 -->
                                         </div>
                                     </div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
-                                if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
-                                    go_to_detail(book)
-                                    st.rerun()
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
+                                    if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
+                                        go_to_detail(book)
+                                        st.rerun()
 
 @st.dialog("削除確認")
 def confirm_delete_dialog():
