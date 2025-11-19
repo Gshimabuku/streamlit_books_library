@@ -404,7 +404,7 @@ def show_books_home():
                                         pass
                                     
                                     # 未購入巻の判定
-                                    has_unpurchased = owned < actual_owned
+                                    has_unpurchased = actual_owned < released
                                     unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
                         
                                     # 画像HTMLを準備
