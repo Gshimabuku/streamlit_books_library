@@ -4,6 +4,9 @@ from utils.css_loader import load_custom_styles
 from utils.kana_converter import title_to_kana
 from utils.config import Config
 from utils.session import SessionManager
+from services.manga_service import MangaService
+from services.image_service import ImageService
+from models.manga import Manga
 import datetime
 import os
 
@@ -54,6 +57,12 @@ else:
 SessionManager.init()
 
 # =========================
+# サービス層の初期化
+# =========================
+manga_service = MangaService(NOTION_API_KEY, BOOKS_DATABASE_ID)
+image_service = ImageService(CLOUDINARY_AVAILABLE, CLOUDINARY_ENABLED)
+
+# =========================
 # ページ遷移関数（SessionManagerから取得）
 # =========================
 go_to_home = SessionManager.go_to_home
@@ -94,83 +103,15 @@ def show_books_home():
     st.markdown("---")
     
     # データベース接続を試行
-    books = []
+    mangas = []
     
     try:
-        # NotionDBから実際のデータを取得
+        # MangaServiceを使用してデータを取得
         with st.spinner("データを読み込み中..."):
-            sorts = [
-                {
-                    "property": "magazine_type", 
-                    "direction": "ascending"
-                },
-                {
-                    "property": "magazine_name", 
-                    "direction": "ascending"
-                },
-                {
-                    "property": "title_kana", 
-                    "direction": "ascending"
-                },
-                {
-                    "property": "title", 
-                    "direction": "ascending"
-                }
-            ]
-            results = query_notion(BOOKS_DATABASE_ID, NOTION_API_KEY, sorts=sorts)
-            
-            # NotionDBのデータを表示用に変換
-            for page in results:
-                try:
-                    props = page["properties"]
-                    
-                    # タイトル取得
-                    title = "タイトル不明"
-                    if props.get("title", {}).get("title"):
-                        title = props["title"]["title"][0]["text"]["content"]
-                    
-                    # 画像URL取得
-                    image_url = props.get("image_url", {}).get("url")
-                    # 無効なURLの場合はNoneに設定
-                    if not image_url or not image_url.startswith(('http://', 'https://')):
-                        image_url = None
-                    
-                    # 巻数情報取得
-                    latest_owned_volume = props.get("latest_owned_volume", {}).get("number", 0)
-                    latest_released_volume = props.get("latest_released_volume", {}).get("number", 0)
-                    
-                    # 完結情報取得
-                    is_completed = props.get("is_completed", {}).get("checkbox", False)
-                    
-                    # 雑誌タイプ取得
-                    magazine_type = "その他"
-                    if props.get("magazine_type", {}).get("select"):
-                        magazine_type = props["magazine_type"]["select"]["name"]
-                    
-                    # 雑誌名取得
-                    magazine_name = "不明"
-                    if props.get("magazine_name", {}).get("rich_text") and props["magazine_name"]["rich_text"]:
-                        magazine_name = props["magazine_name"]["rich_text"][0]["text"]["content"]
-                    
-                    book_data = {
-                        "id": page["id"],
-                        "title": title,
-                        "image_url": image_url,
-                        "latest_owned_volume": latest_owned_volume,
-                        "latest_released_volume": latest_released_volume,
-                        "is_completed": is_completed,
-                        "magazine_type": magazine_type,
-                        "magazine_name": magazine_name,
-                        "page_data": page  # 詳細表示用に元データも保持
-                    }
-                    books.append(book_data)
-                    
-                except Exception as e:
-                    st.error(f"データ読み込みエラー: {str(e)}")
-                    continue
+            mangas = manga_service.get_all_mangas()
         
-        # NotionDBから取得できなかった場合
-        if not books:
+        # データが取得できなかった場合
+        if not mangas:
             st.info("💡 まだ漫画が登録されていません。「新しい漫画を登録」ボタンから追加してください。")
         
     except Exception as e:
@@ -271,31 +212,15 @@ def show_books_home():
             st.info("📋 設定を確認してください。")
         
         # エラー時は空のリストを設定
-        books = []
+        mangas = []
     
     # 本の一覧表示（データがある場合のみ）
-    if books:
-        # 本をmagazine_typeとmagazine_nameでグループ分け
-        from collections import defaultdict
+    if mangas:
+        # MangaServiceを使用してグループ化
+        grouped_books = manga_service.group_by_magazine(mangas)
         
         # magazine_typeの表示順序を定義
         type_order = ["ジャンプ", "マガジン", "サンデー", "その他"]
-        
-        # magazine_nameの表示順序を定義
-        magazine_name_order = {
-            "ジャンプ": ["週刊少年ジャンプ", "週刊ヤングジャンプ", "ジャンプ+", "ジャンプSQ", "ジャンプGIGA"],
-            "マガジン": ["週刊少年マガジン", "週刊ヤングマガジン", "月刊少年マガジン", "別冊少年マガジン"],
-            "サンデー": ["週刊少年サンデー", "少年サンデーＳ（スーパー）", "裏サンデー"],
-            "その他": ["週刊ビッグコミックスピリッツ", "月刊コミックゼノン", "月刊アフタヌーン"]
-        }
-        
-        # グループ分け用の辞書
-        grouped_books = defaultdict(lambda: defaultdict(list))
-        
-        for book in books:
-            magazine_type = book.get("magazine_type", "その他")
-            magazine_name = book.get("magazine_name", "不明")
-            grouped_books[magazine_type][magazine_name].append(book)
         
         # magazine_typeごとに表示
         for magazine_type in type_order:
@@ -326,17 +251,7 @@ def show_books_home():
                 if is_expanded:
                     # magazine_nameをカスタム順序でソート
                     magazine_names = list(grouped_books[magazine_type].keys())
-                    defined_order = magazine_name_order.get(magazine_type, [])
-                    
-                    # 定義済みの順序に従って並び替え、その後は辞書順
-                    sorted_names = []
-                    # まず定義済みの順序で追加
-                    for name in defined_order:
-                        if name in magazine_names:
-                            sorted_names.append(name)
-                    # 定義されていない雑誌名は辞書順で末尾に追加
-                    remaining_names = [name for name in magazine_names if name not in defined_order]
-                    sorted_names.extend(sorted(remaining_names))
+                    sorted_names = manga_service.sort_magazine_names(magazine_names, magazine_type)
                     
                     for magazine_name in sorted_names:
                         # magazine_nameヘッダー
@@ -351,32 +266,19 @@ def show_books_home():
                             cols = st.columns(3, gap="small")
                             row_books = magazine_books[row_start:row_start + 3]
                             
-                            for col_idx, book in enumerate(row_books):
+                            for col_idx, manga in enumerate(row_books):
                                 with cols[col_idx]:
-                                    owned = book["latest_owned_volume"]
-                                    released = book["latest_released_volume"]
-                                    completion_status = "完結" if book["is_completed"] else "連載中"
-                                    
-                                    # 抜け巻を取得して実所持巻数を計算
-                                    missing_volumes_text = ""
-                                    actual_owned = owned
-                                    try:
-                                        props = book.get("page_data", {}).get("properties", {})
-                                        if props.get("missing_volumes", {}).get("rich_text") and props["missing_volumes"]["rich_text"]:
-                                            missing_volumes_text = props["missing_volumes"]["rich_text"][0]["text"]["content"]
-                                            missing_list = [vol.strip() for vol in missing_volumes_text.split(",") if vol.strip()]
-                                            actual_owned = owned - len(missing_list)
-                                    except:
-                                        pass
-                                    
-                                    # 未購入巻の判定
-                                    has_unpurchased = actual_owned < released
+                                    # Mangaオブジェクトから情報を取得
+                                    actual_owned = manga.actual_owned_volume
+                                    released = manga.latest_released_volume
+                                    completion_status = manga.completion_status
+                                    has_unpurchased = manga.has_unpurchased
                                     unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
                         
                                     # 画像HTMLを準備
                                     try:
-                                        if book["image_url"] and book["image_url"] != "":
-                                            image_html = f'<img src="{book["image_url"]}" alt="{book["title"]}">'  
+                                        if manga.image_url and manga.image_url != "":
+                                            image_html = f'<img src="{manga.image_url}" alt="{manga.title}">'  
                                         else:
                                             image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像なし">'  
                                     except:
@@ -390,9 +292,9 @@ def show_books_home():
                                     </div>
                                     <div class="mobile-book-info">
                                         <div class="status-container">
-                                            <span class="status-badge {'status-completed' if book['is_completed'] else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
+                                            <span class="status-badge {'status-completed' if manga.is_completed else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
                                         </div>
-                                        <h3>{book["title"]}</h3>
+                                        <h3>{manga.title}</h3>
                                         <div class="book-volume-info">
                                             📖 {actual_owned}/{released}巻
                                         </div>
@@ -404,8 +306,9 @@ def show_books_home():
                                     """, unsafe_allow_html=True)
                                     
                                     # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
-                                    if st.button(f"詳細を見る", key=f"detail_{book['id']}", use_container_width=True):
-                                        go_to_detail(book)
+                                    # Mangaオブジェクトをdict形式に変換してセッションに保存（後方互換性のため）
+                                    if st.button(f"詳細を見る", key=f"detail_{manga.id}", use_container_width=True):
+                                        go_to_detail(manga.to_dict())
                                         st.rerun()
 
 @st.dialog("削除確認")
@@ -421,27 +324,19 @@ def confirm_delete_dialog():
     with col1:
         if st.button("🗑️ 削除する", type="primary", use_container_width=True):
             try:
-                # Cloudinary画像の削除
+                # ImageServiceを使用して画像削除
                 image_url = book.get("image_url")
-                if image_url and CLOUDINARY_ENABLED:
-                    try:
-                        # CloudinaryのURLからpublic_idを抽出
-                        if "cloudinary.com" in image_url:
-                            import re
-                            match = re.search(r'/upload/(?:v\d+/)?([^/]+?)(?:\.[^.]+)?$', image_url)
-                            if match:
-                                public_id = match.group(1)
-                                with st.spinner("画像を削除中..."):
-                                    cloudinary.uploader.destroy(public_id)
-                                st.success("✅ 画像を削除しました")
-                    except Exception as img_error:
-                        st.warning(f"⚠️ 画像の削除に失敗しました: {str(img_error)}")
+                if image_url:
+                    with st.spinner("画像を削除中..."):
+                        if image_service.delete_image(image_url):
+                            st.success("✅ 画像を削除しました")
                 
-                # Notionレコードの削除
+                # MangaServiceを使用してNotionレコード削除
                 with st.spinner("データを削除中..."):
-                    delete_notion_page(book["id"], NOTION_API_KEY)
-                
-                st.success("✅ 漫画を削除しました")
+                    if manga_service.delete_manga(book["id"]):
+                        st.success("✅ 漫画を削除しました")
+                    else:
+                        raise Exception("削除に失敗しました")
                 
                 # セッション状態をクリア
                 st.session_state.selected_book = None
@@ -691,76 +586,51 @@ def show_add_book():
                 st.error("❌ 所持巻数が発売済み最新巻を超えています")
             else:
                 try:
-                    # 画像アップロード処理
+                    # ImageServiceを使用して画像アップロード
                     final_image_url = None
                     
-                    if uploaded_file is not None:
-                        if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                            with st.spinner("画像をアップロード中..."):
-                                upload_result = cloudinary.uploader.upload(uploaded_file)
-                                final_image_url = upload_result["secure_url"]
-                                st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
-                        else:
-                            st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
+                    if uploaded_file is not None and image_service.is_available():
+                        with st.spinner("画像をアップロード中..."):
+                            final_image_url = image_service.upload_image(uploaded_file)
+                            st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
+                    elif uploaded_file is not None:
+                        st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
                     
-                    # Notionページのプロパティ構築
-                    properties = {
-                        "title": {"title": [{"text": {"content": title}}]},
-                        "latest_owned_volume": {"number": latest_owned_volume},
-                        "latest_released_volume": {"number": latest_released_volume},
-                        "latest_release_date": {"date": {"start": latest_release_date.isoformat()}},
-                        "is_completed": {"checkbox": is_completed}
-                    }
-                    
-                    # タイトルかなを追加（未入力の場合はAIで自動生成）
+                    # タイトルかなを自動生成（未入力の場合）
                     final_title_kana = title_kana.strip() if title_kana else ""
                     ai_generated = False
                     
                     if not final_title_kana and title:
-                        # AI APIキーを取得（secrets.tomlまたは環境変数から）
                         openai_api_key = Config.get_openai_api_key()
-                        
-                        # AIを使用して変換（APIキーがある場合）
                         use_ai = openai_api_key is not None
                         ai_generated = use_ai
                         
                         with st.spinner("タイトルかなを生成中..." + (" (AI使用)" if use_ai else "")):
                             final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
-                    if final_title_kana:
-                        properties["title_kana"] = {"rich_text": [{"text": {"content": final_title_kana}}]}
+                    # Mangaオブジェクトを作成
+                    new_manga = Manga(
+                        id=None,  # 新規登録なのでNone
+                        title=title,
+                        title_kana=final_title_kana,
+                        magazine_type=magazine_type,
+                        magazine_name=magazine_name,
+                        latest_owned_volume=latest_owned_volume,
+                        latest_released_volume=latest_released_volume,
+                        is_completed=is_completed,
+                        image_url=final_image_url,
+                        latest_release_date=latest_release_date,
+                        next_release_date=next_release_date if use_next_release_date else None,
+                        missing_volumes=missing_volumes,
+                        special_volumes=special_volumes,
+                        owned_media=owned_media,
+                        notes=notes
+                    )
                     
-                    # 次巻発売予定日
-                    if use_next_release_date and next_release_date:
-                        properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
-                    
-                    # 追加プロパティ
-                    if magazine_type:
-                        properties["magazine_type"] = {"select": {"name": magazine_type}}
-                    
-                    if magazine_name:
-                        properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
-                    
-                    if missing_volumes:
-                        properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
-                    
-                    if special_volumes:
-                        properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
-                    
-                    if owned_media:
-                        properties["owned_media"] = {"select": {"name": owned_media}}
-                    
-                    if notes:
-                        properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
-                    
-                    # 画像URL
-                    if final_image_url:
-                        properties["image_url"] = {"url": final_image_url}
-                    
-                    # 登録試行
+                    # MangaServiceを使用して登録
                     try:
                         with st.spinner("Notionに登録中..."):
-                            result = create_notion_page(BOOKS_DATABASE_ID, properties, NOTION_API_KEY)
+                            result_id = manga_service.create_manga(new_manga)
                         
                         st.success("✅ 漫画が正常に登録されました！")
                         st.balloons()
@@ -983,114 +853,69 @@ def show_edit_book():
                 st.error("❌ 所持巻数が発売済み最新巻を超えています")
             else:
                 try:
-                    # 画像アップロード処理
-                    final_image_url = current_image_url  # デフォルトは現在の画像
+                    # ImageServiceを使用して画像を置き換え
+                    final_image_url = current_image_url
                     
-                    if uploaded_file is not None:
-                        if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
-                            with st.spinner("画像をアップロード中..."):
-                                upload_result = cloudinary.uploader.upload(uploaded_file)
-                                final_image_url = upload_result["secure_url"]
-                                st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
-                                
-                                # 古い画像を削除（Cloudinaryの場合）
-                                if current_image_url and "cloudinary.com" in current_image_url:
-                                    try:
-                                        import re
-                                        match = re.search(r'/upload/(?:v\d+/)?([^/]+?)(?:\.[^.]+)?$', current_image_url)
-                                        if match:
-                                            old_public_id = match.group(1)
-                                            cloudinary.uploader.destroy(old_public_id)
-                                    except:
-                                        pass  # 古い画像削除失敗は無視
-                        else:
-                            st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
+                    if uploaded_file is not None and image_service.is_available():
+                        with st.spinner("画像をアップロード中..."):
+                            final_image_url = image_service.replace_image(current_image_url, uploaded_file)
+                            st.success(f"✅ 画像アップロード完了: {uploaded_file.name}")
+                    elif uploaded_file is not None:
+                        st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
                     
-                    # Notionページのプロパティ構築
-                    properties = {
-                        "title": {"title": [{"text": {"content": title}}]},
-                        "latest_owned_volume": {"number": latest_owned_volume},
-                        "latest_released_volume": {"number": latest_released_volume},
-                        "latest_release_date": {"date": {"start": latest_release_date.isoformat()}},
-                        "is_completed": {"checkbox": is_completed}
-                    }
-                    
-                    # タイトルかなを追加（未入力の場合はAIで自動生成）
+                    # タイトルかなを自動生成（未入力の場合）
                     final_title_kana = title_kana.strip() if title_kana else ""
                     ai_generated = False
                     
                     if not final_title_kana and title:
-                        # AI APIキーを取得（secrets.tomlまたは環境変数から）
                         openai_api_key = Config.get_openai_api_key()
-                        
-                        # AIを使用して変換（APIキーがある場合）
                         use_ai = openai_api_key is not None
                         ai_generated = use_ai
                         
                         with st.spinner("タイトルかなを生成中..." + (" (AI使用)" if use_ai else "")):
                             final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
-                    if final_title_kana:
-                        properties["title_kana"] = {"rich_text": [{"text": {"content": final_title_kana}}]}
+                    # Mangaオブジェクトを作成
+                    updated_manga = Manga(
+                        id=book["id"],
+                        title=title,
+                        title_kana=final_title_kana,
+                        magazine_type=magazine_type,
+                        magazine_name=magazine_name,
+                        latest_owned_volume=latest_owned_volume,
+                        latest_released_volume=latest_released_volume,
+                        is_completed=is_completed,
+                        image_url=final_image_url,
+                        latest_release_date=latest_release_date,
+                        next_release_date=next_release_date if use_next_release_date else None,
+                        missing_volumes=missing_volumes,
+                        special_volumes=special_volumes,
+                        owned_media=owned_media,
+                        notes=notes
+                    )
                     
-                    # 次巻発売予定日
-                    if use_next_release_date and next_release_date:
-                        properties["next_release_date"] = {"date": {"start": next_release_date.isoformat()}}
-                    else:
-                        # チェックを外した場合は削除
-                        properties["next_release_date"] = {"date": None}
-                    
-                    # 追加プロパティ
-                    if magazine_type:
-                        properties["magazine_type"] = {"select": {"name": magazine_type}}
-                    
-                    if magazine_name:
-                        properties["magazine_name"] = {"rich_text": [{"text": {"content": magazine_name}}]}
-                    else:
-                        properties["magazine_name"] = {"rich_text": []}
-                    
-                    if missing_volumes:
-                        properties["missing_volumes"] = {"rich_text": [{"text": {"content": missing_volumes}}]}
-                    else:
-                        properties["missing_volumes"] = {"rich_text": []}
-                    
-                    if special_volumes:
-                        properties["special_volumes"] = {"rich_text": [{"text": {"content": special_volumes}}]}
-                    else:
-                        properties["special_volumes"] = {"rich_text": []}
-                    
-                    if owned_media:
-                        properties["owned_media"] = {"select": {"name": owned_media}}
-                    
-                    if notes:
-                        properties["notes"] = {"rich_text": [{"text": {"content": notes}}]}
-                    else:
-                        properties["notes"] = {"rich_text": []}
-                    
-                    # 画像URL
-                    if final_image_url:
-                        properties["image_url"] = {"url": final_image_url}
-                    
-                    # Notion更新
+                    # MangaServiceを使用して更新
                     try:
                         with st.spinner("Notionを更新中..."):
-                            result = update_notion_page(book["id"], properties, NOTION_API_KEY)
+                            if manga_service.update_manga(updated_manga):
                         
-                        st.success("✅ 漫画情報が正常に更新されました！")
-                        st.balloons()
-                        
-                        # かなが自動生成された場合は通知（AI生成の場合は明示）
-                        if not title_kana.strip() and final_title_kana:
-                            if ai_generated:
-                                st.info(f"🤖 タイトルかなをAIで生成しました: **{final_title_kana}** (AI生成)")
+                                st.success("✅ 漫画情報が正常に更新されました！")
+                                st.balloons()
+                                
+                                # かなが自動生成された場合は通知（AI生成の場合は明示）
+                                if not title_kana.strip() and final_title_kana:
+                                    if ai_generated:
+                                        st.info(f"🤖 タイトルかなをAIで生成しました: **{final_title_kana}** (AI生成)")
+                                    else:
+                                        st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
+                                
+                                # セッション状態で更新成功をマーク
+                                st.session_state.update_success = True
                             else:
-                                st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
-                        
-                        # セッション状態で更新成功をマーク
-                        st.session_state.update_success = True
+                                st.error("❌ 更新に失敗しました")
                         
                     except Exception as update_error:
-                        st.error(f"❌ 更新に失敗しました: {str(update_error)}")
+                        st.error(f"❌ 更新処理でエラーが発生しました: {str(update_error)}")
                     
                 except Exception as e:
                     st.error(f"❌ 更新処理でエラーが発生しました: {str(e)}")
@@ -1104,33 +929,11 @@ def show_edit_book():
         with col1:
             if st.button("📖 詳細に戻る", type="primary", use_container_width=True):
                 st.session_state.update_success = False
-                # 更新されたデータを再取得して詳細画面に戻る
+                # MangaServiceを使用して更新されたデータを再取得
                 try:
-                    updated_page = retrieve_notion_page(book["id"], NOTION_API_KEY)
-                    # book_dataを更新
-                    updated_props = updated_page["properties"]
-                    
-                    updated_title = "タイトル不明"
-                    if updated_props.get("title", {}).get("title"):
-                        updated_title = updated_props["title"]["title"][0]["text"]["content"]
-                    
-                    updated_image_url = updated_props.get("image_url", {}).get("url")
-                    if not updated_image_url or not updated_image_url.startswith(('http://', 'https://')):
-                        updated_image_url = None
-                    
-                    updated_book_data = {
-                        "id": book["id"],
-                        "title": updated_title,
-                        "image_url": updated_image_url,
-                        "latest_owned_volume": updated_props.get("latest_owned_volume", {}).get("number", 0),
-                        "latest_released_volume": updated_props.get("latest_released_volume", {}).get("number", 0),
-                        "is_completed": updated_props.get("is_completed", {}).get("checkbox", False),
-                        "magazine_type": updated_props.get("magazine_type", {}).get("select", {}).get("name", "その他"),
-                        "magazine_name": updated_props.get("magazine_name", {}).get("rich_text", [{}])[0].get("text", {}).get("content", "不明") if updated_props.get("magazine_name", {}).get("rich_text") else "不明",
-                        "page_data": updated_page
-                    }
-                    
-                    st.session_state.selected_book = updated_book_data
+                    updated_manga = manga_service.get_manga_by_id(book["id"])
+                    if updated_manga:
+                        st.session_state.selected_book = updated_manga.to_dict()
                 except:
                     pass  # エラー時は古いデータのまま
                 
