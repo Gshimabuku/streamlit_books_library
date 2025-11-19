@@ -116,7 +116,7 @@ def main():
 
 def show_books_home():
     """Home画面：本の一覧を3列グリッド表示"""
-    st.header("📖 漫画ライブラリ")
+    st.header("📖 所持作品一覧")
     
     # 新規登録ボタン
     st.markdown('<div class="add-book-button">', unsafe_allow_html=True)
