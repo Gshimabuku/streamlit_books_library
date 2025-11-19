@@ -10,11 +10,11 @@ from services.manga_service import MangaService
 from services.image_service import ImageService
 from components.delete_dialog import DeleteDialog
 
-# ページモジュールをインポート
-from pages.home import show_books_home
-from pages.detail import show_book_detail
-from pages.add import show_add_book
-from pages.edit import show_edit_book
+# ビューモジュールをインポート
+from views.home import show_books_home
+from views.detail import show_book_detail
+from views.add import show_add_book
+from views.edit import show_edit_book
 
 # Cloudinaryのインポート
 try:
@@ -30,7 +30,8 @@ except ImportError:
 st.set_page_config(
     page_title="Books Library",
     page_icon="📚",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"  # サイドバーを非表示
 )
 
 # =========================

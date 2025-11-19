@@ -1,5 +1,5 @@
 """
-Pages module: Screen-specific logic for each page
+Views module: Screen-specific logic for each view
 """
 
 from .home import show_books_home
