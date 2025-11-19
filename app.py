@@ -391,6 +391,18 @@ def show_books_home():
                                     released = book["latest_released_volume"]
                                     completion_status = "完結" if book["is_completed"] else "連載中"
                                     
+                                    # 抜け巻を取得して実所持巻数を計算
+                                    missing_volumes_text = ""
+                                    actual_owned = owned
+                                    try:
+                                        props = book.get("page_data", {}).get("properties", {})
+                                        if props.get("missing_volumes", {}).get("rich_text") and props["missing_volumes"]["rich_text"]:
+                                            missing_volumes_text = props["missing_volumes"]["rich_text"][0]["text"]["content"]
+                                            missing_list = [vol.strip() for vol in missing_volumes_text.split(",") if vol.strip()]
+                                            actual_owned = owned - len(missing_list)
+                                    except:
+                                        pass
+                                    
                                     # 未購入巻の判定
                                     has_unpurchased = owned < released
                                     unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
@@ -416,7 +428,7 @@ def show_books_home():
                                         </div>
                                         <h3>{book["title"]}</h3>
                                         <div class="book-volume-info">
-                                            📖 {owned}/{released}巻
+                                            📖 {actual_owned}/{released}巻
                                         </div>
                                         <div class="detail-button-container">
                                             <!-- ボタンはStreamlitコンポーネントで配置 -->
@@ -600,19 +612,20 @@ def show_book_detail():
         
         # 所持巻数の計算
         owned_count = book['latest_owned_volume']
+        released_count = book['latest_released_volume']
         missing_count = 0
         
         # 抜け巻がある場合の計算
         if missing_volumes:
             try:
-                missing_list = [vol.strip() for vol in missing_volumes.split(",")]
+                missing_list = [vol.strip() for vol in missing_volumes.split(",") if vol.strip()]
                 missing_count = len(missing_list)
                 actual_owned = owned_count - missing_count
-                st.write(f"**所持巻数:** {owned_count}巻 ({actual_owned}巻)")
+                st.write(f"**所持巻数:** {actual_owned}/{released_count}巻")
             except:
-                st.write(f"**所持巻数:** {owned_count}巻")
+                st.write(f"**所持巻数:** {owned_count}/{released_count}巻")
         else:
-            st.write(f"**所持巻数:** {owned_count}巻")
+            st.write(f"**所持巻数:** {owned_count}/{released_count}巻")
         
         # 抜け巻
         if missing_volumes:
