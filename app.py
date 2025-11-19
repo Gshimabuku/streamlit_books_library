@@ -2,6 +2,8 @@ import streamlit as st
 from utils.notion_client import query_notion, create_notion_page, update_notion_page, retrieve_notion_page, delete_notion_page
 from utils.css_loader import load_custom_styles
 from utils.kana_converter import title_to_kana
+from utils.config import Config
+from utils.session import SessionManager
 import datetime
 import os
 
@@ -25,34 +27,20 @@ st.set_page_config(
 # =========================
 # Notion 設定
 # =========================
-try:
-    NOTION_API_KEY = st.secrets["notion"]["api_key"]
-    BOOKS_DATABASE_ID = st.secrets["notion"]["database_id"]
-        
-except Exception as e:
-    st.error(f"🔧 **Notion設定エラー**: {str(e)}")
-    st.markdown("""
-    ### 📋 secrets.toml ファイルを確認してください
-    
-    `.streamlit/secrets.toml` ファイルに以下の形式で設定が必要です：
-    
-    ```toml
-    [notion]
-    api_key = "secret_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    ```
-    """)
-    st.stop()
+notion_config = Config.load_notion_config()
+NOTION_API_KEY = notion_config["api_key"]
+BOOKS_DATABASE_ID = notion_config["database_id"]
 
 # =========================
 # Cloudinary 設定
 # =========================
-if CLOUDINARY_AVAILABLE:
+cloudinary_config = Config.load_cloudinary_config()
+if CLOUDINARY_AVAILABLE and cloudinary_config:
     try:
         cloudinary.config(
-            cloud_name=st.secrets["cloudinary"]["cloud_name"],
-            api_key=st.secrets["cloudinary"]["api_key"],
-            api_secret=st.secrets["cloudinary"]["api_secret"]
+            cloud_name=cloudinary_config["cloud_name"],
+            api_key=cloudinary_config["api_key"],
+            api_secret=cloudinary_config["api_secret"]
         )
         CLOUDINARY_ENABLED = True
     except Exception:
@@ -63,37 +51,15 @@ else:
 # =========================
 # セッション状態の初期化
 # =========================
-if "page" not in st.session_state:
-    st.session_state.page = "books_home"
-
-if "selected_book" not in st.session_state:
-    st.session_state.selected_book = None
-
-# アコーディオンメニューの展開状態を管理
-if "magazine_type_expanded" not in st.session_state:
-    st.session_state.magazine_type_expanded = {
-        "ジャンプ": True,
-        "マガジン": True, 
-        "サンデー": True,
-        "その他": True
-    }
+SessionManager.init()
 
 # =========================
-# ページ遷移関数
+# ページ遷移関数（SessionManagerから取得）
 # =========================
-def go_to_home():
-    st.session_state.page = "books_home"
-    st.session_state.selected_book = None
-
-def go_to_detail(book_data):
-    st.session_state.page = "book_detail"
-    st.session_state.selected_book = book_data
-
-def go_to_add_book():
-    st.session_state.page = "add_book"
-
-def go_to_edit_book():
-    st.session_state.page = "edit_book"
+go_to_home = SessionManager.go_to_home
+go_to_detail = SessionManager.go_to_detail
+go_to_add_book = SessionManager.go_to_add_book
+go_to_edit_book = SessionManager.go_to_edit_book
 
 # =========================
 # メインアプリケーション
@@ -752,11 +718,7 @@ def show_add_book():
                     
                     if not final_title_kana and title:
                         # AI APIキーを取得（secrets.tomlまたは環境変数から）
-                        openai_api_key = None
-                        try:
-                            openai_api_key = st.secrets.get("openai", {}).get("api_key") or os.environ.get("OPENAI_API_KEY")
-                        except:
-                            pass
+                        openai_api_key = Config.get_openai_api_key()
                         
                         # AIを使用して変換（APIキーがある場合）
                         use_ai = openai_api_key is not None
@@ -1059,11 +1021,7 @@ def show_edit_book():
                     
                     if not final_title_kana and title:
                         # AI APIキーを取得（secrets.tomlまたは環境変数から）
-                        openai_api_key = None
-                        try:
-                            openai_api_key = st.secrets.get("openai", {}).get("api_key") or os.environ.get("OPENAI_API_KEY")
-                        except:
-                            pass
+                        openai_api_key = Config.get_openai_api_key()
                         
                         # AIを使用して変換（APIキーがある場合）
                         use_ai = openai_api_key is not None
