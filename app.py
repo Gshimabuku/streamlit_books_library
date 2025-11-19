@@ -612,7 +612,6 @@ def show_book_detail():
         
         # 所持巻数の計算
         owned_count = book['latest_owned_volume']
-        released_count = book['latest_released_volume']
         missing_count = 0
         
         # 抜け巻がある場合の計算
@@ -621,12 +620,12 @@ def show_book_detail():
                 missing_list = [vol.strip() for vol in missing_volumes.split(",") if vol.strip()]
                 missing_count = len(missing_list)
                 actual_owned = owned_count - missing_count
-                st.write(f"**所持巻数:** {actual_owned}/{released_count}巻")
+                st.write(f"**所持巻数:** {actual_owned}巻")
             except:
-                st.write(f"**所持巻数:** {owned_count}/{released_count}巻")
+                st.write(f"**所持巻数:** {owned_count}巻")
         else:
-            st.write(f"**所持巻数:** {owned_count}/{released_count}巻")
-        
+            st.write(f"**所持巻数:** {owned_count}巻")
+
         # 抜け巻
         if missing_volumes:
             st.write(f"**抜け巻:** {missing_volumes}")
