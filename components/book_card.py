@@ -4,13 +4,11 @@ BookCard Component: 漫画カード表示用コンポーネント
 
 from typing import Optional
 from models.manga import Manga
+from config.constants import DEFAULT_IMAGE_URL
 
 
 class BookCard:
     """漫画カードのHTML生成を担当するコンポーネント"""
-    
-    # デフォルト画像URL
-    DEFAULT_IMAGE_URL = "https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg"
     
     @staticmethod
     def render(manga: Manga) -> str:
@@ -75,9 +73,9 @@ class BookCard:
             if image_url and image_url != "":
                 return f'<img src="{image_url}" alt="{title}">'
             else:
-                return f'<img src="{BookCard.DEFAULT_IMAGE_URL}" alt="画像なし">'
+                return f'<img src="{DEFAULT_IMAGE_URL}" alt="画像なし">'
         except Exception:
-            return f'<img src="{BookCard.DEFAULT_IMAGE_URL}" alt="画像読み込みエラー">'
+            return f'<img src="{DEFAULT_IMAGE_URL}" alt="画像読み込みエラー">'
     
     @staticmethod
     def render_magazine_header(magazine_name: str) -> str:
