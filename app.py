@@ -7,6 +7,9 @@ from utils.session import SessionManager
 from services.manga_service import MangaService
 from services.image_service import ImageService
 from models.manga import Manga
+from components.book_card import BookCard
+from components.book_form import BookFormFields
+from components.delete_dialog import DeleteDialog
 import datetime
 import os
 
@@ -254,8 +257,8 @@ def show_books_home():
                     sorted_names = manga_service.sort_magazine_names(magazine_names, magazine_type)
                     
                     for magazine_name in sorted_names:
-                        # magazine_nameヘッダー
-                        st.markdown(f'<div class="magazine-name-header">📖 {magazine_name}</div>', unsafe_allow_html=True)
+                        # magazine_nameヘッダー（BookCardコンポーネント使用）
+                        st.markdown(BookCard.render_magazine_header(magazine_name), unsafe_allow_html=True)
                         
                         # この雑誌の本を表示
                         magazine_books = grouped_books[magazine_type][magazine_name]
@@ -268,42 +271,8 @@ def show_books_home():
                             
                             for col_idx, manga in enumerate(row_books):
                                 with cols[col_idx]:
-                                    # Mangaオブジェクトから情報を取得
-                                    actual_owned = manga.actual_owned_volume
-                                    released = manga.latest_released_volume
-                                    completion_status = manga.completion_status
-                                    has_unpurchased = manga.has_unpurchased
-                                    unpurchased_badge = '<span class="unpurchased-badge">未購入あり</span>' if has_unpurchased else ""
-                        
-                                    # 画像HTMLを準備
-                                    try:
-                                        if manga.image_url and manga.image_url != "":
-                                            image_html = f'<img src="{manga.image_url}" alt="{manga.title}">'  
-                                        else:
-                                            image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像なし">'  
-                                    except:
-                                        image_html = '<img src="https://res.cloudinary.com/do6trtdrp/image/upload/v1762307174/noimage_czluse.jpg" alt="画像読み込みエラー">'
-                                    
-                                    # 本のカード全体をHTMLで作成
-                                    st.markdown(f"""
-                                <div class="book-card">
-                                    <div class="mobile-book-image">
-                                        {image_html}
-                                    </div>
-                                    <div class="mobile-book-info">
-                                        <div class="status-container">
-                                            <span class="status-badge {'status-completed' if manga.is_completed else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
-                                        </div>
-                                        <h3>{manga.title}</h3>
-                                        <div class="book-volume-info">
-                                            📖 {actual_owned}/{released}巻
-                                        </div>
-                                        <div class="detail-button-container">
-                                            <!-- ボタンはStreamlitコンポーネントで配置 -->
-                                        </div>
-                                    </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
+                                    # BookCardコンポーネントでHTMLを生成
+                                    st.markdown(BookCard.render(manga), unsafe_allow_html=True)
                                     
                                     # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
                                     # Mangaオブジェクトをdict形式に変換してセッションに保存（後方互換性のため）
@@ -313,46 +282,9 @@ def show_books_home():
 
 @st.dialog("削除確認")
 def confirm_delete_dialog():
-    """削除確認ダイアログ"""
+    """削除確認ダイアログ（DeleteDialogコンポーネント使用）"""
     book = st.session_state.selected_book
-    
-    st.warning(f"**{book['title']}** を削除しますか？")
-    st.error("⚠️ この操作は取り消せません。")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("🗑️ 削除する", type="primary", use_container_width=True):
-            try:
-                # ImageServiceを使用して画像削除
-                image_url = book.get("image_url")
-                if image_url:
-                    with st.spinner("画像を削除中..."):
-                        if image_service.delete_image(image_url):
-                            st.success("✅ 画像を削除しました")
-                
-                # MangaServiceを使用してNotionレコード削除
-                with st.spinner("データを削除中..."):
-                    if manga_service.delete_manga(book["id"]):
-                        st.success("✅ 漫画を削除しました")
-                    else:
-                        raise Exception("削除に失敗しました")
-                
-                # セッション状態をクリア
-                st.session_state.selected_book = None
-                
-                # ホームに戻る
-                import time
-                time.sleep(1)
-                go_to_home()
-                st.rerun()
-                
-            except Exception as e:
-                st.error(f"❌ 削除に失敗しました: {str(e)}")
-    
-    with col2:
-        if st.button("❌ キャンセル", use_container_width=True):
-            st.rerun()
+    DeleteDialog.show(book, manga_service, image_service, go_to_home)
 
 def show_book_detail():
     """詳細画面：選択された本の詳細情報表示"""
@@ -505,76 +437,35 @@ def show_add_book():
         st.rerun()
     
     with st.form("add_book_form"):
-        st.subheader("📝 基本情報")
+        # BookFormFieldsコンポーネントを使用
+        basic_info = BookFormFields.render_basic_info()
+        title = basic_info["title"]
+        title_kana = basic_info["title_kana"]
+        magazine_type = basic_info["magazine_type"]
+        magazine_name = basic_info["magazine_name"]
         
-        # 必須項目
-        title = st.text_input("漫画タイトル *", placeholder="例: ONE PIECE")
-        title_kana = st.text_input(
-            "タイトルかな（並び順用）", 
-            placeholder="例: わんぴーす",
-            help="空欄の場合は保存時に自動生成されます"
-        )
+        volume_info = BookFormFields.render_volume_info()
+        latest_owned_volume = volume_info["latest_owned_volume"]
+        latest_released_volume = volume_info["latest_released_volume"]
         
-        magazine_type = st.selectbox("連載誌タイプ *", ["ジャンプ", "マガジン", "サンデー", "その他"])
-        magazine_name = st.text_input("連載誌名", placeholder="例: 週刊少年ジャンプ")
+        uploaded_file = BookFormFields.render_image_info()
         
-        # 巻数情報
-        col1, col2 = st.columns(2)
-        with col1:
-            latest_owned_volume = st.number_input("現在所持巻数 *", min_value=0, value=1)
-        with col2:
-            latest_released_volume = st.number_input("発売済み最新巻 *", min_value=0, value=1)
-        
-        # その他情報
-        st.subheader("📷 画像情報")
-        
-        uploaded_file = st.file_uploader(
-            "画像ファイルを選択", 
-            type=["jpg", "jpeg", "png", "webp"],
-            help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます"
-        )
-        
+        # Cloudinaryが利用可能かチェック（プレビュー後のメッセージ）
         if uploaded_file is not None:
-            # プレビュー表示
-            st.image(uploaded_file, caption="アップロード予定の画像", width=200)
-            
-            # Cloudinaryが利用可能かチェック
             if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
                 st.info("📤 登録時にCloudinaryにアップロードされます")
             else:
                 st.warning("⚠️ Cloudinary設定が見つかりません。画像URLは保存されません。")
         
-        # 完結情報
-        is_completed = st.checkbox("完結済み")
+        is_completed = BookFormFields.render_completion_status()
         
-        # 日付情報
-        st.subheader("📅 発売日情報")
+        latest_release_date, use_next_release_date, next_release_date = BookFormFields.render_date_info()
         
-        # 最新巻発売日
-        latest_release_date = st.date_input(
-            "最新巻発売日 *",
-            value=datetime.date.today(),
-            min_value=datetime.date(1960, 1, 1),
-            max_value=datetime.date(2100, 12, 31),
-            help="最新巻の発売日を設定します（必須項目）"
-        )
-        
-        # 次巻発売予定日
-        use_next_release_date = st.checkbox("次巻発売予定日を登録する")
-        next_release_date = st.date_input(
-            "次巻発売予定日",
-            value=datetime.date.today() + datetime.timedelta(days=90),
-            min_value=datetime.date(1960, 1, 1),
-            max_value=datetime.date(2100, 12, 31),
-            help="上のチェックボックスをオンにした場合のみ登録されます"
-        )
-        
-        # 詳細情報
-        st.subheader("📚 詳細情報")
-        missing_volumes = st.text_input("未所持巻（抜け）", placeholder="例: 3,5,10")
-        special_volumes = st.text_input("特殊巻", placeholder="例: 10.5,外伝1")
-        owned_media = st.selectbox("所持媒体", ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"])
-        notes = st.text_area("備考", placeholder="その他メモ...")
+        detail_info = BookFormFields.render_detail_info()
+        missing_volumes = detail_info["missing_volumes"]
+        special_volumes = detail_info["special_volumes"]
+        owned_media = detail_info["owned_media"]
+        notes = detail_info["notes"]
         
         # 登録ボタン
         submitted = st.form_submit_button("📚 漫画を登録", type="primary")
@@ -760,88 +651,54 @@ def show_edit_book():
     if props.get("notes", {}).get("rich_text") and props["notes"]["rich_text"]:
         current_notes = props["notes"]["rich_text"][0]["text"]["content"]
     
-    # 編集フォーム
+    # 編集フォーム（BookFormFieldsコンポーネントを使用）
     with st.form("edit_book_form"):
-        st.subheader("📝 基本情報")
-        
-        # 必須項目
-        title = st.text_input("漫画タイトル *", value=current_title)
-        title_kana = st.text_input(
-            "タイトルかな（並び順用）", 
-            value=current_title_kana,
-            placeholder="例: しんげきのきょじん",
-            help="空欄の場合は保存時に自動生成されます"
+        basic_info = BookFormFields.render_basic_info(
+            default_title=current_title,
+            default_title_kana=current_title_kana,
+            default_magazine_type=current_magazine_type,
+            default_magazine_name=current_magazine_name
         )
+        title = basic_info["title"]
+        title_kana = basic_info["title_kana"]
+        magazine_type = basic_info["magazine_type"]
+        magazine_name = basic_info["magazine_name"]
         
-        magazine_type = st.selectbox(
-            "連載誌タイプ *", 
-            ["ジャンプ", "マガジン", "サンデー", "その他"],
-            index=["ジャンプ", "マガジン", "サンデー", "その他"].index(current_magazine_type) if current_magazine_type in ["ジャンプ", "マガジン", "サンデー", "その他"] else 3
+        volume_info = BookFormFields.render_volume_info(
+            default_owned=current_owned,
+            default_released=current_released
         )
-        magazine_name = st.text_input("連載誌名", value=current_magazine_name)
+        latest_owned_volume = volume_info["latest_owned_volume"]
+        latest_released_volume = volume_info["latest_released_volume"]
         
-        # 巻数情報
-        col1, col2 = st.columns(2)
-        with col1:
-            latest_owned_volume = st.number_input("現在所持巻数 *", min_value=0, value=current_owned)
-        with col2:
-            latest_released_volume = st.number_input("発売済み最新巻 *", min_value=0, value=current_released)
-        
-        # その他情報
-        st.subheader("📷 画像情報")
-        
-        # 現在の画像を表示
-        if current_image_url:
-            st.image(current_image_url, caption="現在の画像", width=200)
-        else:
-            st.info("現在、画像が登録されていません")
-        
-        uploaded_file = st.file_uploader(
-            "新しい画像をアップロード" + ("（画像を変更する場合のみ）" if current_image_url else ""), 
-            type=["jpg", "jpeg", "png", "webp"],
-            help="JPG、PNG、WEBP形式の画像ファイルをアップロードできます",
-            key="edit_image_upload"
+        uploaded_file = BookFormFields.render_image_info(
+            current_image_url=current_image_url,
+            is_edit_mode=True
         )
         
         if uploaded_file is not None:
-            st.image(uploaded_file, caption="新しい画像プレビュー", width=200)
             if CLOUDINARY_ENABLED and CLOUDINARY_AVAILABLE:
                 st.info("📤 保存時にCloudinaryにアップロードされ、現在の画像と入れ替わります")
             else:
                 st.warning("⚠️ Cloudinary設定が見つかりません")
         
-        # 完結情報
-        is_completed = st.checkbox("完結済み", value=current_completed)
+        is_completed = BookFormFields.render_completion_status(default_completed=current_completed)
         
-        # 日付情報
-        st.subheader("📅 発売日情報")
-        
-        latest_release_date = st.date_input(
-            "最新巻発売日 *",
-            value=current_latest_release_date,
-            min_value=datetime.date(1960, 1, 1),
-            max_value=datetime.date(2100, 12, 31)
+        latest_release_date, use_next_release_date, next_release_date = BookFormFields.render_date_info(
+            default_latest_date=current_latest_release_date,
+            default_next_date=current_next_release_date
         )
         
-        use_next_release_date = st.checkbox("次巻発売予定日を設定する", value=current_next_release_date is not None)
-        next_release_date = st.date_input(
-            "次巻発売予定日",
-            value=current_next_release_date if current_next_release_date else datetime.date.today() + datetime.timedelta(days=90),
-            min_value=datetime.date(1960, 1, 1),
-            max_value=datetime.date(2100, 12, 31),
-            help="上のチェックボックスをオンにした場合のみ保存されます"
+        detail_info = BookFormFields.render_detail_info(
+            default_missing_volumes=current_missing_volumes,
+            default_special_volumes=current_special_volumes,
+            default_owned_media=current_owned_media,
+            default_notes=current_notes
         )
-        
-        # 詳細情報
-        st.subheader("📚 詳細情報")
-        missing_volumes = st.text_input("未所持巻（抜け）", value=current_missing_volumes, placeholder="例: 3,5,10")
-        special_volumes = st.text_input("特殊巻", value=current_special_volumes, placeholder="例: 10.5,外伝1")
-        owned_media = st.selectbox(
-            "所持媒体", 
-            ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"],
-            index=["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"].index(current_owned_media) if current_owned_media in ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"] else 0
-        )
-        notes = st.text_area("備考", value=current_notes, placeholder="その他メモ...")
+        missing_volumes = detail_info["missing_volumes"]
+        special_volumes = detail_info["special_volumes"]
+        owned_media = detail_info["owned_media"]
+        notes = detail_info["notes"]
         
         # 更新ボタン
         submitted = st.form_submit_button("💾 変更を保存", type="primary")
