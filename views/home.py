@@ -7,7 +7,7 @@ from services.manga_service import MangaService
 from services.image_service import ImageService
 from components.book_card import BookCard
 from utils.session import SessionManager
-from config.constants import MAGAZINE_TYPE_ORDER, MAGAZINE_LOGOS
+from config.constants import MAGAZINE_TYPE_ORDER
 
 
 def show_books_home(
@@ -142,21 +142,26 @@ def show_books_home(
     
     # 本の一覧表示（データがある場合のみ）
     if mangas:
-        # MangaServiceを使用してグループ化
-        grouped_books = manga_service.group_by_magazine(mangas)
+        # magazine_typeごとにグループ化（magazine_nameは使用しない）
+        grouped_by_type = {}
+        for manga in mangas:
+            magazine_type = manga.magazine_type or "その他"
+            if magazine_type not in grouped_by_type:
+                grouped_by_type[magazine_type] = []
+            grouped_by_type[magazine_type].append(manga)
         
-        # magazine_typeごとに表示
+        # magazine_typeごとにアコーディオン表示
         for magazine_type in MAGAZINE_TYPE_ORDER:
-            if magazine_type in grouped_books:
+            if magazine_type in grouped_by_type:
                 # アコーディオンヘッダー（クリック可能）
                 is_expanded = st.session_state.magazine_type_expanded.get(magazine_type, True)
                 expand_icon = "🔽" if is_expanded else "▶️"
                 
-                # ヘッダーボタン（ロゴは定数から取得）
-                logo_url = MAGAZINE_LOGOS.get(magazine_type)
-
-                # ヘッダーボタン（テキスト表示に戻す）
-                if st.button(f"{expand_icon} 📚 {magazine_type} ({len(grouped_books[magazine_type])}誌)",
+                # タイプごとの漫画数を取得
+                manga_count = len(grouped_by_type[magazine_type])
+                
+                # ヘッダーボタン
+                if st.button(f"{expand_icon} 📚 {magazine_type} ({manga_count}作品)",
                              key=f"toggle_{magazine_type}",
                              use_container_width=True):
                     st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
@@ -164,30 +169,21 @@ def show_books_home(
                 
                 # 展開されている場合のみ内容を表示
                 if is_expanded:
-                    # magazine_nameをカスタム順序でソート
-                    magazine_names = list(grouped_books[magazine_type].keys())
-                    sorted_names = manga_service.sort_magazine_names(magazine_names, magazine_type)
+                    # このタイプの漫画を全て表示
+                    type_mangas = grouped_by_type[magazine_type]
                     
-                    for magazine_name in sorted_names:
-                        # magazine_nameヘッダー（BookCardコンポーネント使用）
-                        st.markdown(BookCard.render_magazine_header(magazine_name), unsafe_allow_html=True)
+                    # PC表示：3カラムで表示
+                    # スマホ表示：CSSで1カラムに変換
+                    for row_start in range(0, len(type_mangas), 3):
+                        cols = st.columns(3, gap="small")
+                        row_books = type_mangas[row_start:row_start + 3]
                         
-                        # この雑誌の本を表示
-                        magazine_books = grouped_books[magazine_type][magazine_name]
-                        
-                        # PC表示：3カラムで表示
-                        # スマホ表示：CSSで1カラムに変換（順序を保つため）
-                        for row_start in range(0, len(magazine_books), 3):
-                            cols = st.columns(3, gap="small")
-                            row_books = magazine_books[row_start:row_start + 3]
-                            
-                            for col_idx, manga in enumerate(row_books):
-                                with cols[col_idx]:
-                                    # BookCardコンポーネントでHTMLを生成
-                                    st.markdown(BookCard.render(manga), unsafe_allow_html=True)
-                                    
-                                    # 詳細ボタンを情報部分内に配置（スマホでは右側に表示）
-                                    # Mangaオブジェクトをdict形式に変換してセッションに保存（後方互換性のため）
-                                    if st.button(f"詳細を見る", key=f"detail_{manga.id}", use_container_width=True):
-                                        go_to_detail(manga.to_dict())
-                                        st.rerun()
+                        for col_idx, manga in enumerate(row_books):
+                            with cols[col_idx]:
+                                # BookCardコンポーネントでHTMLを生成
+                                st.markdown(BookCard.render(manga), unsafe_allow_html=True)
+                                
+                                # 詳細ボタン
+                                if st.button(f"詳細を見る", key=f"detail_{manga.id}", use_container_width=True):
+                                    go_to_detail(manga.to_dict())
+                                    st.rerun()
