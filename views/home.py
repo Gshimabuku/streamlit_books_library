@@ -169,8 +169,11 @@ def show_books_home(
                 
                 # 展開されている場合のみ内容を表示
                 if is_expanded:
-                    # このタイプの漫画を全て表示
-                    type_mangas = grouped_by_type[magazine_type]
+                    # このタイプの漫画をtitle_kanaの五十音順でソート
+                    type_mangas = sorted(
+                        grouped_by_type[magazine_type],
+                        key=lambda m: m.title_kana or m.title or ""
+                    )
                     
                     # PC表示：3カラムで表示
                     # スマホ表示：CSSで1カラムに変換
