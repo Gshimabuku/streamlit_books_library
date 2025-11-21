@@ -34,6 +34,16 @@ class BookCard:
         actual_owned = manga.actual_owned_volume
         released = manga.latest_released_volume
         
+        # 連載誌情報
+        magazine_info = ""
+        if manga.magazine_name:
+            magazine_info = f'<div class="book-magazine-info">📰 {manga.magazine_name}</div>'
+        
+        # 所持媒体情報
+        media_info = ""
+        if manga.owned_media and manga.owned_media != "単行本":
+            media_info = f'<div class="book-media-info">💻 {manga.owned_media}</div>'
+        
         # HTMLテンプレート
         card_html = f"""
         <div class="book-card">
@@ -45,9 +55,11 @@ class BookCard:
                     <span class="status-badge {'status-completed' if is_completed else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
                 </div>
                 <h3>{manga.title}</h3>
+                {magazine_info}
                 <div class="book-volume-info">
                     📖 {actual_owned}/{released}巻
                 </div>
+                {media_info}
                 <div class="detail-button-container">
                     <!-- ボタンはStreamlitコンポーネントで配置 -->
                 </div>

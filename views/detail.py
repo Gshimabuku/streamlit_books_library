@@ -104,6 +104,24 @@ def show_book_detail(
         </div>
         """, unsafe_allow_html=True)
         
+        # 連載誌情報
+        magazine_type = book.get('magazine_type', '')
+        magazine_name = book.get('page_data', {}).get('properties', {}).get('magazine_name', {}).get('rich_text', [])
+        if magazine_name and magazine_name[0].get('text', {}).get('content'):
+            magazine_name_text = magazine_name[0]['text']['content']
+            st.write(f"📰 **連載誌:** {magazine_type} - {magazine_name_text}")
+        elif magazine_type:
+            st.write(f"📰 **連載誌:** {magazine_type}")
+        
+        # 所持媒体情報
+        owned_media = props.get('owned_media', {}).get('select')
+        if owned_media:
+            owned_media_name = owned_media.get('name', '単行本')
+            if owned_media_name != '単行本':
+                st.write(f"💻 **所持媒体:** {owned_media_name}")
+        
+        st.markdown("---")
+        
         # 最新巻情報
         release_info = f"**最新巻:** {book['latest_released_volume']}巻"
         if latest_release_date:
