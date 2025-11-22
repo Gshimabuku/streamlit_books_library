@@ -73,15 +73,16 @@
     border-radius: 8px !important;
 }
 
-/* 巻数情報 */
-.book-volume-info {
-    font-size: clamp(11px, 3vw, 16px) !important;
-    text-align: center !important;
-    margin: 8px 0 8px 0 !important;
-}
-
 /* 連載誌情報 */
 .book-magazine-info {
+    font-size: clamp(10px, 2.5vw, 14px) !important;
+    color: #666 !important;
+    text-align: left !important;
+    margin: 4px 0 4px 10px !important;
+}
+
+/* 巻数情報 */
+.book-volume-info {
     font-size: clamp(10px, 2.5vw, 14px) !important;
     color: #666 !important;
     text-align: left !important;
@@ -92,9 +93,8 @@
 .book-media-info {
     font-size: clamp(10px, 2.5vw, 14px) !important;
     color: #666 !important;
-    text-align: center !important;
-    margin: 4px 0 4px 0 !important;
-    font-style: italic !important;
+    text-align: left !important;
+    margin: 4px 0 4px 10px !important;
 }
 
 /* 完結・連載中ステータス */
