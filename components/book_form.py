@@ -238,3 +238,91 @@ class BookFormFields:
             "owned_media": owned_media,
             "notes": notes
         }
+    
+    @staticmethod
+    def render_search_filters() -> dict:
+        """
+        検索フィルター用のフィールドを表示
+        
+        Returns:
+            dict: 検索条件の辞書
+        """
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # タイトル検索
+            title_search = st.text_input(
+                "📚 タイトル検索",
+                placeholder="例: ワンピース",
+                help="タイトルまたは読み仮名での部分一致検索"
+            )
+            
+            # 雑誌タイプ検索
+            magazine_types = ["すべて", "ジャンプ", "マガジン", "サンデー", "その他"]
+            magazine_type_filter = st.selectbox(
+                "📰 連載誌タイプ",
+                magazine_types,
+                index=0
+            )
+            
+            # 雑誌名検索
+            magazine_name_search = st.text_input(
+                "📖 連載誌名",
+                placeholder="例: 週刊少年ジャンプ",
+                help="連載誌名での部分一致検索"
+            )
+        
+        with col2:
+            # 未所持巻フィルター
+            has_unpurchased_options = ["すべて", "あり", "なし"]
+            has_unpurchased_filter = st.selectbox(
+                "📋 未所持巻",
+                has_unpurchased_options,
+                index=0,
+                help="未購入の巻があるかどうかで絞り込み"
+            )
+            
+            # 所持媒体フィルター
+            owned_media_options = ["すべて", "単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"]
+            owned_media_filter = st.selectbox(
+                "💻 所持媒体",
+                owned_media_options,
+                index=0
+            )
+            
+            # 所持巻数範囲
+            st.write("📊 所持巻数範囲")
+            col2_1, col2_2 = st.columns(2)
+            with col2_1:
+                min_owned = st.number_input(
+                    "最小",
+                    min_value=0,
+                    max_value=999,
+                    value=0,
+                    help="最小所持巻数"
+                )
+            with col2_2:
+                max_owned = st.number_input(
+                    "最大",
+                    min_value=0,
+                    max_value=999,
+                    value=999,
+                    help="最大所持巻数"
+                )
+        
+        # フィルター条件を辞書で返す
+        filters = {
+            'title': title_search.strip() if title_search else None,
+            'magazine_type': magazine_type_filter if magazine_type_filter != "すべて" else None,
+            'magazine_name': magazine_name_search.strip() if magazine_name_search else None,
+            'has_unpurchased': has_unpurchased_filter if has_unpurchased_filter != "すべて" else None,
+            'owned_media': owned_media_filter if owned_media_filter != "すべて" else None,
+            'min_owned_volume': min_owned if min_owned > 0 else None,
+            'max_owned_volume': max_owned if max_owned < 999 else None
+        }
+        
+        # クリアボタン
+        if st.button("🗑️ フィルターをクリア", help="すべての検索条件をリセット"):
+            st.rerun()
+        
+        return filters

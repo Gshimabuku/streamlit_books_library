@@ -172,6 +172,53 @@
 }
 
 /* ==================================== */
+/* 検索フィルター関連スタイル */
+/* ==================================== */
+/* 検索結果件数の表示 */
+.search-result-info {
+    background-color: #e8f4fd;
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+/* フィルタークリアボタン */
+.filter-clear-button .stButton > button {
+    background-color: #6c757d !important;
+    color: white !important;
+    border: none !important;
+    width: 100% !important;
+}
+
+.filter-clear-button .stButton > button:hover {
+    background-color: #5a6268 !important;
+}
+
+/* 検索フィールドの調整 */
+.stTextInput > div > div > input {
+    border-radius: 6px !important;
+}
+
+.stSelectbox > div > div {
+    border-radius: 6px !important;
+}
+
+/* 検索エキスパンダーのスタイル */
+[data-testid="stExpander"] details summary {
+    background-color: #f8f9fa !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+}
+
+[data-testid="stExpander"] details[open] summary {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+/* ==================================== */
 /* 雑誌名ヘッダー */
 /* ==================================== */
 .magazine-name-header {
