@@ -61,9 +61,6 @@ class BookCard:
                 {magazine_info}
                 {volume_info}
                 {media_info}
-                <div class="detail-button-container">
-                    <!-- ボタンはStreamlitコンポーネントで配置 -->
-                </div>
             </div>
         </div>
         """
