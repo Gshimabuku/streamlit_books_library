@@ -44,7 +44,7 @@ class BookCard:
 
         # 所持媒体情報
         media_info = ""
-        if manga.owned_media and manga.owned_media != "単行本":
+        if manga.owned_media:
             media_info = f'<div class="book-media-info">💻 {manga.owned_media}</div>'
         
         # HTMLテンプレート
