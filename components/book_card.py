@@ -39,6 +39,9 @@ class BookCard:
         if manga.magazine_name:
             magazine_info = f'<div class="book-magazine-info">📰 {manga.magazine_name}</div>'
         
+        # 巻数情報
+        volume_info = f'<div class="book-volume-info">📖 {actual_owned}/{released}巻</div>'
+
         # 所持媒体情報
         media_info = ""
         if manga.owned_media and manga.owned_media != "単行本":
@@ -56,9 +59,7 @@ class BookCard:
                 </div>
                 <h3>{manga.title}</h3>
                 {magazine_info}
-                <div class="book-volume-info">
-                    📖 {actual_owned}/{released}巻
-                </div>
+                {volume_info}
                 {media_info}
                 <div class="detail-button-container">
                     <!-- ボタンはStreamlitコンポーネントで配置 -->
