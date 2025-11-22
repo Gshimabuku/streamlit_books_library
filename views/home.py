@@ -150,25 +150,22 @@ def show_books_home(
                 grouped_by_type[magazine_type] = []
             grouped_by_type[magazine_type].append(manga)
         
-        # magazine_typeごとにアコーディオン表示
+        # 存在する雑誌タイプのみを取得し、タブ名にカウントを追加
+        available_types = []
+        tab_names = []
         for magazine_type in MAGAZINE_TYPE_ORDER:
             if magazine_type in grouped_by_type:
-                # アコーディオンヘッダー（クリック可能）
-                is_expanded = st.session_state.magazine_type_expanded.get(magazine_type, True)
-                expand_icon = "🔽" if is_expanded else "▶️"
-                
-                # タイプごとの漫画数を取得
+                available_types.append(magazine_type)
                 manga_count = len(grouped_by_type[magazine_type])
-                
-                # ヘッダーボタン
-                if st.button(f"{expand_icon} 📚 {magazine_type} ({manga_count}作品)",
-                             key=f"toggle_{magazine_type}",
-                             use_container_width=True):
-                    st.session_state.magazine_type_expanded[magazine_type] = not is_expanded
-                    st.rerun()
-                
-                # 展開されている場合のみ内容を表示
-                if is_expanded:
+                tab_names.append(f"📚 {magazine_type} ({manga_count})")
+        
+        # タブメニュー表示
+        if available_types:
+            tabs = st.tabs(tab_names)
+            
+            # 各タブの内容を表示
+            for idx, (magazine_type, tab) in enumerate(zip(available_types, tabs)):
+                with tab:
                     # このタイプの漫画をtitle_kanaの五十音順でソート
                     type_mangas = sorted(
                         grouped_by_type[magazine_type],
@@ -187,6 +184,6 @@ def show_books_home(
                                 st.markdown(BookCard.render(manga), unsafe_allow_html=True)
                                 
                                 # 詳細ボタン
-                                if st.button(f"詳細を見る", key=f"detail_{manga.id}", use_container_width=True):
+                                if st.button(f"詳細を見る", key=f"detail_{magazine_type}_{manga.id}", use_container_width=True):
                                     go_to_detail(manga.to_dict())
                                     st.rerun()

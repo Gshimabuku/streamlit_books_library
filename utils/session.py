@@ -14,13 +14,8 @@ class SessionManager:
         if "selected_book" not in st.session_state:
             st.session_state.selected_book = None
         
-        if "magazine_type_expanded" not in st.session_state:
-            st.session_state.magazine_type_expanded = {
-                "ジャンプ": True,
-                "マガジン": True,
-                "サンデー": True,
-                "その他": True
-            }
+        # magazine_type_expanded は使用しないため削除
+        # タブメニュー方式では展開状態の管理が不要
         
         if "registration_success" not in st.session_state:
             st.session_state.registration_success = False
@@ -69,27 +64,11 @@ class SessionManager:
         """選択をクリア"""
         st.session_state.selected_book = None
     
-    @staticmethod
-    def toggle_magazine_type(magazine_type: str):
-        """雑誌タイプの展開状態を切り替え
-        
-        Args:
-            magazine_type: 雑誌タイプ名
-        """
-        current = st.session_state.magazine_type_expanded.get(magazine_type, True)
-        st.session_state.magazine_type_expanded[magazine_type] = not current
-    
-    @staticmethod
-    def is_magazine_type_expanded(magazine_type: str) -> bool:
-        """雑誌タイプが展開されているか確認
-        
-        Args:
-            magazine_type: 雑誌タイプ名
-            
-        Returns:
-            bool: 展開されている場合True
-        """
-        return st.session_state.magazine_type_expanded.get(magazine_type, True)
+    # タブメニュー方式では以下のメソッドは不要
+    # @staticmethod
+    # def toggle_magazine_type(magazine_type: str):
+    # @staticmethod
+    # def is_magazine_type_expanded(magazine_type: str) -> bool:
     
     @staticmethod
     def set_registration_success(success: bool):
