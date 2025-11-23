@@ -240,40 +240,34 @@ def show_books_home(
                 grouped_by_type[magazine_type] = []
             grouped_by_type[magazine_type].append(manga)
         
-        # 存在する雑誌タイプのみを取得し、タブ名にカウントを追加
-        available_types = []
-        tab_names = []
+        # magazine_typeごとにセクション表示
         for magazine_type in MAGAZINE_TYPE_ORDER:
             if magazine_type in grouped_by_type:
-                available_types.append(magazine_type)
+                # セクションヘッダー
                 manga_count = len(grouped_by_type[magazine_type])
-                tab_names.append(f"📚 {magazine_type} ({manga_count})")
-        
-        # タブメニュー表示
-        if available_types:
-            tabs = st.tabs(tab_names)
-            
-            # 各タブの内容を表示
-            for idx, (magazine_type, tab) in enumerate(zip(available_types, tabs)):
-                with tab:
-                    # このタイプの漫画をtitle_kanaの五十音順でソート
-                    type_mangas = sorted(
-                        grouped_by_type[magazine_type],
-                        key=lambda m: m.title_kana or m.title or ""
-                    )
+                st.subheader(f"📚 {magazine_type} ({manga_count}作品)")
+                
+                # このタイプの漫画をtitle_kanaの五十音順でソート
+                type_mangas = sorted(
+                    grouped_by_type[magazine_type],
+                    key=lambda m: m.title_kana or m.title or ""
+                )
+                
+                # PC表示：3カラムで表示
+                # スマホ表示：CSSで1カラムに変換
+                for row_start in range(0, len(type_mangas), 3):
+                    cols = st.columns(3, gap="small")
+                    row_books = type_mangas[row_start:row_start + 3]
                     
-                    # PC表示：3カラムで表示
-                    # スマホ表示：CSSで1カラムに変換
-                    for row_start in range(0, len(type_mangas), 3):
-                        cols = st.columns(3, gap="small")
-                        row_books = type_mangas[row_start:row_start + 3]
-                        
-                        for col_idx, manga in enumerate(row_books):
-                            with cols[col_idx]:
-                                # BookCardコンポーネントでHTMLを生成
-                                st.markdown(BookCard.render(manga), unsafe_allow_html=True)
-                                
-                                # 詳細ボタン
-                                if st.button(f"詳細を見る", key=f"detail_{magazine_type}_{manga.id}", use_container_width=True):
-                                    go_to_detail(manga.to_dict())
-                                    st.rerun()
+                    for col_idx, manga in enumerate(row_books):
+                        with cols[col_idx]:
+                            # BookCardコンポーネントでHTMLを生成
+                            st.markdown(BookCard.render(manga), unsafe_allow_html=True)
+                            
+                            # 詳細ボタン
+                            if st.button(f"詳細を見る", key=f"detail_{magazine_type}_{manga.id}", use_container_width=True):
+                                go_to_detail(manga.to_dict())
+                                st.rerun()
+                
+                # セクション間の区切り
+                st.markdown("---")
