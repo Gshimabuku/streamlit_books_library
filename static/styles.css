@@ -146,13 +146,15 @@
 /* ==================================== */
 /* 雑誌タイプセクションのヘッダー */
 .stMarkdown h3 {
-    background: linear-gradient(135deg, #007bff, #0056b3) !important;
-    color: white !important;
-    padding: 12px 20px !important;
-    border-radius: 8px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #333 !important;
+    padding: 12px 0 !important;
+    border-radius: 0 !important;
     margin: 20px 0 15px 0 !important;
     font-weight: 600 !important;
-    box-shadow: 0 2px 4px rgba(0,123,255,0.3) !important;
+    box-shadow: none !important;
 }
 
 /* セクション区切り線のスタイル */
