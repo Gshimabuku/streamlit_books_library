@@ -37,7 +37,9 @@ class BookCard:
         # 雑誌タイプ情報
         magazine_type_info = ""
         if manga.magazine_type:
-            magazine_type_info = f'<div class="book-magazine-type-info">📚 {manga.magazine_type}</div>'
+            # 雑誌タイプに応じたCSSクラスを設定
+            type_class = BookCard._get_magazine_type_class(manga.magazine_type)
+            magazine_type_info = f'<div class="book-magazine-type-info {type_class}">📚 {manga.magazine_type}</div>'
         
         # 連載誌情報
         magazine_info = ""
@@ -92,6 +94,25 @@ class BookCard:
                 return f'<img src="{DEFAULT_IMAGE_URL}" alt="画像なし">'
         except Exception:
             return f'<img src="{DEFAULT_IMAGE_URL}" alt="画像読み込みエラー">'
+    
+    @staticmethod
+    def _get_magazine_type_class(magazine_type: str) -> str:
+        """
+        雑誌タイプに応じたCSSクラス名を取得
+        
+        Args:
+            magazine_type: 雑誌タイプ
+        
+        Returns:
+            str: CSSクラス名
+        """
+        type_classes = {
+            "ジャンプ": "magazine-type-jump",
+            "マガジン": "magazine-type-magazine", 
+            "サンデー": "magazine-type-sunday",
+            "その他": "magazine-type-other"
+        }
+        return type_classes.get(magazine_type, "magazine-type-other")
     
     @staticmethod
     def render_magazine_header(magazine_name: str) -> str:

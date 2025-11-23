@@ -76,10 +76,33 @@
 /* 雑誌タイプ情報 */
 .book-magazine-type-info {
     font-size: clamp(10px, 2.5vw, 14px) !important;
-    color: #007bff !important;
     text-align: left !important;
     margin: 4px 0 4px 10px !important;
     font-weight: 600 !important;
+    padding: 2px 6px !important;
+    border-radius: 12px !important;
+    display: inline-block !important;
+}
+
+/* 雑誌タイプごとの色分け */
+.magazine-type-jump {
+    background-color: #FF2B2B !important;
+    color: white !important;
+}
+
+.magazine-type-magazine {
+    background-color: #0066CC !important;
+    color: white !important;
+}
+
+.magazine-type-sunday {
+    background-color: #00AA44 !important;
+    color: white !important;
+}
+
+.magazine-type-other {
+    background-color: #6c757d !important;
+    color: white !important;
 }
 
 /* 連載誌情報 */
