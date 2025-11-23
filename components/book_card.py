@@ -34,6 +34,11 @@ class BookCard:
         actual_owned = manga.actual_owned_volume
         released = manga.latest_released_volume
         
+        # 雑誌タイプ情報
+        magazine_type_info = ""
+        if manga.magazine_type:
+            magazine_type_info = f'<div class="book-magazine-type-info">📚 {manga.magazine_type}</div>'
+        
         # 連載誌情報
         magazine_info = ""
         if manga.magazine_name:
@@ -58,6 +63,7 @@ class BookCard:
                     <span class="status-badge {'status-completed' if is_completed else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
                 </div>
                 <h3>{manga.title}</h3>
+                {magazine_type_info}
                 {magazine_info}
                 {volume_info}
                 {media_info}

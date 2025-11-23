@@ -73,6 +73,15 @@
     border-radius: 8px !important;
 }
 
+/* 雑誌タイプ情報 */
+.book-magazine-type-info {
+    font-size: clamp(10px, 2.5vw, 14px) !important;
+    color: #007bff !important;
+    text-align: left !important;
+    margin: 4px 0 4px 10px !important;
+    font-weight: 600 !important;
+}
+
 /* 連載誌情報 */
 .book-magazine-info {
     font-size: clamp(10px, 2.5vw, 14px) !important;
