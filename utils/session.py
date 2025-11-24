@@ -30,10 +30,6 @@ class SessionManager:
                 "magazine_type": "すべて",
                 "magazine_name": ""
             }
-        
-        # スクロール制御フラグ
-        if "should_scroll_to_top" not in st.session_state:
-            st.session_state.should_scroll_to_top = False
     
     @staticmethod
     def set_page(page_name: str):
@@ -125,21 +121,6 @@ class SessionManager:
             "magazine_name": ""
         }
     
-    @staticmethod
-    def set_scroll_to_top(should_scroll: bool = True):
-        """スクロール位置をトップに戻すフラグを設定"""
-        st.session_state.should_scroll_to_top = should_scroll
-    
-    @staticmethod
-    def should_scroll_to_top() -> bool:
-        """スクロール位置をトップに戻すべきかを確認"""
-        return st.session_state.get("should_scroll_to_top", False)
-    
-    @staticmethod
-    def reset_scroll_flag():
-        """スクロールフラグをリセット"""
-        st.session_state.should_scroll_to_top = False
-    
     # ページ遷移のヘルパー関数
     @staticmethod
     def go_to_home():
@@ -153,7 +134,6 @@ class SessionManager:
         """詳細画面に遷移"""
         SessionManager.set_page("book_detail")
         SessionManager.set_selected_book(book_data)
-        SessionManager.set_scroll_to_top(True)
     
     @staticmethod
     def go_to_add_book():

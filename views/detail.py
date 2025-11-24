@@ -15,37 +15,6 @@ def show_book_detail(
     confirm_delete_dialog: callable
 ):
     """詳細画面：選択された本の詳細情報表示"""
-    from utils.session import SessionManager
-    
-    # ページトップアンカーを設置
-    st.markdown('<div id="page-top" class="page-top-anchor"></div>', unsafe_allow_html=True)
-    
-    # スクロール位置をトップにリセット（ページ遷移時のみ）
-    if SessionManager.should_scroll_to_top():
-        st.markdown("""
-        <script>
-        // 複数の方法でスクロールをトップに戻す
-        setTimeout(function() {
-            // 方法1: 直接スクロール
-            window.scrollTo({
-                top: 0,
-                behavior: 'instant'
-            });
-            
-            // 方法2: bodyのスクロールもリセット
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-            
-            // 方法3: アンカーを使用
-            const topAnchor = document.getElementById('page-top');
-            if (topAnchor) {
-                topAnchor.scrollIntoView({behavior: 'instant'});
-            }
-        }, 50);
-        </script>
-        """, unsafe_allow_html=True)
-        SessionManager.reset_scroll_flag()
-    
     if st.session_state.selected_book is None:
         st.error("本が選択されていません")
         if st.button("ホームに戻る"):
@@ -56,7 +25,6 @@ def show_book_detail(
     book = st.session_state.selected_book
     
     # ボタン群を水平配置（PC右揃え、モバイル横並び）
-    st.markdown('<div class="detail-page-container">', unsafe_allow_html=True)
     st.markdown('<div class="detail-buttons-container">', unsafe_allow_html=True)
     
     # 3列レイアウト（戻る・空白・編集削除）
@@ -202,6 +170,3 @@ def show_book_detail(
         # 特殊巻
         if special_volumes:
             st.write(f"**特殊巻:** {special_volumes}")
-    
-    # 詳細ページコンテナを閉じる
-    st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
