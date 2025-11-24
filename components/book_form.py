@@ -247,27 +247,36 @@ class BookFormFields:
         Returns:
             dict: 検索条件の辞書
         """
+        from utils.session import SessionManager
+        
+        # セッションから保存された検索条件を取得
+        saved_filters = SessionManager.get_search_filters()
+        
         col1, col2 = st.columns(2)
         
         with col1:
             # タイトル検索
             title_search = st.text_input(
                 "📚 タイトル検索",
+                value=saved_filters.get("title", ""),
                 placeholder="例: ワンピース",
                 help="タイトルまたは読み仮名での部分一致検索"
             )
             
             # 雑誌タイプ検索
             magazine_types = ["すべて", "ジャンプ", "マガジン", "サンデー", "その他"]
+            saved_magazine_type = saved_filters.get("magazine_type", "すべて")
+            magazine_type_index = magazine_types.index(saved_magazine_type) if saved_magazine_type in magazine_types else 0
             magazine_type_filter = st.selectbox(
                 "📰 連載誌タイプ",
                 magazine_types,
-                index=0
+                index=magazine_type_index
             )
             
             # 雑誌名検索
             magazine_name_search = st.text_input(
                 "📖 連載誌名",
+                value=saved_filters.get("magazine_name", ""),
                 placeholder="例: 週刊少年ジャンプ",
                 help="連載誌名での部分一致検索"
             )
@@ -275,19 +284,23 @@ class BookFormFields:
         with col2:
             # 未所持巻フィルター
             has_unpurchased_options = ["すべて", "あり", "なし"]
+            saved_has_unpurchased = saved_filters.get("has_unpurchased", "すべて")
+            has_unpurchased_index = has_unpurchased_options.index(saved_has_unpurchased) if saved_has_unpurchased in has_unpurchased_options else 0
             has_unpurchased_filter = st.selectbox(
                 "📋 未所持巻",
                 has_unpurchased_options,
-                index=0,
+                index=has_unpurchased_index,
                 help="未購入の巻があるかどうかで絞り込み"
             )
             
             # 所持媒体フィルター
             owned_media_options = ["すべて", "単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"]
+            saved_owned_media = saved_filters.get("owned_media", "すべて")
+            owned_media_index = owned_media_options.index(saved_owned_media) if saved_owned_media in owned_media_options else 0
             owned_media_filter = st.selectbox(
                 "💻 所持媒体",
                 owned_media_options,
-                index=0
+                index=owned_media_index
             )
             
             # 所持巻数範囲
@@ -298,7 +311,7 @@ class BookFormFields:
                     "最小",
                     min_value=0,
                     max_value=999,
-                    value=0,
+                    value=saved_filters.get("min_owned_volume", 0),
                     help="最小所持巻数"
                 )
             with col2_2:
@@ -306,23 +319,27 @@ class BookFormFields:
                     "最大",
                     min_value=0,
                     max_value=999,
-                    value=999,
+                    value=saved_filters.get("max_owned_volume", 999),
                     help="最大所持巻数"
                 )
         
         # フィルター条件を辞書で返す
         filters = {
-            'title': title_search.strip() if title_search else None,
-            'magazine_type': magazine_type_filter if magazine_type_filter != "すべて" else None,
-            'magazine_name': magazine_name_search.strip() if magazine_name_search else None,
-            'has_unpurchased': has_unpurchased_filter if has_unpurchased_filter != "すべて" else None,
-            'owned_media': owned_media_filter if owned_media_filter != "すべて" else None,
-            'min_owned_volume': min_owned if min_owned > 0 else None,
-            'max_owned_volume': max_owned if max_owned < 999 else None
+            'title': title_search.strip() if title_search else "",
+            'magazine_type': magazine_type_filter if magazine_type_filter != "すべて" else "すべて",
+            'magazine_name': magazine_name_search.strip() if magazine_name_search else "",
+            'has_unpurchased': has_unpurchased_filter if has_unpurchased_filter != "すべて" else "すべて",
+            'owned_media': owned_media_filter if owned_media_filter != "すべて" else "すべて",
+            'min_owned_volume': min_owned if min_owned > 0 else 0,
+            'max_owned_volume': max_owned if max_owned < 999 else 999
         }
+        
+        # セッションに検索条件を保存
+        SessionManager.set_search_filters(filters)
         
         # クリアボタン
         if st.button("🗑️ フィルターをクリア", help="すべての検索条件をリセット"):
+            SessionManager.clear_search_filters()
             st.rerun()
         
         return filters

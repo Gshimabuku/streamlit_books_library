@@ -22,6 +22,14 @@ class SessionManager:
         
         if "update_success" not in st.session_state:
             st.session_state.update_success = False
+        
+        # 検索条件の初期化
+        if "search_filters" not in st.session_state:
+            st.session_state.search_filters = {
+                "title": "",
+                "magazine_type": "すべて",
+                "magazine_name": ""
+            }
     
     @staticmethod
     def set_page(page_name: str):
@@ -90,12 +98,36 @@ class SessionManager:
         """更新成功フラグを取得"""
         return st.session_state.get("update_success", False)
     
+    @staticmethod
+    def set_search_filters(filters: dict):
+        """検索条件を設定"""
+        st.session_state.search_filters = filters
+    
+    @staticmethod
+    def get_search_filters() -> dict:
+        """検索条件を取得"""
+        return st.session_state.get("search_filters", {
+            "title": "",
+            "magazine_type": "すべて", 
+            "magazine_name": ""
+        })
+    
+    @staticmethod
+    def clear_search_filters():
+        """検索条件をクリア"""
+        st.session_state.search_filters = {
+            "title": "",
+            "magazine_type": "すべて",
+            "magazine_name": ""
+        }
+    
     # ページ遷移のヘルパー関数
     @staticmethod
     def go_to_home():
         """ホームに戻る"""
         SessionManager.set_page("books_home")
         SessionManager.clear_selected_book()
+        # 検索条件は維持する
     
     @staticmethod
     def go_to_detail(book_data: Any):
