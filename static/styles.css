@@ -13,7 +13,7 @@
 }
 
 /* メインコンテンツを全幅に */
-[data-testid="stAppViewContainer"] > section:first-child {
+[data-testid="stAppViewContainer"]>section:first-child {
     width: 100% !important;
 }
 
@@ -26,7 +26,7 @@
 /* ==================================== */
 /* 新規登録ボタンのスタイル */
 /* ==================================== */
-.add-book-button .stButton > button {
+.add-book-button .stButton>button {
     background: #28a745 !important;
     border: none !important;
     font-size: 18px !important;
@@ -36,7 +36,7 @@
     color: white !important;
 }
 
-.add-book-button .stButton > button:hover {
+.add-book-button .stButton>button:hover {
     background: #218838 !important;
 }
 
@@ -198,7 +198,7 @@ hr {
 }
 
 /* 詳細ボタンのスタイル調整（タブ内） */
-.stButton > button {
+.stButton>button {
     width: 100%;
     margin-bottom: 10px;
 }
@@ -216,23 +216,23 @@ hr {
 }
 
 /* フィルタークリアボタン */
-.filter-clear-button .stButton > button {
+.filter-clear-button .stButton>button {
     background-color: #6c757d !important;
     color: white !important;
     border: none !important;
     width: 100% !important;
 }
 
-.filter-clear-button .stButton > button:hover {
+.filter-clear-button .stButton>button:hover {
     background-color: #5a6268 !important;
 }
 
 /* 検索フィールドの調整 */
-.stTextInput > div > div > input {
+.stTextInput>div>div>input {
     border-radius: 6px !important;
 }
 
-.stSelectbox > div > div {
+.stSelectbox>div>div {
     border-radius: 6px !important;
 }
 
@@ -280,16 +280,18 @@ hr {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: #ffffff !important; /* 余白を白にする */
+    background: #ffffff !important;
+    /* 余白を白にする */
     border-radius: 6px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     padding: 4px !important;
 }
 
 .magazine-header .magazine-logo img {
     max-width: 100% !important;
     max-height: 100% !important;
-    object-fit: contain !important; /* 画像を切り抜かず収める */
+    object-fit: contain !important;
+    /* 画像を切り抜かず収める */
 }
 
 .magazine-header .magazine-toggle {
@@ -302,7 +304,7 @@ hr {
     width: 100% !important;
 }
 
-.magazine-header .magazine-toggle .stButton > button {
+.magazine-header .magazine-toggle .stButton>button {
     height: 48px !important;
     display: flex !important;
     align-items: center !important;
@@ -316,12 +318,14 @@ hr {
         gap: 8px !important;
         padding: 4px 6px !important;
     }
+
     .magazine-header .magazine-logo {
         width: 40px !important;
         height: 40px !important;
         padding: 3px !important;
     }
-    .magazine-header .magazine-toggle .stButton > button {
+
+    .magazine-header .magazine-toggle .stButton>button {
         height: 40px !important;
         padding-left: 8px !important;
         font-size: 14px !important;
@@ -338,12 +342,12 @@ hr {
         align-items: flex-start !important;
         gap: 10px !important;
     }
-    
+
     .mobile-book-image {
         flex: 0 0 40% !important;
         width: 40% !important;
     }
-    
+
     .mobile-book-info {
         flex: 1 !important;
         display: flex !important;
@@ -352,7 +356,7 @@ hr {
         min-height: 100% !important;
         min-width: 0 !important;
     }
-    
+
     /* モバイルでタイトルを省略 */
     .mobile-book-info h3,
     .book-card h3 {
@@ -361,7 +365,7 @@ hr {
         text-overflow: ellipsis !important;
         max-width: 100% !important;
     }
-    
+
     .detail-button-container {
         margin-top: auto !important;
     }
@@ -370,23 +374,23 @@ hr {
         font-size: 14px;
         padding: 8px 12px;
     }
-    
+
     /* モバイルでのボタン横並び強制 */
     [data-testid="column"] {
         flex-direction: row !important;
     }
-    
-    [data-testid="column"] > div {
+
+    [data-testid="column"]>div {
         display: flex !important;
         gap: 5px !important;
     }
-    
+
     .stButton {
         flex: 1 !important;
         min-width: 0 !important;
     }
-    
-    .stButton > button {
+
+    .stButton>button {
         width: 100% !important;
         white-space: nowrap !important;
         overflow: hidden !important;
@@ -403,7 +407,7 @@ hr {
     .book-card {
         display: block !important;
     }
-    
+
     /* タイトルの省略を強化 */
     .book-card h3 {
         white-space: nowrap !important;
@@ -412,16 +416,16 @@ hr {
         max-width: 100% !important;
         font-size: clamp(14px, 3vw, 18px) !important;
     }
-    
+
     /* 画像のアスペクト比を維持 */
     .book-card img {
         width: 100% !important;
         aspect-ratio: 3/4 !important;
         object-fit: contain !important;
     }
-    
+
     /* ボタンサイズを調整 */
-    .stButton > button {
+    .stButton>button {
         font-size: 11px !important;
         padding: 6px 8px !important;
     }
@@ -431,13 +435,13 @@ hr {
     .book-card {
         display: block !important;
     }
-    
-    .mobile-book-image, 
+
+    .mobile-book-image,
     .mobile-book-info {
         width: 100% !important;
         flex: none !important;
     }
-    
+
     .detail-button-container {
         margin-top: 8px !important;
     }
@@ -457,13 +461,13 @@ hr {
         justify-content: flex-end !important;
         gap: 8px !important;
     }
-    
+
     .detail-buttons-container [data-testid="column"]:last-child [data-testid="column"] {
         flex: 0 0 auto !important;
         margin: 0 !important;
         padding: 0 2px !important;
     }
-    
+
     .detail-buttons-container [data-testid="column"]:last-child .stButton {
         margin: 0 !important;
     }
@@ -477,36 +481,36 @@ hr {
         gap: 4px !important;
         width: 100% !important;
     }
-    
+
     .detail-buttons-container [data-testid="column"] {
         flex: 1 !important;
         min-width: 0 !important;
         margin: 0 !important;
         padding: 0 1px !important;
     }
-    
+
     .detail-buttons-container [data-testid="column"]:nth-child(2) {
         flex: 0 0 8px !important;
     }
-    
+
     .detail-buttons-container [data-testid="column"]:last-child {
         display: flex !important;
         flex-direction: row !important;
         gap: 2px !important;
     }
-    
+
     .detail-buttons-container [data-testid="column"]:last-child [data-testid="column"] {
         flex: 1 !important;
         margin: 0 !important;
         padding: 0 1px !important;
     }
-    
+
     .detail-buttons-container .stButton {
         margin: 0 !important;
         width: 100% !important;
     }
-    
-    .detail-buttons-container .stButton > button {
+
+    .detail-buttons-container .stButton>button {
         width: 100% !important;
         font-size: 10px !important;
         padding: 6px 2px !important;
@@ -515,4 +519,28 @@ hr {
         text-overflow: ellipsis !important;
         min-height: 38px !important;
     }
+}
+
+/* ==================================== */
+/* スクロール制御 */
+/* ==================================== */
+/* 詳細画面遷移時のスクロールリセット */
+.scroll-to-top {
+    scroll-behavior: auto !important;
+}
+
+/* ページ遷移時の一時的なスクロール制御 */
+.detail-page-container {
+    scroll-margin-top: 0 !important;
+}
+
+/* 強制的にページトップを参照するアンカー */
+.page-top-anchor {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
 }
