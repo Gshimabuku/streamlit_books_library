@@ -516,3 +516,27 @@ hr {
         min-height: 38px !important;
     }
 }
+
+/* ==================================== */
+/* スクロール制御 */
+/* ==================================== */
+/* 詳細画面遷移時のスクロールリセット */
+.scroll-to-top {
+    scroll-behavior: auto !important;
+}
+
+/* ページ遷移時の一時的なスクロール制御 */
+.detail-page-container {
+    scroll-margin-top: 0 !important;
+}
+
+/* 強制的にページトップを参照するアンカー */
+.page-top-anchor {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
