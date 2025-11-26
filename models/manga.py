@@ -12,12 +12,12 @@ class Manga:
     id: str
     title: str
     title_kana: str
-    series_title: Optional[str] = ""
     magazine_type: str
     magazine_name: str
     latest_owned_volume: int
     latest_released_volume: int
     is_completed: bool
+    series_title: Optional[str] = ""
     image_url: Optional[str] = None
     latest_release_date: Optional[date] = None
     next_release_date: Optional[date] = None
@@ -165,12 +165,12 @@ class Manga:
             id=page["id"],
             title=title,
             title_kana=title_kana,
-            series_title=series_title,
             magazine_type=magazine_type,
             magazine_name=magazine_name,
             latest_owned_volume=props.get("latest_owned_volume", {}).get("number", 0),
             latest_released_volume=props.get("latest_released_volume", {}).get("number", 0),
             is_completed=props.get("is_completed", {}).get("checkbox", False),
+            series_title=series_title,
             image_url=image_url,
             latest_release_date=latest_release_date,
             next_release_date=next_release_date,
