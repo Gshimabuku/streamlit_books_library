@@ -124,8 +124,6 @@ def show_books_home(
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown("---")
-    
     # 検索フィルター
     with st.expander("🔍 検索・フィルター", expanded=False):
         search_filters = BookFormFields.render_search_filters()
