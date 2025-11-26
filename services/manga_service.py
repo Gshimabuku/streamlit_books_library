@@ -50,11 +50,12 @@ class MangaService:
         mangas = []
         for page in results:
             try:
-                manga = Manga.from_notion_page(page)
+                # リレーション情報を解決してからMangaオブジェクトを作成
+                manga = self._create_manga_with_relations(page)
                 mangas.append(manga)
             except Exception as e:
-                # 個別のページでエラーがあってもスキップして続行
-                print(f"Warning: Failed to parse page {page.get('id', 'unknown')}: {str(e)}")
+                # 個別のページでエラーが発生しても続行
+                print(f"Warning: Failed to parse manga page {page.get('id', 'unknown')}: {e}")
                 continue
         
         return mangas
@@ -79,6 +80,89 @@ class MangaService:
             print(f"Error retrieving manga {page_id}: {str(e)}")
             return None
     
+    def _create_manga_with_relations(self, page: dict) -> Manga:
+        """
+        リレーション情報を解決してMangaオブジェクトを作成
+        
+        Args:
+            page: Notion APIから取得したページデータ
+            
+        Returns:
+            Manga: リレーション情報を含むMangaオブジェクト
+        """
+        from utils.notion_client import retrieve_notion_page
+        
+        # 基本のMangaオブジェクトを作成
+        manga = Manga.from_notion_page(page)
+        
+        # シリーズタイトルのリレーション情報を解決
+        props = page.get("properties", {})
+        series_relation = props.get("series_title", {}).get("relation", [])
+        
+        if series_relation:
+            try:
+                # 最初のリレーション先ページを取得（制限が1ページなので）
+                series_page_id = series_relation[0]["id"]
+                series_page = retrieve_notion_page(series_page_id, self.api_key)
+                
+                # リレーション先のタイトルを取得
+                series_title = ""
+                series_props = series_page.get("properties", {})
+                if series_props.get("title", {}).get("title"):
+                    series_title = series_props["title"]["title"][0]["text"]["content"]
+                
+                # series_titleを更新
+                manga.series_title = series_title
+                
+            except Exception as e:
+                print(f"Warning: Failed to resolve series relation for {manga.id}: {e}")
+                manga.series_title = ""
+        
+        return manga
+    
+    def _find_or_create_series_page(self, series_title: str) -> Optional[str]:
+        """
+        シリーズタイトルで既存ページを検索、なければ新規作成
+        
+        Args:
+            series_title: シリーズタイトル
+            
+        Returns:
+            Optional[str]: ページID、失敗時はNone
+        """
+        from utils.notion_client import query_notion, create_notion_page
+        
+        try:
+            # 既存のシリーズページを検索
+            filter_condition = {
+                "property": "title",
+                "title": {
+                    "equals": series_title
+                }
+            }
+            
+            results = query_notion(self.database_id, self.api_key, filter=filter_condition)
+            
+            if results:
+                # 既存のページが見つかった場合
+                return results[0]["id"]
+            else:
+                # 新規作成
+                properties = {
+                    "title": {"title": [{"text": {"content": series_title}}]},
+                    "latest_owned_volume": {"number": 0},
+                    "latest_released_volume": {"number": 0},
+                    "is_completed": {"checkbox": False},
+                    "series_title": {"relation": []}  # 自己参照なし
+                }
+                
+                result = create_notion_page(self.database_id, properties, self.api_key)
+                return result["id"]
+                
+        except Exception as e:
+            print(f"Warning: Failed to find or create series page for '{series_title}': {e}")
+            return None
+    
     def create_manga(self, manga: Manga) -> str:
         """
         新しい漫画をNotionDBに登録
@@ -93,6 +177,13 @@ class MangaService:
             Exception: Notion APIでエラーが発生した場合
         """
         properties = manga.to_notion_properties()
+        
+        # シリーズタイトルのリレーションを設定
+        if manga.series_title:
+            series_page_id = self._find_or_create_series_page(manga.series_title)
+            if series_page_id:
+                properties["series_title"] = {"relation": [{"id": series_page_id}]}
+        
         result = create_notion_page(self.database_id, properties, self.api_key)
         return result["id"]
     
@@ -114,6 +205,12 @@ class MangaService:
             raise ValueError("Manga ID is required for update operation")
         
         properties = manga.to_notion_properties()
+        
+        # シリーズタイトルのリレーションを設定
+        if manga.series_title:
+            series_page_id = self._find_or_create_series_page(manga.series_title)
+            if series_page_id:
+                properties["series_title"] = {"relation": [{"id": series_page_id}]}
         
         try:
             update_notion_page(manga.id, properties, self.api_key)

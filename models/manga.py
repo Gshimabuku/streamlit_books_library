@@ -197,10 +197,9 @@ class Manga:
         if self.title_kana:
             properties["title_kana"] = {"rich_text": [{"text": {"content": self.title_kana}}]}
         
-        if self.series_title:
-            properties["series_title"] = {"rich_text": [{"text": {"content": self.series_title}}]}
-        else:
-            properties["series_title"] = {"rich_text": []}
+        # シリーズタイトルはリレーションなので、ページIDが必要
+        # 今回は空のリレーションを設定（フロントエンドで手動設定を想定）
+        properties["series_title"] = {"relation": []}
         
         if self.latest_release_date:
             properties["latest_release_date"] = {"date": {"start": self.latest_release_date.isoformat()}}
