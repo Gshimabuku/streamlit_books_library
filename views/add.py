@@ -35,6 +35,7 @@ def show_add_book(
         basic_info = BookFormFields.render_basic_info()
         title = basic_info["title"]
         title_kana = basic_info["title_kana"]
+        series_title = basic_info["series_title"]
         magazine_type = basic_info["magazine_type"]
         magazine_name = basic_info["magazine_name"]
         
@@ -95,9 +96,10 @@ def show_add_book(
                     
                     # Mangaオブジェクトを作成
                     new_manga = Manga(
-                        id=None,  # 新規登録なのでNone
+                        id="",  # 新規作成時は空
                         title=title,
                         title_kana=final_title_kana,
+                        series_title=series_title,
                         magazine_type=magazine_type,
                         magazine_name=magazine_name,
                         latest_owned_volume=latest_owned_volume,

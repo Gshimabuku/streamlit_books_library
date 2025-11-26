@@ -12,6 +12,7 @@ class Manga:
     id: str
     title: str
     title_kana: str
+    series_title: Optional[str] = ""
     magazine_type: str
     magazine_name: str
     latest_owned_volume: int
@@ -71,6 +72,7 @@ class Manga:
         return {
             "id": self.id,
             "title": self.title,
+            "series_title": self.series_title,
             "image_url": self.image_url,
             "latest_owned_volume": self.latest_owned_volume,
             "latest_released_volume": self.latest_released_volume,
@@ -101,6 +103,14 @@ class Manga:
         title_kana = ""
         if props.get("title_kana", {}).get("rich_text") and props["title_kana"]["rich_text"]:
             title_kana = props["title_kana"]["rich_text"][0]["text"]["content"]
+        
+        # シリーズタイトル
+        series_title = ""
+        if props.get("series_title", {}).get("relation") and props["series_title"]["relation"]:
+            # リレーションから取得する場合の処理（実際の値は別途取得が必要）
+            series_title = ""  # 今回は空文字で初期化
+        elif props.get("series_title", {}).get("rich_text") and props["series_title"]["rich_text"]:
+            series_title = props["series_title"]["rich_text"][0]["text"]["content"]
         
         # 画像URL
         image_url = props.get("image_url", {}).get("url")
@@ -155,6 +165,7 @@ class Manga:
             id=page["id"],
             title=title,
             title_kana=title_kana,
+            series_title=series_title,
             magazine_type=magazine_type,
             magazine_name=magazine_name,
             latest_owned_volume=props.get("latest_owned_volume", {}).get("number", 0),
@@ -185,6 +196,11 @@ class Manga:
         
         if self.title_kana:
             properties["title_kana"] = {"rich_text": [{"text": {"content": self.title_kana}}]}
+        
+        if self.series_title:
+            properties["series_title"] = {"rich_text": [{"text": {"content": self.series_title}}]}
+        else:
+            properties["series_title"] = {"rich_text": []}
         
         if self.latest_release_date:
             properties["latest_release_date"] = {"date": {"start": self.latest_release_date.isoformat()}}

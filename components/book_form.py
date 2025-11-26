@@ -14,6 +14,7 @@ class BookFormFields:
     def render_basic_info(
         default_title: str = "",
         default_title_kana: str = "",
+        default_series_title: str = "",
         default_magazine_type: str = "ジャンプ",
         default_magazine_name: str = ""
     ) -> Dict[str, Any]:
@@ -27,7 +28,7 @@ class BookFormFields:
             default_magazine_name: 連載誌名のデフォルト値
         
         Returns:
-            Dict[str, Any]: {title, title_kana, magazine_type, magazine_name}
+            Dict[str, Any]: {title, title_kana, series_title, magazine_type, magazine_name}
         """
         st.subheader("📝 基本情報")
         
@@ -37,6 +38,12 @@ class BookFormFields:
             value=default_title_kana,
             placeholder="例: わんぴーす",
             help="空欄の場合は保存時に自動生成されます"
+        )
+        series_title = st.text_input(
+            "シリーズタイトル",
+            value=default_series_title,
+            placeholder="例: ONE PIECE",
+            help="同じシリーズの作品をグループ化する場合に入力"
         )
         
         magazine_types = ["ジャンプ", "マガジン", "サンデー", "その他"]
@@ -51,6 +58,7 @@ class BookFormFields:
         return {
             "title": title,
             "title_kana": title_kana,
+            "series_title": series_title,
             "magazine_type": magazine_type,
             "magazine_name": magazine_name
         }

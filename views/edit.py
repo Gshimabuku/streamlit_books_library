@@ -49,6 +49,11 @@ def show_edit_book(
     if props.get("title_kana", {}).get("rich_text") and props["title_kana"]["rich_text"]:
         current_title_kana = props["title_kana"]["rich_text"][0]["text"]["content"]
     
+    # シリーズタイトル
+    current_series_title = ""
+    if props.get("series_title", {}).get("rich_text") and props["series_title"]["rich_text"]:
+        current_series_title = props["series_title"]["rich_text"][0]["text"]["content"]
+    
     # 巻数情報
     current_owned = book.get("latest_owned_volume", 0)
     current_released = book.get("latest_released_volume", 0)
@@ -96,11 +101,13 @@ def show_edit_book(
         basic_info = BookFormFields.render_basic_info(
             default_title=current_title,
             default_title_kana=current_title_kana,
+            default_series_title=current_series_title,
             default_magazine_type=current_magazine_type,
             default_magazine_name=current_magazine_name
         )
         title = basic_info["title"]
         title_kana = basic_info["title_kana"]
+        series_title = basic_info["series_title"]
         magazine_type = basic_info["magazine_type"]
         magazine_name = basic_info["magazine_name"]
         
@@ -177,6 +184,7 @@ def show_edit_book(
                         id=book["id"],
                         title=title,
                         title_kana=final_title_kana,
+                        series_title=series_title,
                         magazine_type=magazine_type,
                         magazine_name=magazine_name,
                         latest_owned_volume=latest_owned_volume,
