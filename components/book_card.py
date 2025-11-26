@@ -64,6 +64,7 @@ class BookCard:
                 <div class="status-container">
                     <span class="status-badge {'status-completed' if is_completed else 'status-ongoing'}">{completion_status}</span>{unpurchased_badge}
                 </div>
+                {f'<div class="book-title-kana">{manga.title_kana}</div>' if manga.title_kana else ''}
                 <h3>{manga.title}</h3>
                 {magazine_type_info}
                 {magazine_info}
