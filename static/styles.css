@@ -132,7 +132,7 @@
 /* 完結・連載中ステータス */
 .status-container {
     text-align: left !important;
-    margin: 8px 0 8px 10px !important;
+    margin: 8px 0 0 10px !important;
 }
 
 .status-badge {
@@ -184,7 +184,7 @@
     color: #333 !important;
     padding: 12px 0 !important;
     border-radius: 0 !important;
-    margin: 20px 0 15px 0 !important;
+    margin: 0 0 0 5px !important;
     font-weight: 600 !important;
     box-shadow: none !important;
 }
