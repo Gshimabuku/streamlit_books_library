@@ -31,10 +31,6 @@ class BookFormFields:
         """
         st.subheader("📝 基本情報")
         
-        # エンターキー送信を防ぐための非表示ダミーフィールド
-        import uuid
-        st.text_input("", value="", key=f"dummy_field_{uuid.uuid4().hex[:8]}", label_visibility="collapsed")
-        
         title = st.text_input(
             "漫画タイトル *", 
             value=default_title, 
