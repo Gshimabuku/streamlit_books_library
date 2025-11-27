@@ -140,20 +140,20 @@ def show_book_detail(
         relation_books_to = props.get('relation_books_to', {}).get('relation', [])
         relation_books_from = props.get('relation_books_from', {}).get('relation', [])
         
-        if relation_books_to or relation_books_from:
-            st.markdown("### 🔗 シリーズ情報")
+        # if relation_books_to or relation_books_from:
+        #     st.markdown("### 🔗 シリーズ情報")
             
-            # 親作品がある場合
-            if relation_books_to:
-                st.write(f"📤 **親作品:** この作品は続編・外伝・スピンオフです")
-                # 実際の親作品名を表示する場合は、MangaServiceで取得が必要
+        #     # 親作品がある場合
+        #     if relation_books_to:
+        #         st.write(f"📤 **親作品:** この作品は続編・外伝・スピンオフです")
+        #         # 実際の親作品名を表示する場合は、MangaServiceで取得が必要
                 
-            # 子作品がある場合
-            if relation_books_from:
-                child_count = len(relation_books_from)
-                st.write(f"📥 **子作品:** {child_count}件の続編・外伝・スピンオフがあります")
+        #     # 子作品がある場合
+        #     if relation_books_from:
+        #         child_count = len(relation_books_from)
+        #         st.write(f"📥 **子作品:** {child_count}件の続編・外伝・スピンオフがあります")
         
-        st.markdown("---")
+        # st.markdown("---")
         
         # 連載誌情報
         magazine_type = book.get('magazine_type', '')
