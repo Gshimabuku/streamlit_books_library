@@ -17,8 +17,9 @@ class Manga:
     latest_owned_volume: int
     latest_released_volume: int
     is_completed: bool
-    series_title: Optional[str] = ""
     image_url: Optional[str] = None
+    related_books_to: Optional[list] = None  # booksとのリレーション
+    related_books_from: Optional[list] = None  # booksからのリレーション
     latest_release_date: Optional[date] = None
     next_release_date: Optional[date] = None
     missing_volumes: str = ""
@@ -72,7 +73,6 @@ class Manga:
         return {
             "id": self.id,
             "title": self.title,
-            "series_title": self.series_title,
             "image_url": self.image_url,
             "latest_owned_volume": self.latest_owned_volume,
             "latest_released_volume": self.latest_released_volume,
@@ -104,13 +104,14 @@ class Manga:
         if props.get("title_kana", {}).get("rich_text") and props["title_kana"]["rich_text"]:
             title_kana = props["title_kana"]["rich_text"][0]["text"]["content"]
         
-        # シリーズタイトル
-        series_title = ""
-        if props.get("series_title", {}).get("relation") and props["series_title"]["relation"]:
-            # リレーションから取得する場合の処理（実際の値は別途取得が必要）
-            series_title = ""  # 今回は空文字で初期化
-        elif props.get("series_title", {}).get("rich_text") and props["series_title"]["rich_text"]:
-            series_title = props["series_title"]["rich_text"][0]["text"]["content"]
+        # リレーション情報の取得（新しいプロパティ名を使用）
+        related_books_to = None
+        if props.get("relation_books_to", {}).get("relation"):
+            related_books_to = [rel["id"] for rel in props["relation_books_to"]["relation"]]
+        
+        related_books_from = None
+        if props.get("relation_books_from", {}).get("relation"):
+            related_books_from = [rel["id"] for rel in props["relation_books_from"]["relation"]]
         
         # 画像URL
         image_url = props.get("image_url", {}).get("url")
@@ -170,8 +171,9 @@ class Manga:
             latest_owned_volume=props.get("latest_owned_volume", {}).get("number", 0),
             latest_released_volume=props.get("latest_released_volume", {}).get("number", 0),
             is_completed=props.get("is_completed", {}).get("checkbox", False),
-            series_title=series_title,
             image_url=image_url,
+            related_books_to=related_books_to,
+            related_books_from=related_books_from,
             latest_release_date=latest_release_date,
             next_release_date=next_release_date,
             missing_volumes=missing_volumes,
@@ -197,9 +199,16 @@ class Manga:
         if self.title_kana:
             properties["title_kana"] = {"rich_text": [{"text": {"content": self.title_kana}}]}
         
-        # シリーズタイトルはリレーションなので、ページIDが必要
-        # 今回は空のリレーションを設定（フロントエンドで手動設定を想定）
-        properties["series_title"] = {"relation": []}
+        # リレーション情報を設定（新しいプロパティ名を使用）
+        if self.related_books_to:
+            properties["relation_books_to"] = {"relation": [{"id": book_id} for book_id in self.related_books_to]}
+        else:
+            properties["relation_books_to"] = {"relation": []}
+        
+        if self.related_books_from:
+            properties["relation_books_from"] = {"relation": [{"id": book_id} for book_id in self.related_books_from]}
+        else:
+            properties["relation_books_from"] = {"relation": []}
         
         if self.latest_release_date:
             properties["latest_release_date"] = {"date": {"start": self.latest_release_date.isoformat()}}

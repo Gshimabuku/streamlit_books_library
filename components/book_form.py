@@ -14,7 +14,6 @@ class BookFormFields:
     def render_basic_info(
         default_title: str = "",
         default_title_kana: str = "",
-        default_series_title: str = "",
         default_magazine_type: str = "ジャンプ",
         default_magazine_name: str = ""
     ) -> Dict[str, Any]:
@@ -28,7 +27,7 @@ class BookFormFields:
             default_magazine_name: 連載誌名のデフォルト値
         
         Returns:
-            Dict[str, Any]: {title, title_kana, series_title, magazine_type, magazine_name}
+            Dict[str, Any]: {title, title_kana, magazine_type, magazine_name}
         """
         st.subheader("📝 基本情報")
         
@@ -58,9 +57,86 @@ class BookFormFields:
         return {
             "title": title,
             "title_kana": title_kana,
-            "series_title": series_title,
             "magazine_type": magazine_type,
             "magazine_name": magazine_name
+        }
+    
+    @staticmethod
+    def render_series_relation(
+        all_mangas: list = None,
+        current_manga_id: str = None,
+        default_parent_id: str = None,
+        default_children_ids: list = None
+    ) -> Dict[str, Any]:
+        """
+        シリーズ関係設定セクションのフィールドを表示
+        
+        Args:
+            all_mangas: 全漫画データのリスト（リレーション先選択用）
+            current_manga_id: 現在編集中の漫画ID（自己参照を避けるため）
+            default_parent_id: デフォルトの親作品ID
+            default_children_ids: デフォルトの子作品IDリスト
+            
+        Returns:
+            Dict[str, Any]: {parent_id: str|None, children_ids: list}
+        """
+        if default_children_ids is None:
+            default_children_ids = []
+            
+        st.subheader("🔗 シリーズ関係")
+        
+        parent_id = None
+        children_ids = []
+        
+        if all_mangas:
+            # 自分以外の作品をフィルタリング
+            available_mangas = [
+                manga for manga in all_mangas 
+                if manga.id != current_manga_id
+            ]
+            
+            if available_mangas:
+                # 親作品の選択
+                parent_options = ["なし"] + [f"{manga.title}" for manga in available_mangas]
+                parent_values = [None] + [manga.id for manga in available_mangas]
+                
+                default_parent_index = 0
+                if default_parent_id:
+                    try:
+                        default_parent_index = parent_values.index(default_parent_id)
+                    except ValueError:
+                        pass
+                
+                selected_parent_index = st.selectbox(
+                    "親作品（この作品の元となる作品）",
+                    range(len(parent_options)),
+                    index=default_parent_index,
+                    format_func=lambda x: parent_options[x],
+                    help="続編・外伝・スピンオフの場合、元となる作品を選択"
+                )
+                parent_id = parent_values[selected_parent_index]
+                
+                # 子作品の選択（複数選択）
+                children_options = [manga for manga in available_mangas]
+                default_children_indices = []
+                if default_children_ids:
+                    default_children_indices = [
+                        i for i, manga in enumerate(children_options)
+                        if manga.id in default_children_ids
+                    ]
+                
+                selected_children_indices = st.multiselect(
+                    "子作品（この作品から派生した作品）",
+                    range(len(children_options)),
+                    default=default_children_indices,
+                    format_func=lambda x: children_options[x].title,
+                    help="続編・外伝・スピンオフがある場合に選択"
+                )
+                children_ids = [children_options[i].id for i in selected_children_indices]
+        
+        return {
+            "parent_id": parent_id,
+            "children_ids": children_ids
         }
     
     @staticmethod

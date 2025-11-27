@@ -49,10 +49,14 @@ def show_edit_book(
     if props.get("title_kana", {}).get("rich_text") and props["title_kana"]["rich_text"]:
         current_title_kana = props["title_kana"]["rich_text"][0]["text"]["content"]
     
-    # シリーズタイトル
-    current_series_title = ""
-    if props.get("series_title", {}).get("rich_text") and props["series_title"]["rich_text"]:
-        current_series_title = props["series_title"]["rich_text"][0]["text"]["content"]
+    # リレーション情報の取得（新しいプロパティ名を使用）
+    current_parent_id = None
+    if props.get("relation_books_to", {}).get("relation") and props["relation_books_to"]["relation"]:
+        current_parent_id = props["relation_books_to"]["relation"][0]["id"]
+    
+    current_children_ids = []
+    if props.get("relation_books_from", {}).get("relation"):
+        current_children_ids = [rel["id"] for rel in props["relation_books_from"]["relation"]]
     
     # 巻数情報
     current_owned = book.get("latest_owned_volume", 0)
@@ -101,15 +105,37 @@ def show_edit_book(
         basic_info = BookFormFields.render_basic_info(
             default_title=current_title,
             default_title_kana=current_title_kana,
-            default_series_title=current_series_title,
             default_magazine_type=current_magazine_type,
             default_magazine_name=current_magazine_name
         )
         title = basic_info["title"]
         title_kana = basic_info["title_kana"]
-        series_title = basic_info["series_title"]
         magazine_type = basic_info["magazine_type"]
         magazine_name = basic_info["magazine_name"]
+        
+        # リレーション情報を取得
+        try:
+            all_mangas = manga_service.get_all_mangas()
+        except Exception:
+            all_mangas = []
+        
+        relation_info = BookFormFields.render_series_relation(
+            all_mangas=all_mangas,
+            current_manga_id=manga_id,
+            default_parent_id=current_parent_id,
+            default_children_ids=current_children_ids
+        )
+        parent_id = relation_info["parent_id"]
+        children_ids = relation_info["children_ids"]
+        
+        relation_info = BookFormFields.render_series_relation(
+            all_mangas=all_mangas,
+            current_manga_id=manga_id,
+            default_parent_id=current_parent_id,
+            default_children_ids=current_children_ids
+        )
+        parent_id = relation_info["parent_id"]
+        children_ids = relation_info["children_ids"]
         
         volume_info = BookFormFields.render_volume_info(
             default_owned=current_owned,
@@ -179,6 +205,10 @@ def show_edit_book(
                         with st.spinner("タイトルかなを生成中..." + (" (AI使用)" if use_ai else "")):
                             final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
+                    # リレーション情報の準備
+                    related_books_to = [parent_id] if parent_id else None
+                    related_books_from = children_ids if children_ids else None
+                    
                     # Mangaオブジェクトを作成
                     updated_manga = Manga(
                         id=book["id"],
@@ -189,8 +219,9 @@ def show_edit_book(
                         latest_owned_volume=latest_owned_volume,
                         latest_released_volume=latest_released_volume,
                         is_completed=is_completed,
-                        series_title=series_title,
                         image_url=final_image_url,
+                        related_books_to=related_books_to,
+                        related_books_from=related_books_from,
                         latest_release_date=latest_release_date,
                         next_release_date=next_release_date if use_next_release_date else None,
                         missing_volumes=missing_volumes,
@@ -202,7 +233,18 @@ def show_edit_book(
                     # MangaServiceを使用して更新
                     try:
                         with st.spinner("Notionを更新中..."):
-                            if manga_service.update_manga(updated_manga):
+                            success = manga_service.update_manga(updated_manga)
+                            
+                            # リレーション変更時の相互更新処理
+                            if success and (parent_id != current_parent_id or set(children_ids) != set(current_children_ids)):
+                                with st.spinner("シリーズ関係を更新中..."):
+                                    manga_service.update_changed_relations(
+                                        manga_id=book["id"],
+                                        old_parent_id=current_parent_id,
+                                        new_parent_id=parent_id,
+                                        old_children_ids=current_children_ids,
+                                        new_children_ids=children_ids
+                                    )
                         
                                 st.success("✅ 漫画情報が正常に更新されました！")
                                 st.balloons()

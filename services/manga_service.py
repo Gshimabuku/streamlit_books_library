@@ -9,7 +9,6 @@ from utils.notion_client import (
     query_notion,
     create_notion_page,
     update_notion_page,
-    retrieve_notion_page,
     delete_notion_page
 )
 
@@ -30,28 +29,20 @@ class MangaService:
     
     def get_all_mangas(self) -> List[Manga]:
         """
-        NotionDBから全ての漫画データを取得してMangaオブジェクトのリストを返す
+        全ての漫画データを取得
         
         Returns:
-            List[Manga]: 漫画オブジェクトのリスト（雑誌タイプ→雑誌名→かな→タイトルでソート済み）
-        
+            List[Manga]: 漫画オブジェクトのリスト
+            
         Raises:
             Exception: Notion APIでエラーが発生した場合
         """
-        sorts = [
-            {"property": "magazine_type", "direction": "ascending"},
-            {"property": "magazine_name", "direction": "ascending"},
-            {"property": "title_kana", "direction": "ascending"},
-            {"property": "title", "direction": "ascending"}
-        ]
-        
-        results = query_notion(self.database_id, self.api_key, sorts=sorts)
+        results = query_notion(self.database_id, self.api_key)
         
         mangas = []
         for page in results:
             try:
-                # リレーション情報を解決してからMangaオブジェクトを作成
-                manga = self._create_manga_with_relations(page)
+                manga = Manga.from_notion_page(page)
                 mangas.append(manga)
             except Exception as e:
                 # 個別のページでエラーが発生しても続行
@@ -74,93 +65,11 @@ class MangaService:
             Exception: Notion APIでエラーが発生した場合
         """
         try:
+            from utils.notion_client import retrieve_notion_page
             page = retrieve_notion_page(page_id, self.api_key)
             return Manga.from_notion_page(page)
         except Exception as e:
             print(f"Error retrieving manga {page_id}: {str(e)}")
-            return None
-    
-    def _create_manga_with_relations(self, page: dict) -> Manga:
-        """
-        リレーション情報を解決してMangaオブジェクトを作成
-        
-        Args:
-            page: Notion APIから取得したページデータ
-            
-        Returns:
-            Manga: リレーション情報を含むMangaオブジェクト
-        """
-        from utils.notion_client import retrieve_notion_page
-        
-        # 基本のMangaオブジェクトを作成
-        manga = Manga.from_notion_page(page)
-        
-        # シリーズタイトルのリレーション情報を解決
-        props = page.get("properties", {})
-        series_relation = props.get("series_title", {}).get("relation", [])
-        
-        if series_relation:
-            try:
-                # 最初のリレーション先ページを取得（制限が1ページなので）
-                series_page_id = series_relation[0]["id"]
-                series_page = retrieve_notion_page(series_page_id, self.api_key)
-                
-                # リレーション先のタイトルを取得
-                series_title = ""
-                series_props = series_page.get("properties", {})
-                if series_props.get("title", {}).get("title"):
-                    series_title = series_props["title"]["title"][0]["text"]["content"]
-                
-                # series_titleを更新
-                manga.series_title = series_title
-                
-            except Exception as e:
-                print(f"Warning: Failed to resolve series relation for {manga.id}: {e}")
-                manga.series_title = ""
-        
-        return manga
-    
-    def _find_or_create_series_page(self, series_title: str) -> Optional[str]:
-        """
-        シリーズタイトルで既存ページを検索、なければ新規作成
-        
-        Args:
-            series_title: シリーズタイトル
-            
-        Returns:
-            Optional[str]: ページID、失敗時はNone
-        """
-        from utils.notion_client import query_notion, create_notion_page
-        
-        try:
-            # 既存のシリーズページを検索
-            filter_condition = {
-                "property": "title",
-                "title": {
-                    "equals": series_title
-                }
-            }
-            
-            results = query_notion(self.database_id, self.api_key, filter=filter_condition)
-            
-            if results:
-                # 既存のページが見つかった場合
-                return results[0]["id"]
-            else:
-                # 新規作成
-                properties = {
-                    "title": {"title": [{"text": {"content": series_title}}]},
-                    "latest_owned_volume": {"number": 0},
-                    "latest_released_volume": {"number": 0},
-                    "is_completed": {"checkbox": False},
-                    "series_title": {"relation": []}  # 自己参照なし
-                }
-                
-                result = create_notion_page(self.database_id, properties, self.api_key)
-                return result["id"]
-                
-        except Exception as e:
-            print(f"Warning: Failed to find or create series page for '{series_title}': {e}")
             return None
     
     def create_manga(self, manga: Manga) -> str:
@@ -177,13 +86,6 @@ class MangaService:
             Exception: Notion APIでエラーが発生した場合
         """
         properties = manga.to_notion_properties()
-        
-        # シリーズタイトルのリレーションを設定
-        if manga.series_title:
-            series_page_id = self._find_or_create_series_page(manga.series_title)
-            if series_page_id:
-                properties["series_title"] = {"relation": [{"id": series_page_id}]}
-        
         result = create_notion_page(self.database_id, properties, self.api_key)
         return result["id"]
     
@@ -205,12 +107,6 @@ class MangaService:
             raise ValueError("Manga ID is required for update operation")
         
         properties = manga.to_notion_properties()
-        
-        # シリーズタイトルのリレーションを設定
-        if manga.series_title:
-            series_page_id = self._find_or_create_series_page(manga.series_title)
-            if series_page_id:
-                properties["series_title"] = {"relation": [{"id": series_page_id}]}
         
         try:
             update_notion_page(manga.id, properties, self.api_key)
@@ -292,3 +188,166 @@ class MangaService:
         sorted_names.extend(sorted(remaining_names))
         
         return sorted_names
+    
+    def update_series_relations(
+        self, 
+        created_manga_id: str, 
+        parent_id: str = None, 
+        children_ids: list = None
+    ) -> None:
+        """
+        作成された漫画のシリーズ関係を双方向で更新
+        
+        Args:
+            created_manga_id: 作成された漫画のID
+            parent_id: 親作品のID
+            children_ids: 子作品のIDリスト
+        """
+        # 親作品がある場合、親のrelated_books_fromに新しい作品を追加
+        if parent_id:
+            try:
+                parent_manga = self.get_manga_by_id(parent_id)
+                if parent_manga:
+                    if parent_manga.related_books_from is None:
+                        parent_manga.related_books_from = []
+                    
+                    if created_manga_id not in parent_manga.related_books_from:
+                        parent_manga.related_books_from.append(created_manga_id)
+                        self.update_manga(parent_manga)
+            except Exception as e:
+                print(f"Warning: Failed to update parent relation for {parent_id}: {e}")
+        
+        # 子作品がある場合、各子のrelated_books_toに新しい作品を設定
+        if children_ids:
+            for child_id in children_ids:
+                try:
+                    child_manga = self.get_manga_by_id(child_id)
+                    if child_manga:
+                        # 子は一つの親しか持てないので、リストを置き換え
+                        child_manga.related_books_to = [created_manga_id]
+                        self.update_manga(child_manga)
+                except Exception as e:
+                    print(f"Warning: Failed to update child relation for {child_id}: {e}")
+    
+    def get_series_info(self, manga: Manga) -> Dict[str, Any]:
+        """
+        指定された漫画のシリーズ情報を取得
+        
+        Args:
+            manga: 対象の漫画オブジェクト
+            
+        Returns:
+            Dict[str, Any]: {
+                "parent": Manga|None, 
+                "children": List[Manga],
+                "is_series_root": bool
+            }
+        """
+        parent = None
+        children = []
+        
+        # 親作品を取得
+        if manga.related_books_to:
+            try:
+                parent_id = manga.related_books_to[0]  # 親は一つだけ
+                parent = self.get_manga_by_id(parent_id)
+            except Exception as e:
+                print(f"Warning: Failed to get parent for {manga.id}: {e}")
+        
+        # 子作品を取得
+        if manga.related_books_from:
+            for child_id in manga.related_books_from:
+                try:
+                    child = self.get_manga_by_id(child_id)
+                    if child:
+                        children.append(child)
+                except Exception as e:
+                    print(f"Warning: Failed to get child {child_id} for {manga.id}: {e}")
+        
+        is_series_root = parent is None and len(children) > 0
+        
+        return {
+            "parent": parent,
+            "children": children,
+            "is_series_root": is_series_root
+        }
+    
+    def update_changed_relations(
+        self,
+        manga_id: str,
+        old_parent_id: str = None,
+        new_parent_id: str = None,
+        old_children_ids: list = None,
+        new_children_ids: list = None
+    ) -> None:
+        """
+        編集時のリレーション変更を双方向で更新
+        
+        Args:
+            manga_id: 編集対象の漫画ID
+            old_parent_id: 変更前の親作品ID
+            new_parent_id: 変更後の親作品ID
+            old_children_ids: 変更前の子作品IDリスト
+            new_children_ids: 変更後の子作品IDリスト
+        """
+        if old_children_ids is None:
+            old_children_ids = []
+        if new_children_ids is None:
+            new_children_ids = []
+        
+        # 親の関係変更処理
+        if old_parent_id != new_parent_id:
+            # 古い親から自分を削除
+            if old_parent_id:
+                try:
+                    old_parent = self.get_manga_by_id(old_parent_id)
+                    if old_parent and old_parent.related_books_from:
+                        if manga_id in old_parent.related_books_from:
+                            old_parent.related_books_from.remove(manga_id)
+                            self.update_manga(old_parent)
+                except Exception as e:
+                    print(f"Warning: Failed to remove from old parent {old_parent_id}: {e}")
+            
+            # 新しい親に自分を追加
+            if new_parent_id:
+                try:
+                    new_parent = self.get_manga_by_id(new_parent_id)
+                    if new_parent:
+                        if new_parent.related_books_from is None:
+                            new_parent.related_books_from = []
+                        if manga_id not in new_parent.related_books_from:
+                            new_parent.related_books_from.append(manga_id)
+                            self.update_manga(new_parent)
+                except Exception as e:
+                    print(f"Warning: Failed to add to new parent {new_parent_id}: {e}")
+        
+        # 子の関係変更処理
+        old_children_set = set(old_children_ids)
+        new_children_set = set(new_children_ids)
+        
+        # 削除された子から自分を削除
+        removed_children = old_children_set - new_children_set
+        for child_id in removed_children:
+            try:
+                child = self.get_manga_by_id(child_id)
+                if child and child.related_books_to:
+                    if manga_id in child.related_books_to:
+                        child.related_books_to.remove(manga_id)
+                        # 子の親がなくなる場合は None にする
+                        if not child.related_books_to:
+                            child.related_books_to = None
+                        self.update_manga(child)
+            except Exception as e:
+                print(f"Warning: Failed to remove from child {child_id}: {e}")
+        
+        # 追加された子に自分を設定
+        added_children = new_children_set - old_children_set
+        for child_id in added_children:
+            try:
+                child = self.get_manga_by_id(child_id)
+                if child:
+                    # 子は一つの親しか持てないので、リストを置き換え
+                    child.related_books_to = [manga_id]
+                    self.update_manga(child)
+            except Exception as e:
+                print(f"Warning: Failed to add to child {child_id}: {e}")

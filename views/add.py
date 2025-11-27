@@ -35,9 +35,21 @@ def show_add_book(
         basic_info = BookFormFields.render_basic_info()
         title = basic_info["title"]
         title_kana = basic_info["title_kana"]
-        series_title = basic_info["series_title"]
         magazine_type = basic_info["magazine_type"]
         magazine_name = basic_info["magazine_name"]
+        
+        # リレーション情報を取得（新規作成時は全作品リストが必要）
+        try:
+            all_mangas = manga_service.get_all_mangas()
+        except Exception:
+            all_mangas = []
+        
+        relation_info = BookFormFields.render_series_relation(
+            all_mangas=all_mangas,
+            current_manga_id=None  # 新規作成時はNone
+        )
+        parent_id = relation_info["parent_id"]
+        children_ids = relation_info["children_ids"]
         
         volume_info = BookFormFields.render_volume_info()
         latest_owned_volume = volume_info["latest_owned_volume"]
@@ -95,8 +107,12 @@ def show_add_book(
                             final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
                     # Mangaオブジェクトを作成
+                    # リレーション情報の準備
+                    related_books_to = [parent_id] if parent_id else None
+                    related_books_from = children_ids if children_ids else None
+                    
                     new_manga = Manga(
-                        id="",  # 新規作成時は空
+                        id="",  # 作成時は空文字
                         title=title,
                         title_kana=final_title_kana,
                         magazine_type=magazine_type,
@@ -104,8 +120,9 @@ def show_add_book(
                         latest_owned_volume=latest_owned_volume,
                         latest_released_volume=latest_released_volume,
                         is_completed=is_completed,
-                        series_title=series_title,
                         image_url=final_image_url,
+                        related_books_to=related_books_to,
+                        related_books_from=related_books_from,
                         latest_release_date=latest_release_date,
                         next_release_date=next_release_date if use_next_release_date else None,
                         missing_volumes=missing_volumes,
@@ -118,6 +135,15 @@ def show_add_book(
                     try:
                         with st.spinner("Notionに登録中..."):
                             result_id = manga_service.create_manga(new_manga)
+                            
+                            # リレーション設定後の相互更新処理
+                            if parent_id or children_ids:
+                                with st.spinner("シリーズ関係を更新中..."):
+                                    manga_service.update_series_relations(
+                                        created_manga_id=result_id,
+                                        parent_id=parent_id,
+                                        children_ids=children_ids
+                                    )
                         
                         st.success("✅ 漫画が正常に登録されました！")
                         st.balloons()
