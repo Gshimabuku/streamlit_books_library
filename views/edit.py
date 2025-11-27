@@ -101,7 +101,7 @@ def show_edit_book(
         current_notes = props["notes"]["rich_text"][0]["text"]["content"]
     
     # 編集フォーム（BookFormFieldsコンポーネントを使用）
-    with st.form("edit_book_form"):
+    with st.form("edit_book_form", clear_on_submit=False):
         basic_info = BookFormFields.render_basic_info(
             default_title=current_title,
             default_title_kana=current_title_kana,
@@ -163,8 +163,11 @@ def show_edit_book(
         owned_media = detail_info["owned_media"]
         notes = detail_info["notes"]
         
+        # エンターキーでの送信を防ぐためのスペーサー
+        st.markdown("---")
+        
         # 更新ボタン
-        submitted = st.form_submit_button("💾 変更を保存", type="primary")
+        submitted = st.form_submit_button("💾 変更を保存", type="primary", use_container_width=False)
         
         if submitted:
             if not title or not magazine_type:

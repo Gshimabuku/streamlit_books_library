@@ -30,7 +30,7 @@ def show_add_book(
         go_to_home()
         st.rerun()
     
-    with st.form("add_book_form"):
+    with st.form("add_book_form", clear_on_submit=False):
         # BookFormFieldsコンポーネントを使用
         basic_info = BookFormFields.render_basic_info()
         title = basic_info["title"]
@@ -74,8 +74,11 @@ def show_add_book(
         owned_media = detail_info["owned_media"]
         notes = detail_info["notes"]
         
+        # エンターキーでの送信を防ぐためのスペーサー
+        st.markdown("---")
+        
         # 登録ボタン
-        submitted = st.form_submit_button("📚 漫画を登録", type="primary")
+        submitted = st.form_submit_button("📚 漫画を登録", type="primary", use_container_width=False)
         
         if submitted:
             if not title or not magazine_type:
