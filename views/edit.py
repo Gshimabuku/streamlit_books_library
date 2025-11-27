@@ -119,23 +119,13 @@ def show_edit_book(
         except Exception:
             all_mangas = []
         
-        relation_info = BookFormFields.render_series_relation(
+        series_info = BookFormFields.render_series_selection(
             all_mangas=all_mangas,
-            current_manga_id=manga_id,
-            default_parent_id=current_parent_id,
-            default_children_ids=current_children_ids
+            current_manga_id=book["id"],
+            default_parent_id=current_parent_id
         )
-        parent_id = relation_info["parent_id"]
-        children_ids = relation_info["children_ids"]
-        
-        relation_info = BookFormFields.render_series_relation(
-            all_mangas=all_mangas,
-            current_manga_id=manga_id,
-            default_parent_id=current_parent_id,
-            default_children_ids=current_children_ids
-        )
-        parent_id = relation_info["parent_id"]
-        children_ids = relation_info["children_ids"]
+        parent_id = series_info["parent_id"]
+        children_ids = current_children_ids  # 編集時は既存の子作品を保持
         
         volume_info = BookFormFields.render_volume_info(
             default_owned=current_owned,
@@ -235,15 +225,13 @@ def show_edit_book(
                         with st.spinner("Notionを更新中..."):
                             success = manga_service.update_manga(updated_manga)
                             
-                            # リレーション変更時の相互更新処理
-                            if success and (parent_id != current_parent_id or set(children_ids) != set(current_children_ids)):
+                            # リレーション変更時の相互更新処理（親作品の変更のみ）
+                            if success and parent_id != current_parent_id:
                                 with st.spinner("シリーズ関係を更新中..."):
-                                    manga_service.update_changed_relations(
+                                    manga_service.update_parent_relation(
                                         manga_id=book["id"],
                                         old_parent_id=current_parent_id,
-                                        new_parent_id=parent_id,
-                                        old_children_ids=current_children_ids,
-                                        new_children_ids=children_ids
+                                        new_parent_id=parent_id
                                     )
                         
                                 st.success("✅ 漫画情報が正常に更新されました！")

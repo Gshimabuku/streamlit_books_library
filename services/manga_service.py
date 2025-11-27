@@ -189,6 +189,46 @@ class MangaService:
         
         return sorted_names
     
+    def update_parent_relation(
+        self,
+        manga_id: str,
+        old_parent_id: str = None,
+        new_parent_id: str = None
+    ) -> None:
+        """
+        親作品との関係を更新（簡易版）
+        
+        Args:
+            manga_id: 対象の漫画ID
+            old_parent_id: 変更前の親作品ID
+            new_parent_id: 変更後の親作品ID
+        """
+        # 古い親から自分を削除
+        if old_parent_id:
+            try:
+                old_parent = self.get_manga_by_id(old_parent_id)
+                if old_parent and old_parent.related_books_from:
+                    if manga_id in old_parent.related_books_from:
+                        old_parent.related_books_from.remove(manga_id)
+                        if not old_parent.related_books_from:
+                            old_parent.related_books_from = None
+                        self.update_manga(old_parent)
+            except Exception as e:
+                print(f"Warning: Failed to remove from old parent {old_parent_id}: {e}")
+        
+        # 新しい親に自分を追加
+        if new_parent_id:
+            try:
+                new_parent = self.get_manga_by_id(new_parent_id)
+                if new_parent:
+                    if new_parent.related_books_from is None:
+                        new_parent.related_books_from = []
+                    if manga_id not in new_parent.related_books_from:
+                        new_parent.related_books_from.append(manga_id)
+                        self.update_manga(new_parent)
+            except Exception as e:
+                print(f"Warning: Failed to add to new parent {new_parent_id}: {e}")
+    
     def update_series_relations(
         self, 
         created_manga_id: str, 

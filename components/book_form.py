@@ -38,12 +38,6 @@ class BookFormFields:
             placeholder="例: わんぴーす",
             help="空欄の場合は保存時に自動生成されます"
         )
-        series_title = st.text_input(
-            "シリーズタイトル",
-            value=default_series_title,
-            placeholder="例: ONE PIECE",
-            help="同じシリーズの作品をグループ化する場合に入力"
-        )
         
         magazine_types = ["ジャンプ", "マガジン", "サンデー", "その他"]
         try:
@@ -59,6 +53,91 @@ class BookFormFields:
             "title_kana": title_kana,
             "magazine_type": magazine_type,
             "magazine_name": magazine_name
+        }
+    
+    @staticmethod
+    def render_series_selection(
+        all_mangas: list = None,
+        current_manga_id: str = None,
+        default_parent_id: str = None
+    ) -> Dict[str, Any]:
+        """
+        シリーズ選択セクションのフィールドを表示
+        
+        Args:
+            all_mangas: 全漫画データのリスト
+            current_manga_id: 現在編集中の漫画ID（自己参照を避けるため）
+            default_parent_id: デフォルトの親作品ID
+            
+        Returns:
+            Dict[str, Any]: {parent_id: str|None}
+        """
+        st.subheader("🔗 シリーズ情報")
+        
+        parent_id = None
+        
+        if all_mangas:
+            # 親作品になれる作品をフィルタリング
+            # 1. 自分以外
+            # 2. related_books_fromが空の作品（子作品を持たない作品）
+            available_parents = [
+                manga for manga in all_mangas 
+                if manga.id != current_manga_id and 
+                (manga.related_books_from is None or len(manga.related_books_from) == 0)
+            ]
+            
+            if available_parents:
+                # 検索機能付きプルダウン
+                parent_options = ["なし"] + [f"{manga.title}" for manga in available_parents]
+                parent_values = [None] + [manga.id for manga in available_parents]
+                
+                # 検索用テキストボックス
+                search_query = st.text_input(
+                    "親作品を検索",
+                    placeholder="作品タイトルで検索...",
+                    help="この作品が続編・外伝・スピンオフの場合、元となる作品を選択"
+                )
+                
+                # 検索結果でフィルタリング
+                if search_query:
+                    filtered_parents = [
+                        manga for manga in available_parents 
+                        if search_query.lower() in manga.title.lower() or 
+                           search_query.lower() in (manga.title_kana or "").lower()
+                    ]
+                    filtered_options = ["なし"] + [f"{manga.title}" for manga in filtered_parents]
+                    filtered_values = [None] + [manga.id for manga in filtered_parents]
+                else:
+                    filtered_options = parent_options
+                    filtered_values = parent_values
+                
+                # デフォルト選択インデックスを計算
+                default_parent_index = 0
+                if default_parent_id and default_parent_id in filtered_values:
+                    default_parent_index = filtered_values.index(default_parent_id)
+                
+                # 選択ボックス
+                selected_parent_index = st.selectbox(
+                    "親作品選択",
+                    range(len(filtered_options)),
+                    index=default_parent_index,
+                    format_func=lambda x: filtered_options[x],
+                    help="選択した作品の子作品として登録されます"
+                )
+                parent_id = filtered_values[selected_parent_index]
+                
+                # 選択結果を表示
+                if parent_id:
+                    selected_parent = next((m for m in available_parents if m.id == parent_id), None)
+                    if selected_parent:
+                        st.info(f"📚 選択された親作品: **{selected_parent.title}**")
+            else:
+                st.info("📚 親作品にできる作品がありません")
+        else:
+            st.warning("⚠️ 作品データを読み込めませんでした")
+        
+        return {
+            "parent_id": parent_id
         }
     
     @staticmethod

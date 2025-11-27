@@ -38,18 +38,18 @@ def show_add_book(
         magazine_type = basic_info["magazine_type"]
         magazine_name = basic_info["magazine_name"]
         
-        # リレーション情報を取得（新規作成時は全作品リストが必要）
+        # シリーズ情報を取得（新規作成時は親作品のみ選択可能）
         try:
             all_mangas = manga_service.get_all_mangas()
         except Exception:
             all_mangas = []
         
-        relation_info = BookFormFields.render_series_relation(
+        series_info = BookFormFields.render_series_selection(
             all_mangas=all_mangas,
             current_manga_id=None  # 新規作成時はNone
         )
-        parent_id = relation_info["parent_id"]
-        children_ids = relation_info["children_ids"]
+        parent_id = series_info["parent_id"]
+        children_ids = []  # 新規作成時は子作品なし
         
         volume_info = BookFormFields.render_volume_info()
         latest_owned_volume = volume_info["latest_owned_volume"]
@@ -107,9 +107,9 @@ def show_add_book(
                             final_title_kana = title_to_kana(title, use_ai=use_ai, api_key=openai_api_key)
                     
                     # Mangaオブジェクトを作成
-                    # リレーション情報の準備
+                    # リレーション情報の準備（新規作成時は親作品のみ）
                     related_books_to = [parent_id] if parent_id else None
-                    related_books_from = children_ids if children_ids else None
+                    related_books_from = None  # 新規作成時は子作品なし
                     
                     new_manga = Manga(
                         id="",  # 作成時は空文字
@@ -136,13 +136,13 @@ def show_add_book(
                         with st.spinner("Notionに登録中..."):
                             result_id = manga_service.create_manga(new_manga)
                             
-                            # リレーション設定後の相互更新処理
-                            if parent_id or children_ids:
+                            # リレーション設定後の相互更新処理（親作品の場合のみ）
+                            if parent_id:
                                 with st.spinner("シリーズ関係を更新中..."):
-                                    manga_service.update_series_relations(
-                                        created_manga_id=result_id,
-                                        parent_id=parent_id,
-                                        children_ids=children_ids
+                                    manga_service.update_parent_relation(
+                                        manga_id=result_id,
+                                        old_parent_id=None,
+                                        new_parent_id=parent_id
                                     )
                         
                         st.success("✅ 漫画が正常に登録されました！")
