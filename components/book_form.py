@@ -133,11 +133,11 @@ class BookFormFields:
                 )
                 parent_id = filtered_values[selected_parent_index]
                 
-                # 選択結果を表示
-                if parent_id:
-                    selected_parent = next((m for m in available_parents if m.id == parent_id), None)
-                    if selected_parent:
-                        st.info(f"📚 選択された親作品: **{selected_parent.title}**")
+                # # 選択結果を表示
+                # if parent_id:
+                #     selected_parent = next((m for m in available_parents if m.id == parent_id), None)
+                #     if selected_parent:
+                #         st.info(f"📚 選択された親作品: **{selected_parent.title}**")
             else:
                 st.info("📚 親作品にできる作品がありません")
         else:
