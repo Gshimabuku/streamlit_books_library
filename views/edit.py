@@ -221,19 +221,22 @@ def show_edit_book(
                     )
                     
                     # MangaServiceを使用して更新
-                    try:
-                        with st.spinner("Notionを更新中..."):
+                    with st.spinner("Notionを更新中..."):
+                        try:
                             success = manga_service.update_manga(updated_manga)
                             
-                            # リレーション変更時の相互更新処理（親作品の変更のみ）
-                            if success and parent_id != current_parent_id:
-                                with st.spinner("シリーズ関係を更新中..."):
-                                    manga_service.update_parent_relation(
-                                        manga_id=book["id"],
-                                        old_parent_id=current_parent_id,
-                                        new_parent_id=parent_id
-                                    )
-                        
+                            if success:
+                                # リレーション変更時の相互更新処理（親作品の変更のみ）
+                                if parent_id != current_parent_id:
+                                    with st.spinner("シリーズ関係を更新中..."):
+                                        relation_success = manga_service.update_parent_relation(
+                                            manga_id=book["id"],
+                                            old_parent_id=current_parent_id,
+                                            new_parent_id=parent_id
+                                        )
+                                        if not relation_success:
+                                            st.warning("⚠️ シリーズ関係の更新で問題が発生しました")
+                                
                                 st.success("✅ 漫画情報が正常に更新されました！")
                                 st.balloons()
                                 
@@ -248,9 +251,9 @@ def show_edit_book(
                                 st.session_state.update_success = True
                             else:
                                 st.error("❌ 更新に失敗しました")
-                        
-                    except Exception as update_error:
-                        st.error(f"❌ 更新処理でエラーが発生しました: {str(update_error)}")
+                        except Exception as update_error:
+                            st.error(f"❌ 更新処理でエラーが発生しました: {str(update_error)}")
+                            st.exception(update_error)  # デバッグ用の詳細エラー表示
                     
                 except Exception as e:
                     st.error(f"❌ 更新処理でエラーが発生しました: {str(e)}")

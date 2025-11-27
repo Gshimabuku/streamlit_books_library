@@ -202,21 +202,15 @@ class Manga:
         # リレーション情報を設定（新しいプロパティ名を使用）
         if self.related_books_to:
             properties["relation_books_to"] = {"relation": [{"id": book_id} for book_id in self.related_books_to]}
-        else:
-            properties["relation_books_to"] = {"relation": []}
         
         if self.related_books_from:
             properties["relation_books_from"] = {"relation": [{"id": book_id} for book_id in self.related_books_from]}
-        else:
-            properties["relation_books_from"] = {"relation": []}
         
         if self.latest_release_date:
             properties["latest_release_date"] = {"date": {"start": self.latest_release_date.isoformat()}}
         
         if self.next_release_date:
             properties["next_release_date"] = {"date": {"start": self.next_release_date.isoformat()}}
-        else:
-            properties["next_release_date"] = {"date": None}
         
         if self.magazine_type:
             properties["magazine_type"] = {"select": {"name": self.magazine_type}}

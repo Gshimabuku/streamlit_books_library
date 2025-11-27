@@ -113,15 +113,16 @@ class MangaService:
             return True
         except Exception as e:
             print(f"Error updating manga {manga.id}: {str(e)}")
+            print(f"Properties being sent: {properties}")
             return False
     
     def delete_manga(self, page_id: str) -> bool:
         """
         指定されたIDの漫画を削除
-        
+
         Args:
             page_id: 削除するNotion Page ID
-        
+
         Returns:
             bool: 削除成功ならTrue、失敗ならFalse
         """
@@ -131,8 +132,44 @@ class MangaService:
         except Exception as e:
             print(f"Error deleting manga {page_id}: {str(e)}")
             return False
-    
-    @staticmethod
+
+    def update_parent_relation(self, manga_id: str, old_parent_id: Optional[str], new_parent_id: Optional[str]) -> bool:
+        """
+        親子関係の変更時に、関連する作品の双方向リレーションを更新
+
+        Args:
+            manga_id: 更新対象の漫画ID
+            old_parent_id: 以前の親作品ID（Noneの場合は親なし）
+            new_parent_id: 新しい親作品ID（Noneの場合は親なし）
+
+        Returns:
+            bool: 更新成功ならTrue、失敗ならFalse
+        """
+        try:
+            # 古い親作品から子作品リストを削除
+            if old_parent_id:
+                old_parent = self.get_manga_by_id(old_parent_id)
+                if old_parent and old_parent.related_books_from:
+                    # 自分を子作品リストから削除
+                    updated_children = [child_id for child_id in old_parent.related_books_from if child_id != manga_id]
+                    old_parent.related_books_from = updated_children if updated_children else None
+                    self.update_manga(old_parent)
+
+            # 新しい親作品に子作品を追加
+            if new_parent_id:
+                new_parent = self.get_manga_by_id(new_parent_id)
+                if new_parent:
+                    # 子作品リストに自分を追加
+                    current_children = new_parent.related_books_from or []
+                    if manga_id not in current_children:
+                        current_children.append(manga_id)
+                    new_parent.related_books_from = current_children
+                    self.update_manga(new_parent)
+
+            return True
+        except Exception as e:
+            print(f"Error updating parent relation for manga {manga_id}: {str(e)}")
+            return False    @staticmethod
     def group_by_magazine(mangas: List[Manga]) -> Dict[str, Dict[str, List[Manga]]]:
         """
         漫画リストを雑誌タイプ→雑誌名でグループ化
