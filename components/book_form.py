@@ -79,12 +79,19 @@ class BookFormFields:
         if all_mangas:
             # 親作品になれる作品をフィルタリング
             # 1. 自分以外
-            # 2. related_books_fromが空の作品（子作品を持たない作品）
-            available_parents = [
-                manga for manga in all_mangas 
-                if manga.id != current_manga_id and 
-                (manga.related_books_from is None or len(manga.related_books_from) == 0)
-            ]
+            # 2. related_books_from が空の作品（子作品を持たない作品）
+            # 3. 現在の親作品は編集時に選択肢に含める
+            available_parents = []
+            for manga in all_mangas:
+                if manga.id == current_manga_id:
+                    continue  # 自分は除外
+                
+                # 現在の親作品の場合は常に含める
+                if manga.id == default_parent_id:
+                    available_parents.append(manga)
+                # それ以外は子作品を持たない作品のみ
+                elif manga.related_books_from is None or len(manga.related_books_from) == 0:
+                    available_parents.append(manga)
             
             if available_parents:
                 # 検索機能付きプルダウン
