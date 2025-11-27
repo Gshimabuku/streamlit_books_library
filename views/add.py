@@ -32,7 +32,7 @@ def show_add_book(
     
     with st.form("add_book_form"):
         # BookFormFieldsコンポーネントを使用
-        basic_info = BookFormFields.render_basic_info()
+        basic_info = BookFormFields.render_basic_info(key_prefix="add_")
         title = basic_info["title"]
         title_kana = basic_info["title_kana"]
         magazine_type = basic_info["magazine_type"]
@@ -46,7 +46,8 @@ def show_add_book(
         
         series_info = BookFormFields.render_series_selection(
             all_mangas=all_mangas,
-            current_manga_id=None  # 新規作成時はNone
+            current_manga_id=None,  # 新規作成時はNone
+            key_prefix="add_"
         )
         parent_id = series_info["parent_id"]
         children_ids = []  # 新規作成時は子作品なし
@@ -68,7 +69,7 @@ def show_add_book(
         
         latest_release_date, use_next_release_date, next_release_date = BookFormFields.render_date_info()
         
-        detail_info = BookFormFields.render_detail_info()
+        detail_info = BookFormFields.render_detail_info(key_prefix="add_")
         missing_volumes = detail_info["missing_volumes"]
         special_volumes = detail_info["special_volumes"]
         owned_media = detail_info["owned_media"]

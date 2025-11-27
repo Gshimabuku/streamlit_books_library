@@ -106,7 +106,8 @@ def show_edit_book(
             default_title=current_title,
             default_title_kana=current_title_kana,
             default_magazine_type=current_magazine_type,
-            default_magazine_name=current_magazine_name
+            default_magazine_name=current_magazine_name,
+            key_prefix="edit_"
         )
         title = basic_info["title"]
         title_kana = basic_info["title_kana"]
@@ -122,7 +123,8 @@ def show_edit_book(
         series_info = BookFormFields.render_series_selection(
             all_mangas=all_mangas,
             current_manga_id=book["id"],
-            default_parent_id=current_parent_id
+            default_parent_id=current_parent_id,
+            key_prefix="edit_"
         )
         parent_id = series_info["parent_id"]
         children_ids = current_children_ids  # 編集時は既存の子作品を保持
@@ -156,7 +158,8 @@ def show_edit_book(
             default_missing_volumes=current_missing_volumes,
             default_special_volumes=current_special_volumes,
             default_owned_media=current_owned_media,
-            default_notes=current_notes
+            default_notes=current_notes,
+            key_prefix="edit_"
         )
         missing_volumes = detail_info["missing_volumes"]
         special_volumes = detail_info["special_volumes"]
