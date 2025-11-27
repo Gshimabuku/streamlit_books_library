@@ -79,7 +79,7 @@ class BookFormFields:
         if all_mangas:
             # 親作品になれる作品をフィルタリング
             # 1. 自分以外
-            # 2. related_books_from が空の作品（子作品を持たない作品）
+            # 2. related_books_to が空の作品（親作品を持たない作品）
             # 3. 現在の親作品は編集時に選択肢に含める
             available_parents = []
             for manga in all_mangas:
@@ -90,7 +90,7 @@ class BookFormFields:
                 if manga.id == default_parent_id:
                     available_parents.append(manga)
                 # それ以外は子作品を持たない作品のみ
-                elif manga.related_books_from is None or len(manga.related_books_from) == 0:
+                elif manga.related_books_to is None or len(manga.related_books_to) == 0:
                     available_parents.append(manga)
             
             if available_parents:
@@ -133,11 +133,6 @@ class BookFormFields:
                 )
                 parent_id = filtered_values[selected_parent_index]
                 
-                # # 選択結果を表示
-                # if parent_id:
-                #     selected_parent = next((m for m in available_parents if m.id == parent_id), None)
-                #     if selected_parent:
-                #         st.info(f"📚 選択された親作品: **{selected_parent.title}**")
             else:
                 st.info("📚 親作品にできる作品がありません")
         else:
