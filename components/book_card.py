@@ -54,9 +54,6 @@ class BookCard:
         if manga.owned_media:
             media_info = f'<div class="book-media-info">💻 {manga.owned_media}</div>'
         
-        # シリーズ情報
-        series_info = BookCard._get_series_info_html(manga)
-        
         # HTMLテンプレート
         card_html = f"""
         <div class="book-card">
@@ -73,7 +70,6 @@ class BookCard:
                 {magazine_info}
                 {volume_info}
                 {media_info}
-                {series_info}
             </div>
         </div>
         """
@@ -132,30 +128,4 @@ class BookCard:
         """
         return f'<div class="magazine-name-header">📖 {magazine_name}</div>'
     
-    @staticmethod
-    def _get_series_info_html(manga: Manga) -> str:
-        """
-        シリーズ関係の情報HTMLを生成
-        
-        Args:
-            manga: 対象の漫画オブジェクト
-            
-        Returns:
-            str: シリーズ情報のHTML文字列
-        """
-        series_info_parts = []
-        
-        # 親作品がある場合
-        if manga.related_books_to:
-            series_info_parts.append('<span class="series-child">📤 子作品</span>')
-        
-        # 子作品がある場合
-        if manga.related_books_from:
-            child_count = len(manga.related_books_from)
-            series_info_parts.append(f'<span class="series-parent">📥 親作品 ({child_count}件)</span>')
-        
-        if series_info_parts:
-            series_html = " ".join(series_info_parts)
-            return f'<div class="book-series-info">🔗 {series_html}</div>'
-        
-        return ""
+
