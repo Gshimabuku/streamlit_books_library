@@ -15,8 +15,7 @@ class BookFormFields:
         default_title: str = "",
         default_title_kana: str = "",
         default_magazine_type: str = "ジャンプ",
-        default_magazine_name: str = "",
-        key_prefix: str = ""
+        default_magazine_name: str = ""
     ) -> Dict[str, Any]:
         """
         基本情報セクションのフィールドを表示
@@ -32,24 +31,20 @@ class BookFormFields:
         """
         st.subheader("📝 基本情報")
         
-        # エンターキー送信を防ぐためのコールバック関数
-        def prevent_enter_submit():
-            pass
+        # エンターキー送信を防ぐための非表示ダミーフィールド
+        import uuid
+        st.text_input("", value="", key=f"dummy_field_{uuid.uuid4().hex[:8]}", label_visibility="collapsed")
         
         title = st.text_input(
             "漫画タイトル *", 
             value=default_title, 
-            placeholder="例: ONE PIECE",
-            key=f"{key_prefix}title_input",
-            on_change=prevent_enter_submit
+            placeholder="例: ONE PIECE"
         )
         title_kana = st.text_input(
             "タイトルかな（並び順用）",
             value=default_title_kana,
             placeholder="例: わんぴーす",
-            help="空欄の場合は保存時に自動生成されます",
-            key=f"{key_prefix}title_kana_input",
-            on_change=prevent_enter_submit
+            help="空欄の場合は保存時に自動生成されます"
         )
         
         magazine_types = ["ジャンプ", "マガジン", "サンデー", "その他"]
@@ -62,9 +57,7 @@ class BookFormFields:
         magazine_name = st.text_input(
             "連載誌名", 
             value=default_magazine_name, 
-            placeholder="例: 週刊少年ジャンプ",
-            key=f"{key_prefix}magazine_name_input",
-            on_change=prevent_enter_submit
+            placeholder="例: 週刊少年ジャンプ"
         )
         
         return {
@@ -78,8 +71,7 @@ class BookFormFields:
     def render_series_selection(
         all_mangas: list = None,
         current_manga_id: str = None,
-        default_parent_id: str = None,
-        key_prefix: str = ""
+        default_parent_id: str = None
     ) -> Dict[str, Any]:
         """
         シリーズ選択セクションのフィールドを表示
@@ -118,16 +110,11 @@ class BookFormFields:
                 parent_options = ["なし"] + [f"{manga.title}" for manga in available_parents]
                 parent_values = [None] + [manga.id for manga in available_parents]
                 
-                # 検索用テキストボックス（エンターキー送信防止）
-                def prevent_enter_submit():
-                    pass
-                
+                # 検索用テキストボックス
                 search_query = st.text_input(
                     "親作品を検索",
                     placeholder="作品タイトルで検索...",
-                    help="この作品が続編・外伝・スピンオフの場合、元となる作品を選択",
-                    key=f"{key_prefix}series_search_input",
-                    on_change=prevent_enter_submit
+                    help="この作品が続編・外伝・スピンオフの場合、元となる作品を選択"
                 )
                 
                 # 検索結果でフィルタリング
@@ -386,8 +373,7 @@ class BookFormFields:
         default_missing_volumes: str = "",
         default_special_volumes: str = "",
         default_owned_media: str = "単行本",
-        default_notes: str = "",
-        key_prefix: str = ""
+        default_notes: str = ""
     ) -> Dict[str, str]:
         """
         詳細情報セクションのフィールドを表示
@@ -403,23 +389,15 @@ class BookFormFields:
         """
         st.subheader("📚 詳細情報")
         
-        # エンターキー送信を防ぐためのコールバック関数
-        def prevent_enter_submit():
-            pass
-        
         missing_volumes = st.text_input(
             "未所持巻（抜け）",
             value=default_missing_volumes,
-            placeholder="例: 3,5,10",
-            key=f"{key_prefix}missing_volumes_input",
-            on_change=prevent_enter_submit
+            placeholder="例: 3,5,10"
         )
         special_volumes = st.text_input(
             "特殊巻",
             value=default_special_volumes,
-            placeholder="例: 10.5,外伝1",
-            key=f"{key_prefix}special_volumes_input",
-            on_change=prevent_enter_submit
+            placeholder="例: 10.5,外伝1"
         )
         
         media_options = ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"]
@@ -454,18 +432,12 @@ class BookFormFields:
         col1, col2 = st.columns(2)
         
         with col1:
-            # エンターキー送信を防ぐためのコールバック関数
-            def prevent_enter_submit():
-                pass
-                
             # タイトル検索
             title_search = st.text_input(
                 "📚 タイトル検索",
                 value=saved_filters.get("title", ""),
                 placeholder="例: ワンピース",
-                help="タイトルまたは読み仮名での部分一致検索",
-                key="search_title_input",
-                on_change=prevent_enter_submit
+                help="タイトルまたは読み仮名での部分一致検索"
             )
             
             # 雑誌タイプ検索
@@ -483,9 +455,7 @@ class BookFormFields:
                 "📖 連載誌名",
                 value=saved_filters.get("magazine_name", ""),
                 placeholder="例: 週刊少年ジャンプ",
-                help="連載誌名での部分一致検索",
-                key="search_magazine_name_input",
-                on_change=prevent_enter_submit
+                help="連載誌名での部分一致検索"
             )
         
         with col2:
