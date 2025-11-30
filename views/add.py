@@ -162,8 +162,9 @@ def show_add_book(
                             else:
                                 st.info(f"💡 タイトルかなを自動生成しました: {final_title_kana}")
                         
-                        # セッション状態で登録成功をマーク
+                        # セッション状態で登録成功をマークし、登録した作品のIDを保存
                         st.session_state.registration_success = True
+                        st.session_state.registered_manga_id = result_id
                         
                     except Exception as full_error:
                         st.error(f"❌ 登録に失敗しました: {str(full_error)}")
@@ -186,8 +187,9 @@ def show_add_book(
                             st.success("✅ 基本プロパティで登録成功！")
                             st.info("💡 基本情報のみ保存されました。詳細情報は後で編集してください。")
                             
-                            # セッション状態で登録成功をマーク
+                            # セッション状態で登録成功をマークし、登録した作品のIDを保存
                             st.session_state.registration_success = True
+                            st.session_state.registered_manga_id = result["id"]
                             
                         except Exception as minimal_error:
                             st.error(f"❌ 基本プロパティでも登録失敗: {str(minimal_error)}")
@@ -199,7 +201,34 @@ def show_add_book(
     # フォーム外で登録成功状態をチェック
     if st.session_state.get("registration_success", False):
         st.success("🎉 登録が完了しました！")
-        if st.button("📚 ホームに戻る", type="primary"):
-            st.session_state.registration_success = False
-            go_to_home()
-            st.rerun()
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📖 詳細を見る", type="primary", use_container_width=True):
+                # 登録した作品の詳細画面に遷移
+                registered_id = st.session_state.get("registered_manga_id")
+                if registered_id:
+                    # MangaServiceを使用して登録された作品データを取得
+                    try:
+                        registered_manga = manga_service.get_manga_by_id(registered_id)
+                        if registered_manga:
+                            st.session_state.selected_book = registered_manga.to_dict()
+                            st.session_state.page = "book_detail"
+                        else:
+                            st.error("❌ 登録された作品の詳細を取得できませんでした")
+                    except Exception as e:
+                        st.error(f"❌ 作品詳細の取得でエラーが発生しました: {str(e)}")
+                
+                st.session_state.registration_success = False
+                if "registered_manga_id" in st.session_state:
+                    del st.session_state.registered_manga_id
+                st.rerun()
+        
+        with col2:
+            if st.button("📚 ホームに戻る", use_container_width=True):
+                st.session_state.registration_success = False
+                if "registered_manga_id" in st.session_state:
+                    del st.session_state.registered_manga_id
+                go_to_home()
+                st.rerun()
