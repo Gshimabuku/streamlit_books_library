@@ -106,24 +106,8 @@ def show_book_detail(
         </div>
         """, unsafe_allow_html=True)
         
-        # シリーズ情報
-        relation_books_to = props.get('relation_books_to', {}).get('relation', [])
-        relation_books_from = props.get('relation_books_from', {}).get('relation', [])
-        
-        # if relation_books_to or relation_books_from:
-        #     st.markdown("### 🔗 シリーズ情報")
-            
-        #     # 親作品がある場合
-        #     if relation_books_to:
-        #         st.write(f"📤 **親作品:** この作品は続編・外伝・スピンオフです")
-        #         # 実際の親作品名を表示する場合は、MangaServiceで取得が必要
-                
-        #     # 子作品がある場合
-        #     if relation_books_from:
-        #         child_count = len(relation_books_from)
-        #         st.write(f"📥 **子作品:** {child_count}件の続編・外伝・スピンオフがあります")
-        
-        # st.markdown("---")
+        # 作品情報
+        st.subheader("ℹ️ 作品情報")
         
         # 連載誌情報
         magazine_type = book.get('magazine_type', '')
@@ -140,8 +124,6 @@ def show_book_detail(
             owned_media_name = owned_media.get('name', '単行本')
             if owned_media_name != '単行本':
                 st.write(f"💻 **所持媒体:** {owned_media_name}")
-        
-        st.markdown("---")
         
         # 最新巻情報
         release_info = f"**最新巻:** {book['latest_released_volume']}巻"
@@ -191,7 +173,7 @@ def show_book_detail(
         st.markdown("---")
         
         # 特殊巻
-        st.subheader("📚 特殊巻")
+        st.subheader("📔 特殊巻")
         
         # 特殊巻一覧表示
         try:
