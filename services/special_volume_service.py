@@ -35,10 +35,10 @@ class SpecialVolumeService:
         try:
             # sort_orderでソートしてクエリ
             sorts = [{"property": "sort_order", "direction": "ascending"}]
-            response = query_notion(self.database_id, self.api_key, sorts=sorts)
+            results = query_notion(self.database_id, self.api_key, sorts=sorts)
             
             special_volumes = []
-            for result in response.get("results", []):
+            for result in results:
                 try:
                     special_volume = SpecialVolume.from_notion_page(result)
                     special_volumes.append(special_volume)
@@ -74,15 +74,15 @@ class SpecialVolumeService:
             # sort_orderでソート
             sorts = [{"property": "sort_order", "direction": "ascending"}]
             
-            response = query_notion(
+            results = query_notion(
                 self.database_id, 
                 self.api_key, 
-                filters=filters, 
+                filter=filters, 
                 sorts=sorts
             )
             
             special_volumes = []
-            for result in response.get("results", []):
+            for result in results:
                 try:
                     special_volume = SpecialVolume.from_notion_page(result)
                     special_volumes.append(special_volume)
