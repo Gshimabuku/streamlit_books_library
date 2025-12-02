@@ -4,8 +4,6 @@ Detail Page: Book detail view with edit/delete actions
 
 import streamlit as st
 from datetime import datetime
-from services.manga_service import MangaService
-from components.delete_dialog import DeleteDialog
 from config.constants import DEFAULT_IMAGE_URL
 
 
@@ -15,39 +13,12 @@ def show_book_detail(
     """詳細画面：選択された本の詳細情報表示"""
     from utils.session import SessionManager
     
-    # ページトップアンカーを設置
-    st.markdown('<div id="page-top" class="page-top-anchor"></div>', unsafe_allow_html=True)
-    
-    # スクロール位置をトップにリセット（ページ遷移時のみ）
-    if SessionManager.should_scroll_to_top():
-        st.markdown("""
-        <script>
-        // 複数の方法でスクロールをトップに戻す
-        setTimeout(function() {
-            // 方法1: 直接スクロール
-            window.scrollTo({
-                top: 0,
-                behavior: 'instant'
-            });
-            
-            // 方法2: bodyのスクロールもリセット
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-            
-            // 方法3: アンカーを使用
-            const topAnchor = document.getElementById('page-top');
-            if (topAnchor) {
-                topAnchor.scrollIntoView({behavior: 'instant'});
-            }
-        }, 50);
-        </script>
-        """, unsafe_allow_html=True)
-        SessionManager.reset_scroll_flag()
+
     
     if st.session_state.selected_book is None:
         st.error("本が選択されていません")
         if st.button("ホームに戻る"):
-            go_to_home()
+            SessionManager.go_to_home()
             st.rerun()
         return
     
