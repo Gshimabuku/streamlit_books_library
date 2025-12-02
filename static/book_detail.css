@@ -72,6 +72,24 @@
 /* ==================================== */
 /* レスポンシブデザイン（詳細ページ） */
 /* ==================================== */
+/* ==================================== */
+/* 空要素非表示 */
+/* ==================================== */
+.stElementContainer:empty,
+.element-container:empty,
+div[data-testid="stVerticalBlock"]:empty,
+.st-emotion-cache-1vo6xi6:empty {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 空の要素や不要なマージンを削除 */
+.main .block-container {
+    padding-top: 1rem !important;
+}
+
 @media (max-width: 768px) {
     .book-detail-container {
         padding: 10px;
