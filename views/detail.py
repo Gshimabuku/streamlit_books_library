@@ -187,6 +187,11 @@ def show_book_detail(
         # 抜け巻
         if missing_volumes:
             st.write(f"**抜け巻:** {missing_volumes}")
+
+        st.markdown("---")
+        
+        # 特殊巻
+        st.subheader("📚 特殊巻")
         
         # 特殊巻一覧表示
         try:
@@ -196,7 +201,6 @@ def show_book_detail(
                 # 特殊巻を表示（type昇順、sort_order昇順）
                 sorted_volumes = sorted(special_volumes_list, key=lambda x: (x.type or "", x.sort_order or 0))
                 
-                st.write("**特殊巻:**")
                 # 特殊巻数に応じてレイアウトを調整
                 if len(sorted_volumes) == 1:
                     st.write(f"・{sorted_volumes[0].title}")
