@@ -11,9 +11,9 @@ from config.constants import DEFAULT_IMAGE_URL
 
 def show_book_detail(
     special_volume_service,
-    go_to_home: callable,
-    go_to_edit_book: callable,
-    confirm_delete_dialog: callable
+    go_to_home,
+    go_to_edit_book,
+    confirm_delete_dialog
 ):
     """詳細画面：選択された本の詳細情報表示"""
     from utils.session import SessionManager
