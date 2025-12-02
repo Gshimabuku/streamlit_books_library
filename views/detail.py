@@ -121,8 +121,8 @@ def show_book_detail(
         # 所持媒体情報
         owned_media = props.get('owned_media', {}).get('select')
         if owned_media:
-            owned_media_name = owned_media.get('name', '単行本')
-            if owned_media_name != '単行本':
+            owned_media_name = owned_media.get('name', '')
+            if owned_media_name :
                 st.write(f"💻 **所持媒体:** {owned_media_name}")
         
         # 最新巻情報
