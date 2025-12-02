@@ -126,7 +126,7 @@ def show_book_detail(
                 st.write(f"💻 **所持媒体:** {owned_media_name}")
         
         # 最新巻情報
-        release_info = f"**最新巻:** {book['latest_released_volume']}巻"
+        release_info = f"🆕 **最新巻:** {book['latest_released_volume']}巻"
         if latest_release_date:
             try:
                 date_obj = datetime.strptime(latest_release_date, "%Y-%m-%d")
@@ -141,9 +141,9 @@ def show_book_detail(
             try:
                 date_obj = datetime.strptime(next_release_date, "%Y-%m-%d")
                 formatted_next_date = date_obj.strftime("%Y年%m月%d日")
-                st.write(f"**次巻発売日:** {formatted_next_date}")
+                st.write(f"⏭️ **次巻発売日:** {formatted_next_date}")
             except:
-                st.write(f"**次巻発売日:** {next_release_date}")
+                st.write(f"⏭️ **次巻発売日:** {next_release_date}")
         
         st.markdown("---")
         
