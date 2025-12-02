@@ -112,10 +112,10 @@ def main():
     
     elif current_page == "book_detail":
         show_book_detail(
-            special_volume_service=special_volume_service,
-            go_to_home=go_to_home,
-            go_to_edit_book=go_to_edit_book,
-            confirm_delete_dialog=confirm_delete_dialog
+            special_volume_service,
+            go_to_home,
+            go_to_edit_book,
+            confirm_delete_dialog
         )
     
     elif current_page == "add_book":
