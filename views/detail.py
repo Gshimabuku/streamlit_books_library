@@ -192,35 +192,34 @@ def show_book_detail(
         # if special_volumes:
         #     st.write(f"**特殊巻:** {special_volumes}")
     
-    # 特殊巻一覧表示（新システム）
-    st.markdown("### 📚 特殊巻")
+    # 特殊巻一覧表示
+    st.markdown("---")
+    st.subheader("📚 特殊巻")
+    
     try:
-        book_id = book.get('id')
-        st.write(f"DEBUG: 検索中のbook_id = {book_id}")
-        
-        special_volumes = special_volume_service.get_special_volumes_by_book_id(book_id)
-        st.write(f"DEBUG: 取得した特殊巻数 = {len(special_volumes) if special_volumes else 0}")
+        special_volumes = special_volume_service.get_special_volumes_by_book_id(book.get('id'))
         
         if special_volumes:
-            st.markdown("この作品に関連する特殊巻:")
-            for sv in sorted(special_volumes, key=lambda x: x.sort_order or 0):
-                st.markdown(f"• {sv.title}")
-                st.write(f"DEBUG: 特殊巻 - ID: {sv.id}, Title: {sv.title}, Book ID: {sv.book_id}")
-        else:
-            st.markdown("*関連する特殊巻はありません*")
+            # 特殊巻を2列レイアウトで表示
+            sorted_volumes = sorted(special_volumes, key=lambda x: x.sort_order or 0)
             
-        # 全特殊巻も表示（デバッグ用）
-        all_special_volumes = special_volume_service.get_all_special_volumes()
-        st.write(f"DEBUG: 全特殊巻数 = {len(all_special_volumes) if all_special_volumes else 0}")
-        if all_special_volumes:
-            st.write("DEBUG: 全特殊巻一覧:")
-            for sv in all_special_volumes:
-                st.write(f"  - ID: {sv.id}, Title: {sv.title}, Book ID: {sv.book_id}")
-                
+            # 特殊巻数に応じてレイアウトを調整
+            if len(sorted_volumes) == 1:
+                st.markdown(f"**{sorted_volumes[0].title}**")
+            else:
+                # 2列表示
+                for i in range(0, len(sorted_volumes), 2):
+                    cols = st.columns(2)
+                    with cols[0]:
+                        st.markdown(f"**{sorted_volumes[i].title}**")
+                    if i + 1 < len(sorted_volumes):
+                        with cols[1]:
+                            st.markdown(f"**{sorted_volumes[i + 1].title}**")
+        else:
+            st.info("関連する特殊巻はありません")
+            
     except Exception as sv_error:
-        st.error(f"⚠️ 特殊巻データの読み込みでエラーが発生しました: {sv_error}")
-        import traceback
-        st.code(traceback.format_exc())
+        st.warning(f"⚠️ 特殊巻データの読み込みでエラーが発生しました: {sv_error}")
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
