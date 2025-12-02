@@ -72,9 +72,6 @@ manga_service = MangaService(NOTION_API_KEY, BOOKS_DATABASE_ID)
 image_service = ImageService(CLOUDINARY_AVAILABLE, CLOUDINARY_ENABLED)
 special_volume_service = SpecialVolumeService(NOTION_API_KEY, SPECIAL_VOLUMES_DATABASE_ID)
 
-# セッション状態に特殊巻サービスを保存（詳細ページで使用）
-st.session_state.special_volume_service = special_volume_service
-
 # =========================
 # ページ遷移関数（SessionManagerから取得）
 # =========================
@@ -115,6 +112,7 @@ def main():
     
     elif current_page == "book_detail":
         show_book_detail(
+            special_volume_service=special_volume_service,
             go_to_home=go_to_home,
             go_to_edit_book=go_to_edit_book,
             confirm_delete_dialog=confirm_delete_dialog
