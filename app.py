@@ -8,6 +8,7 @@ from utils.config import Config
 from utils.session import SessionManager
 from services.manga_service import MangaService
 from services.image_service import ImageService
+from services.special_volume_service import SpecialVolumeService
 from components.delete_dialog import DeleteDialog
 
 # ビューモジュールをインポート
@@ -39,7 +40,8 @@ st.set_page_config(
 # =========================
 notion_config = Config.load_notion_config()
 NOTION_API_KEY = notion_config["api_key"]
-BOOKS_DATABASE_ID = notion_config["database_id"]
+BOOKS_DATABASE_ID = notion_config["books_database_id"]
+SPECIAL_VOLUMES_DATABASE_ID = notion_config["special_volumes_database_id"]
 
 # =========================
 # Cloudinary 設定
@@ -68,6 +70,10 @@ SessionManager.init()
 # =========================
 manga_service = MangaService(NOTION_API_KEY, BOOKS_DATABASE_ID)
 image_service = ImageService(CLOUDINARY_AVAILABLE, CLOUDINARY_ENABLED)
+special_volume_service = SpecialVolumeService(NOTION_API_KEY, SPECIAL_VOLUMES_DATABASE_ID)
+
+# セッション状態に特殊巻サービスを保存（詳細ページで使用）
+st.session_state.special_volume_service = special_volume_service
 
 # =========================
 # ページ遷移関数（SessionManagerから取得）

@@ -2,7 +2,8 @@
 Services layer for business logic operations
 """
 
-from services.manga_service import MangaService
-from services.image_service import ImageService
+from .manga_service import MangaService
+from .image_service import ImageService
+from .special_volume_service import SpecialVolumeService
 
-__all__ = ['MangaService', 'ImageService']
+__all__ = ['MangaService', 'ImageService', 'SpecialVolumeService']

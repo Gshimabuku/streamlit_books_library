@@ -218,9 +218,26 @@ def show_book_detail(
         if missing_volumes:
             st.write(f"**抜け巻:** {missing_volumes}")
         
-        # 特殊巻
-        if special_volumes:
-            st.write(f"**特殊巻:** {special_volumes}")
+        # 特殊巻（廃止 - 新しい特殊巻テーブルで管理）
+        # if special_volumes:
+        #     st.write(f"**特殊巻:** {special_volumes}")
+    
+    # 特殊巻一覧表示（新システム）
+    st.markdown("### 📚 特殊巻")
+    try:
+        # 詳細ページの関数にspecial_volume_serviceパラメータが渡されるまでの暫定対応
+        if 'special_volume_service' in st.session_state:
+            special_volumes = st.session_state.special_volume_service.get_special_volumes_by_book_id(book.get('id'))
+            if special_volumes:
+                st.markdown("この作品に関連する特殊巻:")
+                for sv in sorted(special_volumes, key=lambda x: x.sort_order or 0):
+                    st.markdown(f"• {sv.title}")
+            else:
+                st.markdown("*関連する特殊巻はありません*")
+        else:
+            st.info("特殊巻機能を利用するには、アプリケーションの更新が必要です。")
+    except Exception as sv_error:
+        st.warning(f"⚠️ 特殊巻データの読み込みでエラーが発生しました: {sv_error}")
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了

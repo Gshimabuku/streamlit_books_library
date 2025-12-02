@@ -10,7 +10,7 @@ class Config:
         """Notion設定を読み込み
         
         Returns:
-            dict: api_key と database_id を含む辞書
+            dict: api_key と 2つのdatabase_id を含む辞書
             
         Raises:
             SystemExit: 設定が見つからない場合
@@ -18,7 +18,8 @@ class Config:
         try:
             return {
                 "api_key": st.secrets["notion"]["api_key"],
-                "database_id": st.secrets["notion"]["database_id"]
+                "books_database_id": st.secrets["notion"]["books_database_id"],
+                "special_volumes_database_id": st.secrets["notion"]["special_volumes_database_id"]
             }
         except Exception as e:
             st.error(f"🔧 **Notion設定エラー**: {str(e)}")
@@ -30,7 +31,8 @@ class Config:
             ```toml
             [notion]
             api_key = "secret_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            books_database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            special_volumes_database_id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             ```
             """)
             st.stop()
