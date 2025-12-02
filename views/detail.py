@@ -10,10 +10,7 @@ from config.constants import DEFAULT_IMAGE_URL
 
 
 def show_book_detail(
-    special_volume_service,
-    go_to_home,
-    go_to_edit_book,
-    confirm_delete_dialog
+    special_volume_service
 ):
     """詳細画面：選択された本の詳細情報表示"""
     from utils.session import SessionManager
@@ -65,7 +62,7 @@ def show_book_detail(
     
     with home_col:
         if st.button("← ホームに戻る"):
-            go_to_home()
+            SessionManager.go_to_home()
             st.rerun()
     
     with action_col:
@@ -73,11 +70,12 @@ def show_book_detail(
         edit_col, delete_col = st.columns(2)
         with edit_col:
             if st.button("✏️ 編集"):
-                go_to_edit_book()
+                SessionManager.go_to_edit_book()
                 st.rerun()
         with delete_col:
             if st.button("🗑️ 削除", type="secondary"):
-                confirm_delete_dialog()
+                # 削除ダイアログは後で実装
+                st.info("削除機能は後で実装予定")
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     

@@ -111,12 +111,7 @@ def main():
         )
     
     elif current_page == "book_detail":
-        show_book_detail(
-            special_volume_service,
-            go_to_home,
-            go_to_edit_book,
-            confirm_delete_dialog
-        )
+        show_book_detail(special_volume_service)
     
     elif current_page == "add_book":
         show_add_book(
