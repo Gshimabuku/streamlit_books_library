@@ -200,8 +200,8 @@ def show_book_detail(
         special_volumes = special_volume_service.get_special_volumes_by_book_id(book.get('id'))
         
         if special_volumes:
-            # 特殊巻を2列レイアウトで表示
-            sorted_volumes = sorted(special_volumes, key=lambda x: x.sort_order or 0)
+            # 特殊巻を2列レイアウトで表示（type昇順、sort_order昇順）
+            sorted_volumes = sorted(special_volumes, key=lambda x: (x.type or "", x.sort_order or 0))
             
             # 特殊巻数に応じてレイアウトを調整
             if len(sorted_volumes) == 1:
