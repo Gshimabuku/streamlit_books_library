@@ -201,6 +201,13 @@
     box-shadow: none !important;
 }
 
+/* セクション区切り線のスタイル */
+hr {
+    border: none !important;
+    height: 2px !important;
+    margin: 10px 0 !important;
+}
+
 /* 詳細ボタンのスタイル調整（タブ内） */
 .stButton>button {
     width: 100%;
