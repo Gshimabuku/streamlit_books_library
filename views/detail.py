@@ -13,8 +13,6 @@ def show_book_detail(
     """詳細画面：選択された本の詳細情報表示"""
     from utils.session import SessionManager
     
-
-    
     if st.session_state.selected_book is None:
         st.error("本が選択されていません")
         if st.button("ホームに戻る"):
@@ -170,16 +168,16 @@ def show_book_detail(
         if missing_volumes:
             st.write(f"**抜け巻:** {missing_volumes}")
 
-        st.markdown("---")
-        
-        # 特殊巻
-        st.subheader("📔 特殊巻")
-        
         # 特殊巻一覧表示
         try:
             special_volumes_list = special_volume_service.get_special_volumes_by_book_id(book.get('id'))
             
             if special_volumes_list:
+                st.markdown("---")
+
+                # 特殊巻
+                st.subheader("📔 特殊巻")
+                
                 # 特殊巻を表示（type昇順、sort_order昇順）
                 sorted_volumes = sorted(special_volumes_list, key=lambda x: (x.type or "", x.sort_order or 0))
                 
@@ -198,10 +196,6 @@ def show_book_detail(
                 
         except Exception as sv_error:
             st.warning(f"⚠️ 特殊巻データの読み込みでエラーが発生しました: {sv_error}")
-        
-        # 特殊巻（廃止 - 新しい特殊巻テーブルで管理）
-        # if special_volumes:
-        #     st.write(f"**特殊巻:** {special_volumes}")
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
