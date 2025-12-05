@@ -29,7 +29,7 @@ def load_custom_styles():
     アプリケーション全体で使用するカスタムスタイルを読み込む
     """
     load_css("styles.css")
-    load_css("default.css")
+    # load_css("default.css")
 
 def load_page_styles(page_name):
     """
