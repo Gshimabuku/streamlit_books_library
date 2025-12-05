@@ -25,6 +25,17 @@ def show_book_detail(
         margin: 0 !important;
         padding: 0 !important;
     }
+    /* 空要素のgapを削除 */
+    .main > div:first-child:empty,
+    .main > div:first-child > div:empty {
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    /* Streamlitコンテナの上部マージンを調整 */
+    .main .block-container {
+        padding-top: 0.5rem !important;
+    }
     </style>
     """, unsafe_allow_html=True)
     
