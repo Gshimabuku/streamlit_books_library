@@ -13,6 +13,21 @@ def show_book_detail(
     """詳細画面：選択された本の詳細情報表示"""
     from utils.session import SessionManager
     
+    # 上部の空要素を非表示にするCSS
+    st.markdown("""
+    <style>
+    .main > div:first-child .stElementContainer:empty,
+    .main > div:first-child .element-container:empty,
+    .st-emotion-cache-3pwa5w:empty,
+    .ek2vi381:empty {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     if st.session_state.selected_book is None:
         st.error("本が選択されていません")
         if st.button("ホームに戻る"):
