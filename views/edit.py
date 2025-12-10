@@ -229,6 +229,10 @@ def show_edit_book(
                             success = manga_service.update_manga(updated_manga)
                             
                             if success:
+                                # 特殊巻キャッシュをクリア（更新時にデータが変更される可能性があるため）
+                                from utils.session import SessionManager
+                                SessionManager.clear_special_volumes_cache()
+                                
                                 # リレーション変更時の相互更新処理（親作品の変更のみ）
                                 if parent_id != current_parent_id:
                                     with st.spinner("シリーズ関係を更新中..."):
@@ -256,6 +260,18 @@ def show_edit_book(
                                 st.error("❌ 更新に失敗しました")
                         except Exception as update_error:
                             st.error(f"❌ 更新処理でエラーが発生しました: {str(update_error)}")
+                            st.error(f"エラータイプ: {type(update_error)}")
+                            
+                            # 更新しようとしたデータをデバッグ表示
+                            with st.expander("🔍 デバッグ情報"):
+                                st.write("更新しようとした漫画データ:")
+                                st.json({
+                                    "id": updated_manga.id,
+                                    "title": updated_manga.title,
+                                    "latest_owned_volume": updated_manga.latest_owned_volume,
+                                    "latest_released_volume": updated_manga.latest_released_volume
+                                })
+                            
                             st.exception(update_error)  # デバッグ用の詳細エラー表示
                     
                 except Exception as e:

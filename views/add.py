@@ -148,6 +148,10 @@ def show_add_book(
                                         new_parent_id=parent_id
                                     )
                         
+                        # 特殊巻キャッシュをクリア（新規作品が追加されたため）
+                        from utils.session import SessionManager
+                        SessionManager.clear_special_volumes_cache()
+                        
                         st.success("✅ 漫画が正常に登録されました！")
                         st.balloons()
                         

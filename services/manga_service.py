@@ -109,11 +109,17 @@ class MangaService:
         properties = manga.to_notion_properties()
         
         try:
+            print(f"Attempting to update manga {manga.id}")
+            print(f"Properties being sent: {properties}")
             update_notion_page(manga.id, properties, self.api_key)
+            print(f"Successfully updated manga {manga.id}")
             return True
         except Exception as e:
             print(f"Error updating manga {manga.id}: {str(e)}")
             print(f"Properties being sent: {properties}")
+            print(f"Exception type: {type(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
             return False
     
     def delete_manga(self, page_id: str) -> bool:
