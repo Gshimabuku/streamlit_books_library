@@ -6,13 +6,19 @@ class SessionManager:
     """セッション状態を管理するクラス"""
     
     @staticmethod
-    def init():
+    def initialize():
         """セッション状態を初期化"""
         if "page" not in st.session_state:
             st.session_state.page = "books_home"
         
         if "selected_book" not in st.session_state:
             st.session_state.selected_book = None
+        
+        if "special_volumes_cache" not in st.session_state:
+            st.session_state.special_volumes_cache = None
+        
+        if "special_volumes_count_cache" not in st.session_state:
+            st.session_state.special_volumes_count_cache = {}
         
         # magazine_type_expanded は使用しないため削除
         # タブメニュー方式では展開状態の管理が不要
@@ -73,8 +79,35 @@ class SessionManager:
     
     @staticmethod
     def clear_selected_book():
-        """選択をクリア"""
+        """選択された本をクリア"""
         st.session_state.selected_book = None
+    
+    @staticmethod
+    def get_special_volumes_cache():
+        """特殊巻キャッシュを取得"""
+        return st.session_state.get("special_volumes_cache")
+    
+    @staticmethod
+    def set_special_volumes_cache(special_volumes_data):
+        """特殊巻キャッシュを設定"""
+        st.session_state.special_volumes_cache = special_volumes_data
+        
+        # book_id別の特殊巻数もキャッシュ
+        count_cache = {}
+        for book_id, volumes in special_volumes_data.items():
+            count_cache[book_id] = len(volumes)
+        st.session_state.special_volumes_count_cache = count_cache
+    
+    @staticmethod
+    def get_special_volume_count_for_book(book_id: str) -> int:
+        """指定された本IDの特殊巻数をキャッシュから取得"""
+        return st.session_state.special_volumes_count_cache.get(book_id, 0)
+    
+    @staticmethod
+    def clear_special_volumes_cache():
+        """特殊巻キャッシュをクリア"""
+        st.session_state.special_volumes_cache = None
+        st.session_state.special_volumes_count_cache = {}
     
     # タブメニュー方式では以下のメソッドは不要
     # @staticmethod
@@ -147,6 +180,7 @@ class SessionManager:
         SessionManager.set_page("books_home")
         SessionManager.clear_selected_book()
         # 検索条件は維持する
+        # 特殊巻キャッシュは維持（パフォーマンスのため）
     
     @staticmethod
     def go_to_detail(book_data: Any):

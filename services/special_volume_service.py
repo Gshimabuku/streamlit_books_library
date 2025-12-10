@@ -21,6 +21,7 @@ class SpecialVolumeService:
         """
         self.api_key = api_key
         self.database_id = database_id
+        self._special_volumes_by_book_cache = None
     
     def get_all_special_volumes(self) -> List[SpecialVolume]:
         """
@@ -95,6 +96,61 @@ class SpecialVolumeService:
         except Exception as e:
             print(f"Error fetching special volumes for book {book_id}: {str(e)}")
             return []
+    
+    def get_all_special_volumes_grouped_by_book(self) -> Dict[str, List[SpecialVolume]]:
+        """
+        全ての特殊巻を取得してbook_id別にグループ化（キャッシュ付き）
+        
+        Returns:
+            Dict[str, List[SpecialVolume]]: {book_id: [SpecialVolume, ...]} 形式
+        """
+        from utils.session import SessionManager
+        
+        # キャッシュがある場合はそれを返す
+        cached_data = SessionManager.get_special_volumes_cache()
+        if cached_data is not None:
+            return cached_data
+        
+        try:
+            # 全特殊巻を一度に取得
+            all_special_volumes = self.get_all_special_volumes()
+            
+            # book_id別にグループ化
+            grouped = defaultdict(list)
+            for volume in all_special_volumes:
+                if volume.book_id:
+                    grouped[volume.book_id].append(volume)
+            
+            # 辞書型に変換してキャッシュに保存
+            result = dict(grouped)
+            SessionManager.set_special_volumes_cache(result)
+            
+            return result
+            
+        except Exception as e:
+            print(f"Error fetching all special volumes: {str(e)}")
+            return {}
+    
+    def get_special_volume_count_for_book(self, book_id: str) -> int:
+        """
+        指定されたbook_idの特殊巻数を効率的に取得
+        
+        Args:
+            book_id: 本のID
+        
+        Returns:
+            int: 特殊巻の数
+        """
+        from utils.session import SessionManager
+        
+        # キャッシュから直接取得を試行
+        cached_count = SessionManager.get_special_volume_count_for_book(book_id)
+        if cached_count is not None:
+            return cached_count
+        
+        # キャッシュがない場合、全データを取得してキャッシュを構築
+        grouped_data = self.get_all_special_volumes_grouped_by_book()
+        return len(grouped_data.get(book_id, []))
     
     def get_special_volume_by_id(self, special_volume_id: str) -> Optional[SpecialVolume]:
         """

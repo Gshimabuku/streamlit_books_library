@@ -162,12 +162,16 @@ def show_book_detail(
         else:
             actual_owned = owned_count
 
-        # 特殊巻数を取得
+        # 特殊巻数を取得（キャッシュ利用）
         special_volumes_list = []
         special_count = 0
         try:
-            special_volumes_list = special_volume_service.get_special_volumes_by_book_id(book.get('id'))
-            special_count = len(special_volumes_list)
+            # キャッシュから特殊巻数を取得
+            special_count = special_volume_service.get_special_volume_count_for_book(book.get('id'))
+            
+            # 詳細表示用に特殊巻リストも取得
+            grouped_data = special_volume_service.get_all_special_volumes_grouped_by_book()
+            special_volumes_list = grouped_data.get(book.get('id'), [])
         except Exception as e:
             print(f"Error getting special volumes: {e}")
 

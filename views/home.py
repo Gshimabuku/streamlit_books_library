@@ -14,7 +14,7 @@ from models.manga import Manga
 
 
 def calculate_total_volumes_with_specials(mangas: List[Manga], special_volume_service) -> int:
-    """漫画リストの特殊巻を含む合計冊数を計算
+    """漫画リストの特殊巻を含む合計冊数を計算（バッチ処理）
     
     Args:
         mangas: 漫画リスト
@@ -23,19 +23,22 @@ def calculate_total_volumes_with_specials(mangas: List[Manga], special_volume_se
     Returns:
         int: 合計冊数（通常巻 + 特殊巻）
     """
+    if not special_volume_service:
+        return sum(manga.calculate_actual_owned_count() for manga in mangas)
+    
+    # 特殊巻データを一括取得してキャッシュを構築
+    try:
+        special_volume_service.get_all_special_volumes_grouped_by_book()
+    except Exception as e:
+        print(f"Error caching special volumes: {e}")
+    
     total = 0
     for manga in mangas:
         # 通常巻の冊数
         normal_count = manga.calculate_actual_owned_count()
         
-        # 特殊巻の冊数
-        special_count = 0
-        if special_volume_service:
-            try:
-                special_volumes = special_volume_service.get_special_volumes_by_book_id(manga.id)
-                special_count = len(special_volumes)
-            except:
-                special_count = 0
+        # 特殊巻の冊数（キャッシュから高速取得）
+        special_count = special_volume_service.get_special_volume_count_for_book(manga.id)
         
         total += manga.calculate_total_owned_count_with_specials(special_count)
     
