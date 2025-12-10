@@ -13,18 +13,27 @@ from typing import List
 from models.manga import Manga
 
 
-def calculate_total_volumes_with_specials(mangas: List[Manga], special_volume_service) -> int:
-    """漫画リストの特殊巻を含む合計冊数を計算（バッチ処理）
+def calculate_volumes_breakdown(mangas: List[Manga], special_volume_service) -> dict:
+    """漫画リストの冊数を詳細に分析（バッチ処理）
     
     Args:
         mangas: 漫画リスト
         special_volume_service: 特殊巻サービス
     
     Returns:
-        int: 合計冊数（通常巻 + 特殊巻）
+        dict: {
+            'normal_volumes': 通常巻の合計,
+            'special_volumes': 特殊巻の合計,
+            'total_volumes': 全体の合計
+        }
     """
     if not special_volume_service:
-        return sum(manga.calculate_actual_owned_count() for manga in mangas)
+        normal_total = sum(manga.calculate_actual_owned_count() for manga in mangas)
+        return {
+            'normal_volumes': normal_total,
+            'special_volumes': 0,
+            'total_volumes': normal_total
+        }
     
     # 特殊巻データを一括取得してキャッシュを構築
     try:
@@ -32,17 +41,28 @@ def calculate_total_volumes_with_specials(mangas: List[Manga], special_volume_se
     except Exception as e:
         print(f"Error caching special volumes: {e}")
     
-    total = 0
+    normal_total = 0
+    special_total = 0
+    
     for manga in mangas:
         # 通常巻の冊数
         normal_count = manga.calculate_actual_owned_count()
+        normal_total += normal_count
         
         # 特殊巻の冊数（キャッシュから高速取得）
         special_count = special_volume_service.get_special_volume_count_for_book(manga.id)
-        
-        total += manga.calculate_total_owned_count_with_specials(special_count)
+        special_total += special_count
     
-    return total
+    return {
+        'normal_volumes': normal_total,
+        'special_volumes': special_total,
+        'total_volumes': normal_total + special_total
+    }
+
+def calculate_total_volumes_with_specials(mangas: List[Manga], special_volume_service) -> int:
+    """互換性のためのラッパー関数"""
+    breakdown = calculate_volumes_breakdown(mangas, special_volume_service)
+    return breakdown['total_volumes']
 
 
 def filter_mangas(mangas: List[Manga], filters: dict) -> List[Manga]:
@@ -282,17 +302,26 @@ def show_books_home(
             st.info("🔍 検索条件に一致する漫画が見つかりませんでした。")
             return
         
-        # 検索結果件数と合計冊数を表示
+        # 検索結果件数と合計冊数を表示（特殊巻の内訳を含む）
         if any(search_filters.values()):
-            # フィルター結果の合計冊数を計算（特殊巻を含む）
-            filtered_total_volumes = calculate_total_volumes_with_specials(filtered_mangas, special_volume_service)
-            # 全体の合計冊数を計算（特殊巻を含む）
-            all_total_volumes = calculate_total_volumes_with_specials(mangas, special_volume_service)
-            st.info(f"🎯 {len(filtered_mangas)}件・{filtered_total_volumes}冊の漫画が見つかりました（全{len(mangas)}件・{all_total_volumes}冊中）")
+            # フィルター結果の分析
+            filtered_breakdown = calculate_volumes_breakdown(filtered_mangas, special_volume_service)
+            # 全体の分析
+            all_breakdown = calculate_volumes_breakdown(mangas, special_volume_service)
+            
+            # 表示形式: 10作品・50冊の漫画が見つかりました（50/94作品・50冊[12冊]/1670冊[30冊]）
+            filtered_total = filtered_breakdown['total_volumes']
+            filtered_special = filtered_breakdown['special_volumes']
+            all_total = all_breakdown['total_volumes']
+            all_special = all_breakdown['special_volumes']
+            
+            st.info(f"🎯 {len(filtered_mangas)}作品・{filtered_total}冊の漫画が見つかりました（{len(filtered_mangas)}/{len(mangas)}作品・{filtered_total}冊[{filtered_special}冊]/{all_total}冊[{all_special}冊]）")
         else:
-            # 全件表示時も合計冊数を表示（特殊巻を含む）
-            total_volumes = calculate_total_volumes_with_specials(mangas, special_volume_service)
-            st.info(f"📚 全{len(mangas)}件・{total_volumes}冊の漫画を表示中")
+            # 全件表示時も特殊巻の内訳を表示
+            breakdown = calculate_volumes_breakdown(mangas, special_volume_service)
+            total_volumes = breakdown['total_volumes']
+            special_volumes = breakdown['special_volumes']
+            st.info(f"📚 全{len(mangas)}作品・{total_volumes}冊の漫画を表示中（特殊巻{special_volumes}冊を含む）")
         
         # 全ての漫画をtitle_kanaの五十音順でソート
         sorted_mangas = sorted(
