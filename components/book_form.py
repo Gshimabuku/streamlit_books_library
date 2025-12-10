@@ -434,14 +434,20 @@ class BookFormFields:
                 help="タイトルまたは読み仮名での部分一致検索"
             )
             
-            # 雑誌タイプ検索
-            magazine_types = ["すべて", "ジャンプ", "マガジン", "サンデー", "その他"]
-            saved_magazine_type = saved_filters.get("magazine_type", "すべて")
-            magazine_type_index = magazine_types.index(saved_magazine_type) if saved_magazine_type in magazine_types else 0
-            magazine_type_filter = st.selectbox(
+            # 雑誌タイプ検索（マルチセレクト）
+            magazine_types = ["ジャンプ", "マガジン", "サンデー", "その他"]
+            saved_magazine_types = saved_filters.get("magazine_types", [])
+            # 旧形式の互換性を維持
+            if isinstance(saved_magazine_types, str) and saved_magazine_types != "すべて":
+                saved_magazine_types = [saved_magazine_types]
+            elif saved_magazine_types == "すべて" or not saved_magazine_types:
+                saved_magazine_types = []
+            
+            magazine_type_filter = st.multiselect(
                 "📰 連載誌タイプ",
                 magazine_types,
-                index=magazine_type_index
+                default=saved_magazine_types,
+                help="複数選択可能。未選択の場合は全て表示"
             )
             
             # 雑誌名検索
@@ -453,6 +459,16 @@ class BookFormFields:
             )
         
         with col2:
+            # 連載状況フィルター
+            completion_status_options = ["すべて", "連載中", "完結"]
+            saved_completion_status = saved_filters.get("completion_status", "すべて")
+            completion_status_index = completion_status_options.index(saved_completion_status) if saved_completion_status in completion_status_options else 0
+            completion_status_filter = st.selectbox(
+                "📚 連載状況",
+                completion_status_options,
+                index=completion_status_index
+            )
+            
             # 未所持巻フィルター
             has_unpurchased_options = ["すべて", "あり", "なし"]
             saved_has_unpurchased = saved_filters.get("has_unpurchased", "すべて")
@@ -464,14 +480,20 @@ class BookFormFields:
                 help="未購入の巻があるかどうかで絞り込み"
             )
             
-            # 所持媒体フィルター
-            owned_media_options = ["すべて", "単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"]
-            saved_owned_media = saved_filters.get("owned_media", "すべて")
-            owned_media_index = owned_media_options.index(saved_owned_media) if saved_owned_media in owned_media_options else 0
-            owned_media_filter = st.selectbox(
+            # 所持媒体フィルター（マルチセレクト）
+            owned_media_options = ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"]
+            saved_owned_medias = saved_filters.get("owned_medias", [])
+            # 旧形式の互換性を維持
+            if isinstance(saved_owned_medias, str) and saved_owned_medias != "すべて":
+                saved_owned_medias = [saved_owned_medias]
+            elif saved_owned_medias == "すべて" or not saved_owned_medias:
+                saved_owned_medias = []
+                
+            owned_media_filter = st.multiselect(
                 "💻 所持媒体",
                 owned_media_options,
-                index=owned_media_index
+                default=saved_owned_medias,
+                help="複数選択可能。未選択の場合は全て表示"
             )
             
             # 所持巻数範囲
@@ -497,10 +519,11 @@ class BookFormFields:
         # フィルター条件を辞書で返す
         filters = {
             'title': title_search.strip() if title_search else "",
-            'magazine_type': magazine_type_filter if magazine_type_filter != "すべて" else "すべて",
+            'magazine_types': magazine_type_filter,  # マルチセレクト
             'magazine_name': magazine_name_search.strip() if magazine_name_search else "",
+            'completion_status': completion_status_filter if completion_status_filter != "すべて" else "すべて",  # 新項目
             'has_unpurchased': has_unpurchased_filter if has_unpurchased_filter != "すべて" else "すべて",
-            'owned_media': owned_media_filter if owned_media_filter != "すべて" else "すべて",
+            'owned_medias': owned_media_filter,  # マルチセレクト
             'min_owned_volume': min_owned if min_owned > 0 else 0,
             'max_owned_volume': max_owned if max_owned < 999 else 999
         }

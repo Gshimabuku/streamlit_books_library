@@ -87,19 +87,32 @@ def filter_mangas(mangas: List[Manga], filters: dict) -> List[Manga]:
                (manga.title_kana and title_query in manga.title_kana.lower())
         ]
     
-    # 雑誌タイプ検索
-    if filters.get('magazine_type') and filters['magazine_type'] != "すべて":
+    # 雑誌タイプ検索（マルチセレクト対応）
+    magazine_types_filter = filters.get('magazine_types', [])
+    # 旧形式の互換性を維持
+    if not magazine_types_filter and filters.get('magazine_type') and filters['magazine_type'] != 'すべて':
+        magazine_types_filter = [filters['magazine_type']]
+    
+    if magazine_types_filter:
         filtered_mangas = [
             manga for manga in filtered_mangas 
-            if manga.magazine_type == filters['magazine_type']
+            if manga.magazine_type in magazine_types_filter
         ]
     
     # 雑誌名検索（部分一致）
     if filters.get('magazine_name') and filters['magazine_name'].strip():
-        magazine_query = filters['magazine_name'].lower()
+        magazine_name_query = filters['magazine_name'].lower()
         filtered_mangas = [
             manga for manga in filtered_mangas 
-            if magazine_query in (manga.magazine_name or "").lower()
+            if magazine_name_query in (manga.magazine_name or '').lower()
+        ]
+    
+    # 連載状況検索
+    if filters.get('completion_status') and filters['completion_status'] != 'すべて':
+        is_completed_filter = filters['completion_status'] == '完結'
+        filtered_mangas = [
+            manga for manga in filtered_mangas 
+            if manga.is_completed == is_completed_filter
         ]
     
     # 未所持巻フィルター
@@ -109,11 +122,16 @@ def filter_mangas(mangas: List[Manga], filters: dict) -> List[Manga]:
         elif filters['has_unpurchased'] == "なし":
             filtered_mangas = [manga for manga in filtered_mangas if not manga.has_unpurchased]
     
-    # 所持媒体フィルター
-    if filters.get('owned_media') and filters['owned_media'] != "すべて":
+    # 所持媒体フィルター（マルチセレクト対応）
+    owned_medias_filter = filters.get('owned_medias', [])
+    # 旧形式の互換性を維持
+    if not owned_medias_filter and filters.get('owned_media') and filters['owned_media'] != 'すべて':
+        owned_medias_filter = [filters['owned_media']]
+    
+    if owned_medias_filter:
         filtered_mangas = [
             manga for manga in filtered_mangas 
-            if manga.owned_media == filters['owned_media']
+            if manga.owned_media in owned_medias_filter
         ]
     
     # 所持巻数範囲フィルター
@@ -125,37 +143,7 @@ def filter_mangas(mangas: List[Manga], filters: dict) -> List[Manga]:
             if min_owned <= manga.actual_owned_volume <= max_owned
         ]
     
-    # 未所持巻フィルター
-    if filters.get('has_unpurchased') == "あり":
-        filtered_mangas = [
-            manga for manga in filtered_mangas 
-            if manga.has_unpurchased
-        ]
-    elif filters.get('has_unpurchased') == "なし":
-        filtered_mangas = [
-            manga for manga in filtered_mangas 
-            if not manga.has_unpurchased
-        ]
-    
-    # 所持媒体検索
-    if filters.get('owned_media') and filters['owned_media'] != "すべて":
-        filtered_mangas = [
-            manga for manga in filtered_mangas 
-            if manga.owned_media == filters['owned_media']
-        ]
-    
-    # 所持巻数範囲検索
-    if filters.get('min_owned_volume') is not None:
-        filtered_mangas = [
-            manga for manga in filtered_mangas 
-            if manga.actual_owned_volume >= filters['min_owned_volume']
-        ]
-    
-    if filters.get('max_owned_volume') is not None:
-        filtered_mangas = [
-            manga for manga in filtered_mangas 
-            if manga.actual_owned_volume <= filters['max_owned_volume']
-        ]
+    # 重複削除完了
     
     return filtered_mangas
 
