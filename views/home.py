@@ -249,9 +249,17 @@ def show_books_home(
             st.info("🔍 検索条件に一致する漫画が見つかりませんでした。")
             return
         
-        # 検索結果件数を表示
+        # 検索結果件数と合計冊数を表示
         if any(search_filters.values()):
-            st.info(f"🎯 {len(filtered_mangas)}件の漫画が見つかりました（全{len(mangas)}件中）")
+            # フィルター結果の合計冊数を計算
+            filtered_total_volumes = sum(manga.calculate_actual_owned_count() for manga in filtered_mangas)
+            # 全体の合計冊数を計算
+            all_total_volumes = sum(manga.calculate_actual_owned_count() for manga in mangas)
+            st.info(f"🎯 {len(filtered_mangas)}件・{filtered_total_volumes}冊の漫画が見つかりました（全{len(mangas)}件・{all_total_volumes}冊中）")
+        else:
+            # 全件表示時も合計冊数を表示
+            total_volumes = sum(manga.calculate_actual_owned_count() for manga in mangas)
+            st.info(f"📚 全{len(mangas)}件・{total_volumes}冊の漫画を表示中")
         
         # 全ての漫画をtitle_kanaの五十音順でソート
         sorted_mangas = sorted(

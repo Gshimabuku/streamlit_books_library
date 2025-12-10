@@ -150,14 +150,13 @@ def show_book_detail(
         
         # 所持巻数の計算
         owned_count = book['latest_owned_volume']
-        missing_count = 0
         
-        # 抜け巻がある場合の計算
+        # 抜け巻がある場合の計算（新しいロジックに統一）
         if missing_volumes:
             try:
                 missing_list = [vol.strip() for vol in missing_volumes.split(",") if vol.strip()]
                 missing_count = len(missing_list)
-                actual_owned = owned_count - missing_count
+                actual_owned = max(0, owned_count - missing_count)
                 st.write(f"**所持巻数:** {actual_owned}巻")
             except:
                 st.write(f"**所持巻数:** {owned_count}巻")

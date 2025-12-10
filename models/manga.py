@@ -242,3 +242,22 @@ class Manga:
             properties["image_url"] = {"url": self.image_url}
         
         return properties
+    
+    def calculate_actual_owned_count(self) -> int:
+        """実際の所持冊数を計算（所持最新巻から抜け巻を引いた数）
+        
+        Returns:
+            int: 実際に所持している冊数
+        """
+        owned_count = self.latest_owned_volume
+        
+        # 抜け巻がある場合の計算
+        if self.missing_volumes:
+            try:
+                missing_list = [vol.strip() for vol in self.missing_volumes.split(",") if vol.strip()]
+                missing_count = len(missing_list)
+                return max(0, owned_count - missing_count)
+            except:
+                return owned_count
+        
+        return owned_count
