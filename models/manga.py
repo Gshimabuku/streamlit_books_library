@@ -189,59 +189,81 @@ class Manga:
         Returns:
             dict: Notion API用のプロパティ辞書
         """
-        properties = {
-            "title": {"title": [{"text": {"content": self.title}}]},
-            "latest_owned_volume": {"number": self.latest_owned_volume},
-            "latest_released_volume": {"number": self.latest_released_volume},
-            "is_completed": {"checkbox": self.is_completed}
-        }
+        try:
+            # 基本プロパティ（必須）
+            properties = {
+                "title": {"title": [{"text": {"content": str(self.title) if self.title else ""}}]},
+                "latest_owned_volume": {"number": int(self.latest_owned_volume) if self.latest_owned_volume is not None else 0},
+                "latest_released_volume": {"number": int(self.latest_released_volume) if self.latest_released_volume is not None else 0},
+                "is_completed": {"checkbox": bool(self.is_completed)}
+            }
+            
+            # オプショナルプロパティ
+            if self.title_kana and str(self.title_kana).strip():
+                properties["title_kana"] = {"rich_text": [{"text": {"content": str(self.title_kana)}}]}
+            
+            # リレーション情報を設定（新しいプロパティ名を使用）
+            if self.related_books_to and isinstance(self.related_books_to, list):
+                valid_ids = [book_id for book_id in self.related_books_to if book_id and isinstance(book_id, str)]
+                if valid_ids:
+                    properties["relation_books_to"] = {"relation": [{"id": book_id} for book_id in valid_ids]}
+            
+            if self.related_books_from and isinstance(self.related_books_from, list):
+                valid_ids = [book_id for book_id in self.related_books_from if book_id and isinstance(book_id, str)]
+                if valid_ids:
+                    properties["relation_books_from"] = {"relation": [{"id": book_id} for book_id in valid_ids]}
         
-        if self.title_kana:
-            properties["title_kana"] = {"rich_text": [{"text": {"content": self.title_kana}}]}
+            # 日付フィールド
+            if self.latest_release_date:
+                try:
+                    properties["latest_release_date"] = {"date": {"start": self.latest_release_date.isoformat()}}
+                except:
+                    pass  # 日付変換に失敗した場合は無視
+            
+            if self.next_release_date:
+                try:
+                    properties["next_release_date"] = {"date": {"start": self.next_release_date.isoformat()}}
+                except:
+                    pass  # 日付変換に失敗した場合は無視
+            
+            # セレクトフィールド
+            if self.magazine_type and str(self.magazine_type).strip():
+                properties["magazine_type"] = {"select": {"name": str(self.magazine_type)}}
+            
+            # リッチテキストフィールド
+            if self.magazine_name and str(self.magazine_name).strip():
+                properties["magazine_name"] = {"rich_text": [{"text": {"content": str(self.magazine_name)}}]}
+            else:
+                properties["magazine_name"] = {"rich_text": []}
+            
+            if self.missing_volumes and str(self.missing_volumes).strip():
+                properties["missing_volumes"] = {"rich_text": [{"text": {"content": str(self.missing_volumes)}}]}
+            else:
+                properties["missing_volumes"] = {"rich_text": []}
+            
+            if self.special_volumes and str(self.special_volumes).strip():
+                properties["special_volumes"] = {"rich_text": [{"text": {"content": str(self.special_volumes)}}]}
+            else:
+                properties["special_volumes"] = {"rich_text": []}
+            
+            if self.owned_media and str(self.owned_media).strip():
+                properties["owned_media"] = {"select": {"name": str(self.owned_media)}}
+            
+            if self.notes and str(self.notes).strip():
+                properties["notes"] = {"rich_text": [{"text": {"content": str(self.notes)}}]}
+            else:
+                properties["notes"] = {"rich_text": []}
+            
+            # URLフィールド
+            if self.image_url and str(self.image_url).strip() and str(self.image_url).startswith(('http://', 'https://')):
+                properties["image_url"] = {"url": str(self.image_url)}
+            
+            return properties
         
-        # リレーション情報を設定（新しいプロパティ名を使用）
-        if self.related_books_to:
-            properties["relation_books_to"] = {"relation": [{"id": book_id} for book_id in self.related_books_to]}
-        
-        if self.related_books_from:
-            properties["relation_books_from"] = {"relation": [{"id": book_id} for book_id in self.related_books_from]}
-        
-        if self.latest_release_date:
-            properties["latest_release_date"] = {"date": {"start": self.latest_release_date.isoformat()}}
-        
-        if self.next_release_date:
-            properties["next_release_date"] = {"date": {"start": self.next_release_date.isoformat()}}
-        
-        if self.magazine_type:
-            properties["magazine_type"] = {"select": {"name": self.magazine_type}}
-        
-        if self.magazine_name:
-            properties["magazine_name"] = {"rich_text": [{"text": {"content": self.magazine_name}}]}
-        else:
-            properties["magazine_name"] = {"rich_text": []}
-        
-        if self.missing_volumes:
-            properties["missing_volumes"] = {"rich_text": [{"text": {"content": self.missing_volumes}}]}
-        else:
-            properties["missing_volumes"] = {"rich_text": []}
-        
-        if self.special_volumes:
-            properties["special_volumes"] = {"rich_text": [{"text": {"content": self.special_volumes}}]}
-        else:
-            properties["special_volumes"] = {"rich_text": []}
-        
-        if self.owned_media:
-            properties["owned_media"] = {"select": {"name": self.owned_media}}
-        
-        if self.notes:
-            properties["notes"] = {"rich_text": [{"text": {"content": self.notes}}]}
-        else:
-            properties["notes"] = {"rich_text": []}
-        
-        if self.image_url:
-            properties["image_url"] = {"url": self.image_url}
-        
-        return properties
+        except Exception as e:
+            print(f"Error in to_notion_properties: {str(e)}")
+            print(f"Manga data: title={self.title}, id={self.id}")
+            raise
     
     def calculate_actual_owned_count(self) -> int:
         """実際の所持冊数を計算（所持最新巻から抜け巻を引いた数）

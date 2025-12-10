@@ -202,6 +202,28 @@ def show_edit_book(
                     related_books_to = [parent_id] if parent_id else None
                     related_books_from = children_ids if children_ids else None
                     
+                    # 日付フィールドの検証と変換
+                    try:
+                        # latest_release_dateの型確認
+                        if hasattr(latest_release_date, 'date'):
+                            latest_release_date = latest_release_date.date()
+                        elif isinstance(latest_release_date, str):
+                            from datetime import datetime
+                            latest_release_date = datetime.strptime(latest_release_date, "%Y-%m-%d").date()
+                        
+                        # next_release_dateの型確認
+                        if use_next_release_date and next_release_date:
+                            if hasattr(next_release_date, 'date'):
+                                next_release_date = next_release_date.date()
+                            elif isinstance(next_release_date, str):
+                                next_release_date = datetime.strptime(next_release_date, "%Y-%m-%d").date()
+                        else:
+                            next_release_date = None
+                            
+                    except Exception as date_error:
+                        st.error(f"❌ 日付フィールドの変換エラー: {str(date_error)}")
+                        return
+                    
                     # Mangaオブジェクトを作成
                     updated_manga = Manga(
                         id=book["id"],
@@ -216,16 +238,33 @@ def show_edit_book(
                         related_books_to=related_books_to,
                         related_books_from=related_books_from,
                         latest_release_date=latest_release_date,
-                        next_release_date=next_release_date if use_next_release_date else None,
+                        next_release_date=next_release_date,
                         missing_volumes=missing_volumes,
                         special_volumes=special_volumes,
                         owned_media=owned_media,
                         notes=notes
                     )
                     
+                    # データ検証
+                    if not updated_manga.id:
+                        st.error("❌ 漫画IDが見つかりません。")
+                        return
+                    
+                    if not updated_manga.title or not updated_manga.title.strip():
+                        st.error("❌ タイトルが空です。")
+                        return
+                    
                     # MangaServiceを使用して更新
                     with st.spinner("Notionを更新中..."):
                         try:
+                            # プロパティ生成のテスト
+                            try:
+                                test_properties = updated_manga.to_notion_properties()
+                                print(f"Generated properties for update: {test_properties}")
+                            except Exception as prop_error:
+                                st.error(f"❌ データ変換エラー: {str(prop_error)}")
+                                return
+                            
                             success = manga_service.update_manga(updated_manga)
                             
                             if success:
