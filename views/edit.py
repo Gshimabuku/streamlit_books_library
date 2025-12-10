@@ -208,15 +208,14 @@ def show_edit_book(
                         if hasattr(latest_release_date, 'date'):
                             latest_release_date = latest_release_date.date()
                         elif isinstance(latest_release_date, str):
-                            from datetime import datetime
-                            latest_release_date = datetime.strptime(latest_release_date, "%Y-%m-%d").date()
+                            latest_release_date = datetime.datetime.strptime(latest_release_date, "%Y-%m-%d").date()
                         
                         # next_release_dateの型確認
                         if use_next_release_date and next_release_date:
                             if hasattr(next_release_date, 'date'):
                                 next_release_date = next_release_date.date()
                             elif isinstance(next_release_date, str):
-                                next_release_date = datetime.strptime(next_release_date, "%Y-%m-%d").date()
+                                next_release_date = datetime.datetime.strptime(next_release_date, "%Y-%m-%d").date()
                         else:
                             next_release_date = None
                             
@@ -240,7 +239,7 @@ def show_edit_book(
                         latest_release_date=latest_release_date,
                         next_release_date=next_release_date,
                         missing_volumes=missing_volumes,
-                        special_volumes=special_volumes,
+                        special_volumes="",  # 特殊巻は別テーブルで管理
                         owned_media=owned_media,
                         notes=notes
                     )

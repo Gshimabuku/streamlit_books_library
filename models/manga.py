@@ -241,10 +241,8 @@ class Manga:
             else:
                 properties["missing_volumes"] = {"rich_text": []}
             
-            if self.special_volumes and str(self.special_volumes).strip():
-                properties["special_volumes"] = {"rich_text": [{"text": {"content": str(self.special_volumes)}}]}
-            else:
-                properties["special_volumes"] = {"rich_text": []}
+            # special_volumesフィールドは削除（現在はspecial_volumesテーブルとの双方向リレーションで管理）
+            # 下位互換性のため、フィールド自体は保持するが、Notion更新時は送信しない
             
             if self.owned_media and str(self.owned_media).strip():
                 properties["owned_media"] = {"select": {"name": str(self.owned_media)}}

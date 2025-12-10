@@ -390,11 +390,9 @@ class BookFormFields:
             value=default_missing_volumes,
             placeholder="例: 3,5,10"
         )
-        special_volumes = st.text_input(
-            "特殊巻",
-            value=default_special_volumes,
-            placeholder="例: 10.5,外伝1"
-        )
+        # 特殊巻フィールドは廃止（special_volumesテーブルで管理）
+        # st.info("📔 特殊巻は作品詳細画面から個別に管理されます")
+        special_volumes = ""  # 常に空文字列
         
         media_options = ["単行本", "電子(ジャンプ+)", "電子(マガポケ)", "電子(U-NEXT)"]
         try:

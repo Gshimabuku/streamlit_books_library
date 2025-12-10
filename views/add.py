@@ -129,7 +129,7 @@ def show_add_book(
                         latest_release_date=latest_release_date,
                         next_release_date=next_release_date if use_next_release_date else None,
                         missing_volumes=missing_volumes,
-                        special_volumes=special_volumes,
+                        special_volumes="",  # 特殊巻は別テーブルで管理
                         owned_media=owned_media,
                         notes=notes
                     )
