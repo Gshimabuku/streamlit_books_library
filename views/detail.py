@@ -157,21 +157,33 @@ def show_book_detail(
                 missing_list = [vol.strip() for vol in missing_volumes.split(",") if vol.strip()]
                 missing_count = len(missing_list)
                 actual_owned = max(0, owned_count - missing_count)
-                st.write(f"**所持巻数:** {actual_owned}巻")
             except:
-                st.write(f"**所持巻数:** {owned_count}巻")
+                actual_owned = owned_count
         else:
-            st.write(f"**所持巻数:** {owned_count}巻")
+            actual_owned = owned_count
+
+        # 特殊巻数を取得
+        special_volumes_list = []
+        special_count = 0
+        try:
+            special_volumes_list = special_volume_service.get_special_volumes_by_book_id(book.get('id'))
+            special_count = len(special_volumes_list)
+        except Exception as e:
+            print(f"Error getting special volumes: {e}")
+
+        # 所持冊数表示（通常巻 + 特殊巻）
+        total_owned = actual_owned + special_count
+        if special_count > 0:
+            st.write(f"**所持巻数:** {actual_owned}巻 + 特殊巻{special_count}冊 = 合計{total_owned}冊")
+        else:
+            st.write(f"**所持巻数:** {actual_owned}巻")
 
         # 抜け巻
         if missing_volumes:
             st.write(f"**抜け巻:** {missing_volumes}")
 
         # 特殊巻一覧表示
-        try:
-            special_volumes_list = special_volume_service.get_special_volumes_by_book_id(book.get('id'))
-            
-            if special_volumes_list:
+        if special_volumes_list:
                 st.markdown("---")
 
                 # 特殊巻
@@ -192,9 +204,6 @@ def show_book_detail(
                         if i + 1 < len(sorted_volumes):
                             with cols[1]:
                                 st.write(f"・{sorted_volumes[i + 1].title}")
-                
-        except Exception as sv_error:
-            st.warning(f"⚠️ 特殊巻データの読み込みでエラーが発生しました: {sv_error}")
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了

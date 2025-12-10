@@ -107,7 +107,8 @@ def main():
             manga_service=manga_service,
             notion_api_key=NOTION_API_KEY,
             books_database_id=BOOKS_DATABASE_ID,
-            go_to_detail=go_to_detail
+            go_to_detail=go_to_detail,
+            special_volume_service=special_volume_service
         )
     
     elif current_page == "book_detail":

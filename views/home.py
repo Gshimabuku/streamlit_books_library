@@ -13,6 +13,35 @@ from typing import List
 from models.manga import Manga
 
 
+def calculate_total_volumes_with_specials(mangas: List[Manga], special_volume_service) -> int:
+    """漫画リストの特殊巻を含む合計冊数を計算
+    
+    Args:
+        mangas: 漫画リスト
+        special_volume_service: 特殊巻サービス
+    
+    Returns:
+        int: 合計冊数（通常巻 + 特殊巻）
+    """
+    total = 0
+    for manga in mangas:
+        # 通常巻の冊数
+        normal_count = manga.calculate_actual_owned_count()
+        
+        # 特殊巻の冊数
+        special_count = 0
+        if special_volume_service:
+            try:
+                special_volumes = special_volume_service.get_special_volumes_by_book_id(manga.id)
+                special_count = len(special_volumes)
+            except:
+                special_count = 0
+        
+        total += manga.calculate_total_owned_count_with_specials(special_count)
+    
+    return total
+
+
 def filter_mangas(mangas: List[Manga], filters: dict) -> List[Manga]:
     """
     検索条件に基づいて漫画リストをフィルタリング
@@ -112,7 +141,8 @@ def show_books_home(
     manga_service: MangaService,
     notion_api_key: str,
     books_database_id: str,
-    go_to_detail: callable
+    go_to_detail: callable,
+    special_volume_service=None
 ):
     """Home画面：本の一覧を3列グリッド表示"""
     st.header("📖 所持作品一覧")
@@ -251,14 +281,14 @@ def show_books_home(
         
         # 検索結果件数と合計冊数を表示
         if any(search_filters.values()):
-            # フィルター結果の合計冊数を計算
-            filtered_total_volumes = sum(manga.calculate_actual_owned_count() for manga in filtered_mangas)
-            # 全体の合計冊数を計算
-            all_total_volumes = sum(manga.calculate_actual_owned_count() for manga in mangas)
+            # フィルター結果の合計冊数を計算（特殊巻を含む）
+            filtered_total_volumes = calculate_total_volumes_with_specials(filtered_mangas, special_volume_service)
+            # 全体の合計冊数を計算（特殊巻を含む）
+            all_total_volumes = calculate_total_volumes_with_specials(mangas, special_volume_service)
             st.info(f"🎯 {len(filtered_mangas)}件・{filtered_total_volumes}冊の漫画が見つかりました（全{len(mangas)}件・{all_total_volumes}冊中）")
         else:
-            # 全件表示時も合計冊数を表示
-            total_volumes = sum(manga.calculate_actual_owned_count() for manga in mangas)
+            # 全件表示時も合計冊数を表示（特殊巻を含む）
+            total_volumes = calculate_total_volumes_with_specials(mangas, special_volume_service)
             st.info(f"📚 全{len(mangas)}件・{total_volumes}冊の漫画を表示中")
         
         # 全ての漫画をtitle_kanaの五十音順でソート

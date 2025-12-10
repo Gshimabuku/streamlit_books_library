@@ -261,3 +261,14 @@ class Manga:
                 return owned_count
         
         return owned_count
+    
+    def calculate_total_owned_count_with_specials(self, special_volumes_count: int = 0) -> int:
+        """特殊巻を含む合計所持冊数を計算
+        
+        Args:
+            special_volumes_count: 特殊巻の冊数
+        
+        Returns:
+            int: 通常巻 + 特殊巻の合計冊数
+        """
+        return self.calculate_actual_owned_count() + special_volumes_count
