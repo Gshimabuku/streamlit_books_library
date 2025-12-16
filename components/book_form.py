@@ -611,26 +611,22 @@ class BookFormFields:
         }
     
     @staticmethod
-    def render_special_volume_image_info() -> Tuple[Any, str]:
+    def render_special_volume_image_info(image_service) -> Tuple[Any, str]:
         """
         特殊巻の画像情報セクションのフィールドを表示
+        
+        Args:
+            image_service: ImageServiceインスタンス
         
         Returns:
             Tuple[Any, str]: (uploaded_file, manual_image_url)
         """
-        from utils.config import ConfigManager
-        from services.image_service import ImageService
-        
-        # Cloudinary設定チェック
-        config = ConfigManager()
-        image_service = ImageService(config)
         cloudinary_available = image_service.is_available()
-        cloudinary_enabled = config.get_cloudinary_config() is not None
         
         st.subheader("🖼️ 画像")
         
         # Cloudinaryの利用可否表示
-        if cloudinary_available and cloudinary_enabled:
+        if cloudinary_available:
             st.success("✅ 画像アップロード機能が利用できます")
             uploaded_file = st.file_uploader(
                 "画像を選択",
