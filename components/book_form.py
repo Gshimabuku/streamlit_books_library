@@ -611,7 +611,7 @@ class BookFormFields:
         }
     
     @staticmethod
-    def render_special_volume_image_info(image_service) -> Tuple[Any, str]:
+    def render_special_volume_image_info(image_service) -> Any:
         """
         特殊巻の画像情報セクションのフィールドを表示
         
@@ -619,7 +619,7 @@ class BookFormFields:
             image_service: ImageServiceインスタンス
         
         Returns:
-            Tuple[Any, str]: (uploaded_file, manual_image_url)
+            Any: uploaded_file
         """
         cloudinary_available = image_service.is_available()
         
@@ -627,7 +627,6 @@ class BookFormFields:
         
         # Cloudinaryの利用可否表示
         if cloudinary_available:
-            st.success("✅ 画像アップロード機能が利用できます")
             uploaded_file = st.file_uploader(
                 "画像を選択",
                 type=['png', 'jpg', 'jpeg', 'webp'],
@@ -637,14 +636,7 @@ class BookFormFields:
             st.warning("⚠️ Cloudinary設定が無効のため、画像アップロード機能は利用できません")
             uploaded_file = None
         
-        # 手動URL入力（代替手段）
-        manual_image_url = st.text_input(
-            "画像URL (手動入力)",
-            placeholder="https://example.com/image.jpg",
-            help="画像ファイルをアップロードできない場合の代替手段"
-        )
-        
-        return uploaded_file, manual_image_url
+        return uploaded_file
     
     @staticmethod
     def validate_special_volume_form(title: str, parent_manga_id: str) -> list:

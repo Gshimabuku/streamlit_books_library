@@ -83,6 +83,30 @@ class SessionManager:
         st.session_state.selected_book = None
     
     @staticmethod
+    def set_selected_special_volume(special_volume_data: Any):
+        """選択された特殊巻を設定
+        
+        Args:
+            special_volume_data: 特殊巻のデータ（SpecialVolumeオブジェクト）
+        """
+        st.session_state.selected_special_volume = special_volume_data
+    
+    @staticmethod
+    def get_selected_special_volume() -> Optional[Any]:
+        """選択された特殊巻を取得
+        
+        Returns:
+            選択された特殊巻のデータ、または None
+        """
+        return st.session_state.get("selected_special_volume")
+    
+    @staticmethod
+    def clear_selected_special_volume():
+        """選択された特殊巻をクリア"""
+        if "selected_special_volume" in st.session_state:
+            del st.session_state["selected_special_volume"]
+    
+    @staticmethod
     def get_special_volumes_cache():
         """特殊巻キャッシュを取得"""
         return st.session_state.get("special_volumes_cache")
@@ -203,4 +227,11 @@ class SessionManager:
     def go_to_add_special_volume():
         """特殊巻登録画面に遷移"""
         SessionManager.set_page("add_special_volume")
+        SessionManager.set_scroll_to_top(True)
+    
+    @staticmethod
+    def go_to_special_volume_detail(special_volume_data: Any):
+        """特殊巻詳細画面に遷移"""
+        SessionManager.set_page("special_volume_detail")
+        SessionManager.set_selected_special_volume(special_volume_data)
         SessionManager.set_scroll_to_top(True)

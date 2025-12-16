@@ -42,7 +42,7 @@ def show_add_special_volume(
         parent_manga_id = parent_info["parent_id"]
         parent_manga_title = parent_info["parent_title"]
         
-        uploaded_file, manual_image_url = BookFormFields.render_special_volume_image_info(image_service)
+        uploaded_file = BookFormFields.render_special_volume_image_info(image_service)
         
         # Cloudinaryが利用可能かチェック（プレビュー後のメッセージ）
         if uploaded_file is not None:
@@ -77,9 +77,7 @@ def show_add_special_volume(
                     elif uploaded_file is not None:
                         st.warning("⚠️ Cloudinary設定がないため、画像はアップロードされませんでした")
                     
-                    # 手動URL入力がある場合はそちらを優先
-                    if manual_image_url and manual_image_url.strip():
-                        final_image_url = manual_image_url.strip()
+
                     
                     # SpecialVolumeオブジェクト作成
                     new_special_volume = SpecialVolume(

@@ -17,6 +17,7 @@ from views.detail import show_book_detail
 from views.add import show_add_book
 from views.edit import show_edit_book
 from views.add_special_volume import show_add_special_volume
+from views.special_volume_detail import show_special_volume_detail
 
 # Cloudinaryのインポート
 try:
@@ -143,6 +144,12 @@ def main():
             manga_service=manga_service,
             image_service=image_service,
             go_to_home=go_to_home
+        )
+    
+    elif current_page == "special_volume_detail":
+        show_special_volume_detail(
+            special_volume_service=special_volume_service,
+            manga_service=manga_service
         )
 
 

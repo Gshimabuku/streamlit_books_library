@@ -198,16 +198,25 @@ def show_book_detail(
                 
                 # 特殊巻数に応じてレイアウトを調整
                 if len(sorted_volumes) == 1:
-                    st.write(f"・{sorted_volumes[0].title}")
+                    sv = sorted_volumes[0]
+                    if st.button(f"📔 {sv.title}", key=f"special_volume_{sv.id}"):
+                        SessionManager.go_to_special_volume_detail(sv)
+                        st.rerun()
                 else:
                     # 2列表示
                     for i in range(0, len(sorted_volumes), 2):
                         cols = st.columns(2)
                         with cols[0]:
-                            st.write(f"・{sorted_volumes[i].title}")
+                            sv = sorted_volumes[i]
+                            if st.button(f"📔 {sv.title}", key=f"special_volume_{sv.id}_0"):
+                                SessionManager.go_to_special_volume_detail(sv)
+                                st.rerun()
                         if i + 1 < len(sorted_volumes):
                             with cols[1]:
-                                st.write(f"・{sorted_volumes[i + 1].title}")
+                                sv = sorted_volumes[i + 1]
+                                if st.button(f"📔 {sv.title}", key=f"special_volume_{sv.id}_1"):
+                                    SessionManager.go_to_special_volume_detail(sv)
+                                    st.rerun()
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
