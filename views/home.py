@@ -160,10 +160,12 @@ def show_books_home(
     
     # 新規登録ボタン
     st.markdown('<div class="add-book-button">', unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
     if st.button("➕ 新しい漫画を登録", type="primary"):
             st.session_state.page = "add_book"
             st.rerun()
-    if st.button("📔 特殊巻を登録", type="secondary"):
+    with col2:
+        if st.button("📔 特殊巻を登録", type="secondary"):
             st.session_state.page = "add_special_volume"
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
