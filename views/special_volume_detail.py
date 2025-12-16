@@ -99,7 +99,10 @@ def show_special_volume_detail(
         st.markdown(type_badge, unsafe_allow_html=True)
         
         # 親作品情報
-        st.write(f"**親作品:** {parent_manga.title}")
+        st.markdown("**親作品:**")
+        if st.button(f"📖 {parent_manga.title}", key="parent_manga_link"):
+            SessionManager.go_to_detail(parent_manga)
+            st.rerun()
         
         # その他の特殊巻表示
         if parent_manga:
