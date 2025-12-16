@@ -48,26 +48,11 @@ def show_book_detail(
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     
-    # Notionから詳細データを取得
-    page_data = book.get("page_data", {})
-    props = page_data.get("properties", {})
-    
-    # 追加情報を取得
-    latest_release_date = ""
-    if props.get("latest_release_date", {}).get("date"):
-        latest_release_date = props["latest_release_date"]["date"]["start"]
-    
-    next_release_date = ""
-    if props.get("next_release_date", {}).get("date"):
-        next_release_date = props["next_release_date"]["date"]["start"]
-    
-    missing_volumes = ""
-    if props.get("missing_volumes", {}).get("rich_text") and props["missing_volumes"]["rich_text"]:
-        missing_volumes = props["missing_volumes"]["rich_text"][0]["text"]["content"]
-    
-    special_volumes = ""
-    if props.get("special_volumes", {}).get("rich_text") and props["special_volumes"]["rich_text"]:
-        special_volumes = props["special_volumes"]["rich_text"][0]["text"]["content"]
+    # Mangaオブジェクトから情報を取得
+    latest_release_date = book.latest_release_date.isoformat() if book.latest_release_date else ""
+    next_release_date = book.next_release_date.isoformat() if book.next_release_date else ""
+    missing_volumes = book.missing_volumes if book.missing_volumes else ""
+    # special_volumesフィールドは廃止（別テーブルで管理）
     
     # 2列レイアウト
     col1, col2 = st.columns([1, 2])
@@ -75,8 +60,8 @@ def show_book_detail(
     with col1:
         # 画像表示（エラーハンドリング付き）
         try:
-            if book["image_url"] and book["image_url"] != "":
-                st.image(book["image_url"], width=300)
+            if book.image_url and book.image_url != "":
+                st.image(book.image_url, width=300)
             else:
                 st.image(DEFAULT_IMAGE_URL, width=300)
         except Exception as e:
@@ -84,20 +69,20 @@ def show_book_detail(
     
     with col2:
         # タイトル
-        st.header(f"📚 {book['title']}")
+        st.header(f"📚 {book.title}")
         
         # 漫画情報
-        completion_status = "完結" if book['is_completed'] else "連載中"
+        completion_status = "完結" if book.is_completed else "連載中"
         
         # 完結・連載中のステータスを背景色付きで表示
-        if book['is_completed']:
+        if book.is_completed:
             status_color = "#28a745"  # 緑色（完結）
             text_color = "white"
         else:
             status_color = "#007bff"  # 青色（連載中）
             text_color = "white"
         
-        status_class = "status-completed" if book['is_completed'] else "status-ongoing"
+        status_class = "status-completed" if book.is_completed else "status-ongoing"
         st.markdown(f"""
         <div class="detail-status-badge {status_class}">
             {completion_status}
@@ -108,23 +93,18 @@ def show_book_detail(
         st.subheader("ℹ️ 作品情報")
         
         # 連載誌情報
-        magazine_type = book.get('magazine_type', '')
-        magazine_name = book.get('page_data', {}).get('properties', {}).get('magazine_name', {}).get('rich_text', [])
-        if magazine_name and magazine_name[0].get('text', {}).get('content'):
-            magazine_name_text = magazine_name[0]['text']['content']
-            st.write(f"📰 **連載誌:** {magazine_type} - {magazine_name_text}")
-        elif magazine_type:
-            st.write(f"📰 **連載誌:** {magazine_type}")
+        if book.magazine_type:
+            magazine_display = book.magazine_type
+            if book.magazine_name:
+                magazine_display += f" - {book.magazine_name}"
+            st.write(f"📰 **連載誌:** {magazine_display}")
         
         # 所持媒体情報
-        owned_media = props.get('owned_media', {}).get('select')
-        if owned_media:
-            owned_media_name = owned_media.get('name', '')
-            if owned_media_name :
-                st.write(f"💻 **所持媒体:** {owned_media_name}")
+        if book.owned_media:
+            st.write(f"💻 **所持媒体:** {book.owned_media}")
         
         # 最新巻情報
-        release_info = f"🆕 **最新巻:** {book['latest_released_volume']}巻"
+        release_info = f"🆕 **最新巻:** {book.latest_released_volume}巻"
         if latest_release_date:
             try:
                 date_obj = datetime.strptime(latest_release_date, "%Y-%m-%d")
@@ -149,7 +129,7 @@ def show_book_detail(
         st.subheader("📚 所持状況")
         
         # 所持巻数の計算
-        owned_count = book['latest_owned_volume']
+        owned_count = book.latest_owned_volume
         
         # 抜け巻がある場合の計算（新しいロジックに統一）
         if missing_volumes:
@@ -167,11 +147,11 @@ def show_book_detail(
         special_count = 0
         try:
             # キャッシュから特殊巻数を取得
-            special_count = special_volume_service.get_special_volume_count_for_book(book.get('id'))
+            special_count = special_volume_service.get_special_volume_count_for_book(book.id)
             
             # 詳細表示用に特殊巻リストも取得
             grouped_data = special_volume_service.get_all_special_volumes_grouped_by_book()
-            special_volumes_list = grouped_data.get(book.get('id'), [])
+            special_volumes_list = grouped_data.get(book.id, [])
         except Exception as e:
             print(f"Error getting special volumes: {e}")
 
