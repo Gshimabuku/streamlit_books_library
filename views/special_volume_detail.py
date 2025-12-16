@@ -100,17 +100,9 @@ def show_special_volume_detail(
         
         # 親作品情報
         if parent_manga:
-            st.markdown("**親作品:**")
-            # 親作品への遷移ボタン
-            if st.button(f"📖 {parent_manga.title}", key="parent_manga_link"):
-                SessionManager.go_to_detail(parent_manga)
-                st.rerun()
+            st.write(f"**親作品:** {parent_manga.title}")
         else:
             st.markdown("**親作品:** 不明")
-        
-        # ソート順（管理情報として表示）
-        if special_volume.sort_order is not None:
-            st.markdown(f"**ソート順:** {special_volume.sort_order}")
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-content-container終了
     
