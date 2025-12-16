@@ -142,9 +142,7 @@ def main():
             special_volume_service=special_volume_service,
             manga_service=manga_service,
             image_service=image_service,
-            go_to_home=go_to_home,
-            cloudinary_available=CLOUDINARY_AVAILABLE,
-            cloudinary_enabled=CLOUDINARY_ENABLED
+            go_to_home=go_to_home
         )
 
 

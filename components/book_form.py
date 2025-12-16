@@ -537,3 +537,137 @@ class BookFormFields:
             st.rerun()
         
         return filters
+    
+    @staticmethod
+    def render_special_volume_basic_info() -> Dict[str, Any]:
+        """
+        特殊巻の基本情報セクションのフィールドを表示
+        
+        Returns:
+            Dict[str, Any]: {title, type, sort_order}
+        """
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            # 特殊巻タイトル
+            title = st.text_input(
+                "📚 特殊巻タイトル *",
+                placeholder="例: 公式ガイドブック RED",
+                help="特殊巻のタイトルを入力してください"
+            )
+            
+            # 作品タイプ
+            type_options = ["特殊巻", "外伝", "ガイドブック", "映画", "小説"]
+            volume_type = st.selectbox(
+                "📋 作品タイプ *",
+                type_options,
+                help="特殊巻の種類を選択してください"
+            )
+            
+            # ソート順
+            sort_order = st.number_input(
+                "🔢 ソート順",
+                min_value=0.0,
+                max_value=9999999999.0,  # 約100億まで対応
+                value=0.0,
+                step=0.1,
+                format="%.1f",
+                help="同じ親作品内での表示順序（小さい順に表示）\n例: 0巻→0、10.5巻→10.5、40億巻→4000000000"
+            )
+        
+        return {
+            "title": title,
+            "type": volume_type,
+            "sort_order": sort_order
+        }
+    
+    @staticmethod
+    def render_parent_manga_selection(all_mangas: list) -> Dict[str, Any]:
+        """
+        親作品選択セクションのフィールドを表示
+        
+        Args:
+            all_mangas: 全漫画データのリスト
+        
+        Returns:
+            Dict[str, Any]: {parent_id, parent_title}
+        """
+        # 親作品選択用の辞書作成
+        manga_options = {}
+        for manga in all_mangas:
+            manga_options[manga.title] = manga.id
+        
+        # 親作品選択
+        parent_manga_title = st.selectbox(
+            "📖 親作品 *",
+            options=list(manga_options.keys()),
+            help="この特殊巻が属する親作品を選択してください"
+        )
+        parent_manga_id = manga_options.get(parent_manga_title, "")
+        
+        return {
+            "parent_id": parent_manga_id,
+            "parent_title": parent_manga_title
+        }
+    
+    @staticmethod
+    def render_special_volume_image_info() -> Tuple[Any, str]:
+        """
+        特殊巻の画像情報セクションのフィールドを表示
+        
+        Returns:
+            Tuple[Any, str]: (uploaded_file, manual_image_url)
+        """
+        from utils.config import ConfigManager
+        from services.image_service import ImageService
+        
+        # Cloudinary設定チェック
+        config = ConfigManager()
+        image_service = ImageService(config)
+        cloudinary_available = image_service.is_available()
+        cloudinary_enabled = config.get_cloudinary_config() is not None
+        
+        st.subheader("🖼️ 画像")
+        
+        # Cloudinaryの利用可否表示
+        if cloudinary_available and cloudinary_enabled:
+            st.success("✅ 画像アップロード機能が利用できます")
+            uploaded_file = st.file_uploader(
+                "画像を選択",
+                type=['png', 'jpg', 'jpeg', 'webp'],
+                help="推奨サイズ: 縦長の画像"
+            )
+        else:
+            st.warning("⚠️ Cloudinary設定が無効のため、画像アップロード機能は利用できません")
+            uploaded_file = None
+        
+        # 手動URL入力（代替手段）
+        manual_image_url = st.text_input(
+            "画像URL (手動入力)",
+            placeholder="https://example.com/image.jpg",
+            help="画像ファイルをアップロードできない場合の代替手段"
+        )
+        
+        return uploaded_file, manual_image_url
+    
+    @staticmethod
+    def validate_special_volume_form(title: str, parent_manga_id: str) -> list:
+        """
+        特殊巻フォームの入力値を検証
+        
+        Args:
+            title: 特殊巻タイトル
+            parent_manga_id: 親作品ID
+        
+        Returns:
+            list: エラーメッセージのリスト
+        """
+        errors = []
+        
+        if not title or not title.strip():
+            errors.append("特殊巻タイトルは必須です")
+        
+        if not parent_manga_id:
+            errors.append("親作品の選択は必須です")
+        
+        return errors
