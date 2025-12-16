@@ -32,73 +32,47 @@ def show_edit_book(
         return
     
     book = st.session_state.selected_book
-    page_data = book.get("page_data", {})
-    props = page_data.get("properties", {})
     
-    # 既存データを取得
-    current_title = book.get("title", "")
-    current_magazine_type = book.get("magazine_type", "その他")
+    # Mangaオブジェクトから既存データを取得
+    current_title = getattr(book, 'title', '')
+    current_magazine_type = getattr(book, 'magazine_type', 'その他')
+    current_magazine_name = getattr(book, 'magazine_name', '')
+    current_title_kana = getattr(book, 'title_kana', '')
     
-    # 雑誌名
-    current_magazine_name = ""
-    if props.get("magazine_name", {}).get("rich_text") and props["magazine_name"]["rich_text"]:
-        current_magazine_name = props["magazine_name"]["rich_text"][0]["text"]["content"]
-    
-    # タイトルかな
-    current_title_kana = ""
-    if props.get("title_kana", {}).get("rich_text") and props["title_kana"]["rich_text"]:
-        current_title_kana = props["title_kana"]["rich_text"][0]["text"]["content"]
-    
-    # リレーション情報の取得（新しいプロパティ名を使用）
+    # リレーション情報の取得
     current_parent_id = None
-    if props.get("relation_books_to", {}).get("relation") and props["relation_books_to"]["relation"]:
-        current_parent_id = props["relation_books_to"]["relation"][0]["id"]
-    
     current_children_ids = []
-    if props.get("relation_books_from", {}).get("relation"):
-        current_children_ids = [rel["id"] for rel in props["relation_books_from"]["relation"]]
+    
+    # related_books_toがリストで、最初の要素がID
+    related_books_to = getattr(book, 'related_books_to', None)
+    if related_books_to and len(related_books_to) > 0:
+        current_parent_id = related_books_to[0]
+    
+    # related_books_fromがリストで、全てがID
+    related_books_from = getattr(book, 'related_books_from', None)
+    if related_books_from:
+        current_children_ids = related_books_from
     
     # 巻数情報
-    current_owned = book.get("latest_owned_volume", 0)
-    current_released = book.get("latest_released_volume", 0)
-    current_completed = book.get("is_completed", False)
+    current_owned = getattr(book, 'latest_owned_volume', 0)
+    current_released = getattr(book, 'latest_released_volume', 0)
+    current_completed = getattr(book, 'is_completed', False)
     
     # 画像URL
-    current_image_url = book.get("image_url", "")
+    current_image_url = getattr(book, 'image_url', '')
     
     # 発売日情報
-    current_latest_release_date = datetime.date.today()
-    if props.get("latest_release_date", {}).get("date"):
-        try:
-            date_str = props["latest_release_date"]["date"]["start"]
-            current_latest_release_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-        except:
-            pass
+    current_latest_release_date = getattr(book, 'latest_release_date', None)
+    if current_latest_release_date is None:
+        current_latest_release_date = datetime.date.today()
     
-    current_next_release_date = None
-    if props.get("next_release_date", {}).get("date"):
-        try:
-            date_str = props["next_release_date"]["date"]["start"]
-            current_next_release_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-        except:
-            pass
+    current_next_release_date = getattr(book, 'next_release_date', None)
     
     # 詳細情報
-    current_missing_volumes = ""
-    if props.get("missing_volumes", {}).get("rich_text") and props["missing_volumes"]["rich_text"]:
-        current_missing_volumes = props["missing_volumes"]["rich_text"][0]["text"]["content"]
-    
-    current_special_volumes = ""
-    if props.get("special_volumes", {}).get("rich_text") and props["special_volumes"]["rich_text"]:
-        current_special_volumes = props["special_volumes"]["rich_text"][0]["text"]["content"]
-    
-    current_owned_media = "単行本"
-    if props.get("owned_media", {}).get("select"):
-        current_owned_media = props["owned_media"]["select"]["name"]
-    
-    current_notes = ""
-    if props.get("notes", {}).get("rich_text") and props["notes"]["rich_text"]:
-        current_notes = props["notes"]["rich_text"][0]["text"]["content"]
+    current_missing_volumes = getattr(book, 'missing_volumes', '')
+    current_special_volumes = getattr(book, 'special_volumes', '')
+    current_owned_media = getattr(book, 'owned_media', '単行本')
+    current_notes = getattr(book, 'notes', '')
     
     # 編集フォーム（BookFormFieldsコンポーネントを使用）
     with st.form("edit_book_form", clear_on_submit=False):
@@ -121,7 +95,7 @@ def show_edit_book(
         
         series_info = BookFormFields.render_series_selection(
             all_mangas=all_mangas,
-            current_manga_id=book["id"],
+            current_manga_id=getattr(book, 'id', None),
             default_parent_id=current_parent_id
         )
         parent_id = series_info["parent_id"]
@@ -225,7 +199,7 @@ def show_edit_book(
                     
                     # Mangaオブジェクトを作成
                     updated_manga = Manga(
-                        id=book["id"],
+                        id=getattr(book, 'id', None),
                         title=title,
                         title_kana=final_title_kana,
                         magazine_type=magazine_type,
@@ -275,7 +249,7 @@ def show_edit_book(
                                 if parent_id != current_parent_id:
                                     with st.spinner("シリーズ関係を更新中..."):
                                         relation_success = manga_service.update_parent_relation(
-                                            manga_id=book["id"],
+                                            manga_id=getattr(book, 'id', None),
                                             old_parent_id=current_parent_id,
                                             new_parent_id=parent_id
                                         )
@@ -326,9 +300,11 @@ def show_edit_book(
                 st.session_state.update_success = False
                 # MangaServiceを使用して更新されたデータを再取得
                 try:
-                    updated_manga = manga_service.get_manga_by_id(book["id"])
-                    if updated_manga:
-                        st.session_state.selected_book = updated_manga.to_dict()
+                    book_id = getattr(book, 'id', None)
+                    if book_id:
+                        updated_manga = manga_service.get_manga_by_id(book_id)
+                        if updated_manga:
+                            st.session_state.selected_book = updated_manga
                 except:
                     pass  # エラー時は古いデータのまま
                 
