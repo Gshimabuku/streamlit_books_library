@@ -336,5 +336,5 @@ def show_books_home(
                     
                     # 詳細ボタン
                     if st.button(f"詳細を見る", key=f"detail_{manga.id}", use_container_width=True):
-                        go_to_detail(manga.to_dict())
+                        go_to_detail(manga)
                         st.rerun()
