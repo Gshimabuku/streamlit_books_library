@@ -198,3 +198,9 @@ class SessionManager:
     def go_to_edit_book():
         """編集画面に遷移"""
         SessionManager.set_page("edit_book")
+    
+    @staticmethod
+    def go_to_add_special_volume():
+        """特殊巻登録画面に遷移"""
+        SessionManager.set_page("add_special_volume")
+        SessionManager.set_scroll_to_top(True)

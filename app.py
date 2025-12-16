@@ -16,6 +16,7 @@ from views.home import show_books_home
 from views.detail import show_book_detail
 from views.add import show_add_book
 from views.edit import show_edit_book
+from views.add_special_volume import show_add_special_volume
 
 # Cloudinaryのインポート
 try:
@@ -80,6 +81,8 @@ go_to_detail = SessionManager.go_to_detail
 go_to_add_book = SessionManager.go_to_add_book
 go_to_edit_book = SessionManager.go_to_edit_book
 
+go_to_add_special_volume = SessionManager.go_to_add_special_volume
+
 
 # =========================
 # 削除確認ダイアログ
@@ -127,6 +130,16 @@ def main():
     
     elif current_page == "edit_book":
         show_edit_book(
+            manga_service=manga_service,
+            image_service=image_service,
+            go_to_home=go_to_home,
+            cloudinary_available=CLOUDINARY_AVAILABLE,
+            cloudinary_enabled=CLOUDINARY_ENABLED
+        )
+    
+    elif current_page == "add_special_volume":
+        show_add_special_volume(
+            special_volume_service=special_volume_service,
             manga_service=manga_service,
             image_service=image_service,
             go_to_home=go_to_home,
