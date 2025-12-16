@@ -48,10 +48,14 @@ def show_book_detail(
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     
-    # Mangaオブジェクトから情報を取得
-    latest_release_date = book.latest_release_date.isoformat() if book.latest_release_date is not None else ""
-    next_release_date = book.next_release_date.isoformat() if book.next_release_date is not None else ""
-    missing_volumes = book.missing_volumes if book.missing_volumes else ""
+    # Mangaオブジェクトから情報を取得（安全なアクセス）
+    latest_release_date_obj = getattr(book, 'latest_release_date', None)
+    latest_release_date = latest_release_date_obj.isoformat() if latest_release_date_obj is not None else ""
+    
+    next_release_date_obj = getattr(book, 'next_release_date', None)
+    next_release_date = next_release_date_obj.isoformat() if next_release_date_obj is not None else ""
+    
+    missing_volumes = getattr(book, 'missing_volumes', '') or ""
     # special_volumesフィールドは廃止（別テーブルで管理）
     
     # 2列レイアウト
