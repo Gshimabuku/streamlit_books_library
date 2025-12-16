@@ -76,7 +76,7 @@ def show_special_volume_detail(
     
     with info_col:
         # タイトル
-        st.markdown(f'<h1 class="book-title">{special_volume.title}</h1>', unsafe_allow_html=True)
+        st.markdown(f'<h1 class="book-title">{parent_manga.title} - {special_volume.title}</h1>', unsafe_allow_html=True)
         
         # 基本情報表示
         st.markdown("### 📚 基本情報")
@@ -99,10 +99,7 @@ def show_special_volume_detail(
         st.markdown(type_badge, unsafe_allow_html=True)
         
         # 親作品情報
-        if parent_manga:
-            st.write(f"**親作品:** {parent_manga.title}")
-        else:
-            st.markdown("**親作品:** 不明")
+        st.write(f"**親作品:** {parent_manga.title}")
         
         # その他の特殊巻表示
         if parent_manga:
