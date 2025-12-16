@@ -103,42 +103,42 @@ def show_special_volume_detail(
             st.write(f"**親作品:** {parent_manga.title}")
         else:
             st.markdown("**親作品:** 不明")
-    
-    st.markdown('</div>', unsafe_allow_html=True)  # detail-content-container終了
-    
-    # その他の特殊巻表示
-    if parent_manga:
-        try:
-            # 同じ親作品の他の特殊巻を取得
-            all_special_volumes = special_volume_service.get_special_volumes_by_book_id(parent_manga.id)
-            other_special_volumes = [sv for sv in all_special_volumes if sv.id != special_volume.id]
-            
-            if other_special_volumes:
-                st.markdown("---")
-                st.subheader("📔 その他の特殊巻")
+        
+        # その他の特殊巻表示
+        if parent_manga:
+            try:
+                # 同じ親作品の他の特殊巻を取得
+                all_special_volumes = special_volume_service.get_special_volumes_by_book_id(parent_manga.id)
+                other_special_volumes = [sv for sv in all_special_volumes if sv.id != special_volume.id]
                 
-                # 特殊巻をソート（type昇順、sort_order昇順）
-                sorted_volumes = sorted(other_special_volumes, key=lambda x: (x.type or "", x.sort_order or 0))
-                
-                # 2列表示で他の特殊巻を表示
-                for i in range(0, len(sorted_volumes), 2):
-                    cols = st.columns(2)
+                if other_special_volumes:
+                    st.markdown("---")
+                    st.subheader("📔 その他の特殊巻")
                     
-                    with cols[0]:
-                        sv = sorted_volumes[i]
-                        if st.button(f"📔 {sv.title}", key=f"other_sv_{sv.id}_0"):
-                            SessionManager.go_to_special_volume_detail(sv)
-                            st.rerun()
+                    # 特殊巻をソート（type昇順、sort_order昇順）
+                    sorted_volumes = sorted(other_special_volumes, key=lambda x: (x.type or "", x.sort_order or 0))
                     
-                    if i + 1 < len(sorted_volumes):
-                        with cols[1]:
-                            sv = sorted_volumes[i + 1]
-                            if st.button(f"📔 {sv.title}", key=f"other_sv_{sv.id}_1"):
+                    # 2列表示で他の特殊巻を表示
+                    for i in range(0, len(sorted_volumes), 2):
+                        cols = st.columns(2)
+                        
+                        with cols[0]:
+                            sv = sorted_volumes[i]
+                            if st.button(f"📔 {sv.title}", key=f"other_sv_{sv.id}_0"):
                                 SessionManager.go_to_special_volume_detail(sv)
                                 st.rerun()
-        
-        except Exception as e:
-            st.error(f"その他の特殊巻の取得に失敗しました: {str(e)}")
+                        
+                        if i + 1 < len(sorted_volumes):
+                            with cols[1]:
+                                sv = sorted_volumes[i + 1]
+                                if st.button(f"📔 {sv.title}", key=f"other_sv_{sv.id}_1"):
+                                    SessionManager.go_to_special_volume_detail(sv)
+                                    st.rerun()
+            
+            except Exception as e:
+                st.error(f"その他の特殊巻の取得に失敗しました: {str(e)}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # detail-content-container終了
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
