@@ -73,20 +73,22 @@ def show_book_detail(
     
     with col2:
         # タイトル
-        st.header(f"📚 {book.title}")
+        title = getattr(book, 'title', 'タイトル不明')
+        st.header(f"📚 {title}")
         
         # 漫画情報
-        completion_status = "完結" if book.is_completed else "連載中"
+        is_completed = getattr(book, 'is_completed', False)
+        completion_status = "完結" if is_completed else "連載中"
         
         # 完結・連載中のステータスを背景色付きで表示
-        if book.is_completed:
+        if is_completed:
             status_color = "#28a745"  # 緑色（完結）
             text_color = "white"
         else:
             status_color = "#007bff"  # 青色（連載中）
             text_color = "white"
         
-        status_class = "status-completed" if book.is_completed else "status-ongoing"
+        status_class = "status-completed" if is_completed else "status-ongoing"
         st.markdown(f"""
         <div class="detail-status-badge {status_class}">
             {completion_status}
@@ -97,18 +99,22 @@ def show_book_detail(
         st.subheader("ℹ️ 作品情報")
         
         # 連載誌情報
-        if book.magazine_type:
-            magazine_display = book.magazine_type
-            if book.magazine_name:
-                magazine_display += f" - {book.magazine_name}"
+        magazine_type = getattr(book, 'magazine_type', '')
+        if magazine_type:
+            magazine_display = magazine_type
+            magazine_name = getattr(book, 'magazine_name', '')
+            if magazine_name:
+                magazine_display += f" - {magazine_name}"
             st.write(f"📰 **連載誌:** {magazine_display}")
         
         # 所持媒体情報
-        if book.owned_media:
-            st.write(f"💻 **所持媒体:** {book.owned_media}")
+        owned_media = getattr(book, 'owned_media', '')
+        if owned_media:
+            st.write(f"💻 **所持媒体:** {owned_media}")
         
         # 最新巻情報
-        release_info = f"🆕 **最新巻:** {book.latest_released_volume}巻"
+        latest_released_volume = getattr(book, 'latest_released_volume', 0)
+        release_info = f"🆕 **最新巻:** {latest_released_volume}巻"
         if latest_release_date:
             try:
                 date_obj = datetime.strptime(latest_release_date, "%Y-%m-%d")
@@ -133,7 +139,7 @@ def show_book_detail(
         st.subheader("📚 所持状況")
         
         # 所持巻数の計算
-        owned_count = book.latest_owned_volume
+        owned_count = getattr(book, 'latest_owned_volume', 0)
         
         # 抜け巻がある場合の計算（新しいロジックに統一）
         if missing_volumes:
@@ -151,11 +157,13 @@ def show_book_detail(
         special_count = 0
         try:
             # キャッシュから特殊巻数を取得
-            special_count = special_volume_service.get_special_volume_count_for_book(book.id)
-            
-            # 詳細表示用に特殊巻リストも取得
-            grouped_data = special_volume_service.get_all_special_volumes_grouped_by_book()
-            special_volumes_list = grouped_data.get(book.id, [])
+            book_id = getattr(book, 'id', None)
+            if book_id:
+                special_count = special_volume_service.get_special_volume_count_for_book(book_id)
+                
+                # 詳細表示用に特殊巻リストも取得
+                grouped_data = special_volume_service.get_all_special_volumes_grouped_by_book()
+                special_volumes_list = grouped_data.get(book_id, [])
         except Exception as e:
             print(f"Error getting special volumes: {e}")
 
