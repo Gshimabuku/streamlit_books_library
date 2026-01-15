@@ -14,7 +14,7 @@ class DeleteDialog:
     
     @staticmethod
     def show(
-        book: Dict[str, Any],
+        book: Any,
         manga_service: MangaService,
         image_service: ImageService,
         on_success_callback: Callable[[], None]
@@ -23,12 +23,14 @@ class DeleteDialog:
         削除確認ダイアログを表示
         
         Args:
-            book: 削除対象の漫画データ（dict形式）
+            book: 削除対象の漫画データ（MangaオブジェクトまたはDict）
             manga_service: MangaServiceインスタンス
             image_service: ImageServiceインスタンス
             on_success_callback: 削除成功時のコールバック関数
         """
-        st.warning(f"**{book['title']}** を削除しますか？")
+        # MangaオブジェクトまたはDict両方に対応
+        title = getattr(book, 'title', None) or book.get('title', '不明')
+        st.warning(f"**{title}** を削除しますか？")
         st.error("⚠️ この操作は取り消せません。")
         
         col1, col2 = st.columns(2)
@@ -43,7 +45,7 @@ class DeleteDialog:
     
     @staticmethod
     def _handle_delete(
-        book: Dict[str, Any],
+        book: Any,
         manga_service: MangaService,
         image_service: ImageService,
         on_success_callback: Callable[[], None]
@@ -52,14 +54,17 @@ class DeleteDialog:
         削除処理を実行
         
         Args:
-            book: 削除対象の漫画データ
+            book: 削除対象の漫画データ（MangaオブジェクトまたはDict）
             manga_service: MangaServiceインスタンス
             image_service: ImageServiceインスタンス
             on_success_callback: 削除成功時のコールバック関数
         """
         try:
+            # MangaオブジェクトまたはDict両方に対応
+            image_url = getattr(book, 'image_url', None) or book.get('image_url')
+            book_id = getattr(book, 'id', None) or book.get('id')
+            
             # ImageServiceを使用して画像削除
-            image_url = book.get("image_url")
             if image_url:
                 with st.spinner("画像を削除中..."):
                     if image_service.delete_image(image_url):
@@ -67,7 +72,7 @@ class DeleteDialog:
             
             # MangaServiceを使用してNotionレコード削除
             with st.spinner("データを削除中..."):
-                if manga_service.delete_manga(book["id"]):
+                if manga_service.delete_manga(book_id):
                     st.success("✅ 漫画を削除しました")
                 else:
                     raise Exception("削除に失敗しました")

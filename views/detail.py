@@ -5,10 +5,13 @@ Detail Page: Book detail view with edit/delete actions
 import streamlit as st
 from datetime import datetime
 from config.constants import DEFAULT_IMAGE_URL
+from components.delete_dialog import DeleteDialog
 
 
 def show_book_detail(
-    special_volume_service
+    special_volume_service,
+    manga_service,
+    image_service
 ):
     """詳細画面：選択された本の詳細情報表示"""
     from utils.session import SessionManager
@@ -43,8 +46,9 @@ def show_book_detail(
                 st.rerun()
         with delete_col:
             if st.button("🗑️ 削除", type="secondary"):
-                # 削除ダイアログは後で実装
-                st.info("削除機能は後で実装予定")
+                # 削除確認状態をセッションに保存
+                st.session_state.show_delete_dialog = True
+                st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     
@@ -212,3 +216,20 @@ def show_book_detail(
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
+    
+    # 削除ダイアログの表示
+    if st.session_state.get('show_delete_dialog', False):
+        st.markdown("---")
+        st.subheader("🗑️ 削除確認")
+        
+        def on_delete_success():
+            """削除成功時のコールバック"""
+            st.session_state.show_delete_dialog = False
+            SessionManager.go_to_home()
+        
+        DeleteDialog.show(
+            book=book,
+            manga_service=manga_service,
+            image_service=image_service,
+            on_success_callback=on_delete_success
+        )

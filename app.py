@@ -116,7 +116,11 @@ def main():
         )
     
     elif current_page == "book_detail":
-        show_book_detail(special_volume_service)
+        show_book_detail(
+            special_volume_service=special_volume_service,
+            manga_service=manga_service,
+            image_service=image_service
+        )
     
     elif current_page == "add_book":
         show_add_book(
