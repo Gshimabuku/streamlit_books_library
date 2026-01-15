@@ -383,6 +383,7 @@ hr {
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         max-width: 100% !important;
+        margin: 2px 0 8px 10px !important;
     }
 
     /* モバイルで雑誌タイプ情報を調整 */
@@ -392,7 +393,7 @@ hr {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        margin: 4px 0 4px 0 !important;
+        margin: 4px 0 4px 10px !important;
         padding: 2px 4px !important;
         font-size: 10px !important;
         flex-shrink: 0 !important;
@@ -403,6 +404,14 @@ hr {
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
+    }
+
+    /* モバイルで各種情報の左マージンを統一 */
+    .mobile-book-info .book-magazine-info,
+    .mobile-book-info .book-volume-info,
+    .mobile-book-info .book-media-info,
+    .mobile-book-info .book-title-kana {
+        margin-left: 10px !important;
     }
 
     .detail-button-container {
