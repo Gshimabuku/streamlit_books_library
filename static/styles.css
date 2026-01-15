@@ -380,6 +380,17 @@ hr {
         max-width: 100% !important;
     }
 
+    /* モバイルで雑誌タイプ情報を調整 */
+    .book-magazine-type-info {
+        max-width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        margin: 4px 0 4px 0 !important;
+        padding: 2px 4px !important;
+        font-size: 10px !important;
+    }
+
     .detail-button-container {
         margin-top: auto !important;
     }
