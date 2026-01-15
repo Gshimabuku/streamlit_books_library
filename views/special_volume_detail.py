@@ -53,8 +53,9 @@ def show_special_volume_detail(
                 st.info("特殊巻編集機能は後で実装予定")
         with delete_col:
             if st.button("🗑️ 削除", type="secondary"):
-                # TODO: 特殊巻削除機能を後で実装
-                st.info("特殊巻削除機能は後で実装予定")
+                # セッション状態の削除フラグを設定して、対話的削除を開始
+                st.session_state.delete_special_volume_requested = True
+                st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
     
@@ -142,3 +143,39 @@ def show_special_volume_detail(
     
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
+    
+    # 削除確認ダイアログの表示（@st.dialogを使用）
+    if st.session_state.get('delete_special_volume_requested', False):
+        @st.dialog("特殊巻削除確認")
+        def confirm_delete_special_volume():
+            st.warning(f"**{special_volume.title}** を削除しますか？")
+            st.error("⚠️ この操作は取り消せません。")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("🗑️ 削除する", type="primary", use_container_width=True):
+                    try:
+                        # 削除処理を実行
+                        with st.spinner("削除中..."):
+                            # 特殊巻データ削除
+                            if special_volume_service.delete_special_volume(special_volume.id):
+                                st.success("✅ 特殊巻を削除しました")
+                                # セッション状態をクリア
+                                st.session_state.selected_special_volume = None
+                                st.session_state.delete_special_volume_requested = False
+                                # ホームに戻る
+                                SessionManager.go_to_home()
+                                st.rerun()
+                            else:
+                                st.error("❌ 削除に失敗しました")
+                    except Exception as e:
+                        st.error(f"❌ 削除エラー: {str(e)}")
+            
+            with col2:
+                if st.button("❌ キャンセル", use_container_width=True):
+                    st.session_state.delete_special_volume_requested = False
+                    st.rerun()
+        
+        # ダイアログを表示
+        confirm_delete_special_volume()

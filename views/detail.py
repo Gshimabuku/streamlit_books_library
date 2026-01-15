@@ -5,7 +5,6 @@ Detail Page: Book detail view with edit/delete actions
 import streamlit as st
 from datetime import datetime
 from config.constants import DEFAULT_IMAGE_URL
-from components.delete_dialog import DeleteDialog
 
 
 def show_book_detail(
@@ -46,8 +45,8 @@ def show_book_detail(
                 st.rerun()
         with delete_col:
             if st.button("🗑️ 削除", type="secondary"):
-                # 削除確認状態をセッションに保存
-                st.session_state.show_delete_dialog = True
+                # セッション状態の削除フラグを設定して、対話的削除を開始
+                st.session_state.delete_requested = True
                 st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)  # detail-buttons-container終了
@@ -217,19 +216,42 @@ def show_book_detail(
     # 詳細ページコンテナを閉じる
     st.markdown('</div>', unsafe_allow_html=True)  # detail-page-container終了
     
-    # 削除ダイアログの表示
-    if st.session_state.get('show_delete_dialog', False):
-        st.markdown("---")
-        st.subheader("🗑️ 削除確認")
+    # 削除確認ダイアログの表示（@st.dialogを使用）
+    if st.session_state.get('delete_requested', False):
+        @st.dialog("削除確認")
+        def confirm_delete():
+            st.warning(f"**{book.title}** を削除しますか？")
+            st.error("⚠️ この操作は取り消せません。")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("🗑️ 削除する", type="primary", use_container_width=True):
+                    try:
+                        # 削除処理を実行
+                        with st.spinner("削除中..."):
+                            # 画像削除
+                            if book.image_url:
+                                image_service.delete_image(book.image_url)
+                            
+                            # Notionレコード削除
+                            if manga_service.delete_manga(book.id):
+                                st.success("✅ 削除が完了しました")
+                                # セッション状態をクリア
+                                st.session_state.selected_book = None
+                                st.session_state.delete_requested = False
+                                # ホームに戻る
+                                SessionManager.go_to_home()
+                                st.rerun()
+                            else:
+                                st.error("❌ 削除に失敗しました")
+                    except Exception as e:
+                        st.error(f"❌ 削除エラー: {str(e)}")
+            
+            with col2:
+                if st.button("❌ キャンセル", use_container_width=True):
+                    st.session_state.delete_requested = False
+                    st.rerun()
         
-        def on_delete_success():
-            """削除成功時のコールバック"""
-            st.session_state.show_delete_dialog = False
-            SessionManager.go_to_home()
-        
-        DeleteDialog.show(
-            book=book,
-            manga_service=manga_service,
-            image_service=image_service,
-            on_success_callback=on_delete_success
-        )
+        # ダイアログを表示
+        confirm_delete()

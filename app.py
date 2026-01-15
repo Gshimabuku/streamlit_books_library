@@ -9,7 +9,6 @@ from utils.session import SessionManager
 from services.manga_service import MangaService
 from services.image_service import ImageService
 from services.special_volume_service import SpecialVolumeService
-from components.delete_dialog import DeleteDialog
 
 # ビューモジュールをインポート
 from views.home import show_books_home
@@ -83,16 +82,6 @@ go_to_add_book = SessionManager.go_to_add_book
 go_to_edit_book = SessionManager.go_to_edit_book
 
 go_to_add_special_volume = SessionManager.go_to_add_special_volume
-
-
-# =========================
-# 削除確認ダイアログ
-# =========================
-@st.dialog("削除確認")
-def confirm_delete_dialog():
-    """削除確認ダイアログ（DeleteDialogコンポーネント使用）"""
-    book = st.session_state.selected_book
-    DeleteDialog.show(book, manga_service, image_service, go_to_home)
 
 
 # =========================
